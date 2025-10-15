@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SimioUnrealEngineLiveLinkConnector.UnrealIntegration;
 
-namespace SimioUnrealEngineLiveLinkConnector.Tests.UnrealIntegration
+namespace SimioUnrealEngineLiveLinkConnector.Unit.Tests
 {
     [TestClass]
     public class TypesTests

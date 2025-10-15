@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SimioUnrealEngineLiveLinkConnector.UnrealIntegration;
 using System;
 
-namespace SimioUnrealEngineLiveLinkConnector.Tests.UnrealIntegration
+namespace SimioUnrealEngineLiveLinkConnector.Unit.Tests
 {
     [TestClass]
     public class LiveLinkManagerTests
