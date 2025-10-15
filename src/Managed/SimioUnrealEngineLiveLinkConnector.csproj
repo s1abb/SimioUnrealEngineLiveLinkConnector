@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyTitle>Simio Unreal Engine LiveLink Connector</AssemblyTitle>
+    <AssemblyDescription>Simio extension for streaming real-time simulation data to Unreal Engine via LiveLink</AssemblyDescription>
+    <AssemblyCompany>Simio LLC</AssemblyCompany>
+    <AssemblyProduct>SimioUnrealEngineLiveLinkConnector</AssemblyProduct>
+    <AssemblyCopyright>Copyright © 2025</AssemblyCopyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <OutputType>Library</OutputType>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>CS8618;CS8625</WarningsNotAsErrors> <!-- Nullable reference type warnings -->
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <!-- Native DLL deployment -->
+  <ItemGroup>
+    <Content Include="..\..\lib\native\win-x64\UnrealLiveLink.Native.dll">
+      <Link>UnrealLiveLink.Native.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\lib\native\win-x64\UnrealLiveLink.Native.pdb" Condition="Exists('..\..\lib\native\win-x64\UnrealLiveLink.Native.pdb')">
+      <Link>UnrealLiveLink.Native.pdb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Reference assemblies (will be added when we implement Simio integration) -->
+  <!--
+  <ItemGroup>
+    <Reference Include="SimioAPI">
+      <HintPath>$(SIMIO_INSTALL_DIR)\SimioAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  -->
+
+</Project>
