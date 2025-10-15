@@ -588,3 +588,13 @@ staging/
 
 # Crash dumps
 *.dmp
+
+# Temporary DLL files (prevent accidental commits of test copies)
+/*.dll
+/*.pdb
+/*.lib
+/*.exp
+
+# Build temporary directories
+build/temp/
+src/Native/Mock/build/
