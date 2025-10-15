@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using SimioAPI;
 using SimioAPI.Extensions;
 using SimioUnrealEngineLiveLinkConnector.UnrealIntegration;
@@ -10,8 +9,6 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
     /// Element that manages the LiveLink connection lifecycle for a simulation run.
     /// Provides connection health status and manages initialization/shutdown.
     /// </summary>
-    [NullableContext(1)]
-    [Nullable(0)]
     public class SimioUnrealEngineLiveLinkElement : IElement
     {
         private readonly IElementData _elementData;

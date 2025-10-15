@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using SimioAPI;
 using SimioAPI.Extensions;
 using SimioUnrealEngineLiveLinkConnector.Element;
@@ -10,8 +9,6 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
     /// <summary>
     /// Step that creates a new object in Unreal Engine LiveLink and sets its initial transform.
     /// </summary>
-    [NullableContext(1)]
-    [Nullable(0)]
     internal class CreateObjectStep : IStep
     {
         private readonly IPropertyReaders _readers;

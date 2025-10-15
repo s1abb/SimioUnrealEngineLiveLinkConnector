@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using SimioAPI;
 using SimioAPI.Extensions;
 using SimioUnrealEngineLiveLinkConnector.Element;
@@ -11,8 +10,6 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
     /// Step that updates an object's position and orientation in Unreal Engine LiveLink.
     /// Called frequently during simulation to stream real-time transform updates.
     /// </summary>
-    [NullableContext(1)]
-    [Nullable(0)]
     internal class SetObjectPositionOrientationStep : IStep
     {
         private readonly IPropertyReaders _readers;

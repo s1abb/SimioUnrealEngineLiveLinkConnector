@@ -44,13 +44,19 @@
   <!-- Simio API References for Element and Step implementations -->
   <ItemGroup>
     <Reference Include="SimioAPI">
-      <HintPath>$(SIMIO_INSTALL_DIR)\SimioAPI.dll</HintPath>
+      <HintPath>C:\Program Files\Simio LLC\Simio\SimioAPI.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="SimioAPI.Extensions">
-      <HintPath>$(SIMIO_INSTALL_DIR)\SimioAPI.Extensions.dll</HintPath>
+      <HintPath>C:\Program Files\Simio LLC\Simio\SimioAPI.Extensions.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+
+  <!-- System.Drawing.Common package for .NET Framework compatibility -->
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
   </ItemGroup>
 
 </Project>

@@ -185,10 +185,9 @@ Build Simio Unreal Engine LiveLink Connector in manageable phases, starting with
 ## Phase 6: Build Automation & Deployment (Days 23-25)
 
 ### Day 23-24: Build Scripts
-- [ ] `build/BuildNative.ps1` - UBT build with copy to `lib/native/win-x64/`
 - [ ] `build/BuildManaged.ps1` - MSBuild with native DLL copy
-- [ ] `build/BuildAndDeploy.ps1` - Complete build and Simio deployment
-- [ ] `build/DeployToSimio.ps1` - Copy to `%USERPROFILE%\Documents\Simio\UserExtensions\`
+- [ ] `build/BuildNative.ps1` - UBT build with copy to `lib/native/win-x64/`
+- [ ] `build/DeployToSimio.ps1` - Copy to $UserExtensions = "$env:USERPROFILE\Documents\SimioUserExtensions\SimioUnrealEngineLiveLinkConnector\SimioUnrealEngineLiveLinkConnector.dll" and $SimioUserExtensions = "C:\Program Files\Simio LLC\Simio\UserExtensions\SimioUnrealEngineLiveLinkConnector\SimioUnrealEngineLiveLinkConnector.dll" (prompt for admin credentials)
 - [ ] Version management in `lib/native/win-x64/VERSION.txt`
 
 ### Day 25: Documentation & Cleanup
