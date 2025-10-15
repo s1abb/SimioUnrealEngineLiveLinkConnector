@@ -57,20 +57,20 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
                     return ExitType.FirstExit;
                 }
 
-                // Read orientation values
-                double orientX, orientY, orientZ;
-                if (!TryGetDoubleProperty("OrientationX", context, out orientX) ||
-                    !TryGetDoubleProperty("OrientationY", context, out orientY) ||
-                    !TryGetDoubleProperty("OrientationZ", context, out orientZ))
+                // Read rotation values
+                double heading, pitch, roll;
+                if (!TryGetDoubleProperty("Heading", context, out heading) ||
+                    !TryGetDoubleProperty("Pitch", context, out pitch) ||
+                    !TryGetDoubleProperty("Roll", context, out roll))
                 {
-                    context.ExecutionInformation.ReportError("Failed to read orientation values (OrientationX, OrientationY, OrientationZ)");
+                    context.ExecutionInformation.ReportError("Failed to read rotation values (Heading, Pitch, Roll)");
                     return ExitType.FirstExit;
                 }
 
                 // Get or create the object updater and update transform
                 // Note: GetOrCreateObject handles both new objects and existing ones
                 var objectUpdater = LiveLinkManager.Instance.GetOrCreateObject(objectName);
-                objectUpdater.UpdateTransform(x, y, z, orientX, orientY, orientZ);
+                objectUpdater.UpdateTransform(x, y, z, heading, pitch, roll);
 
                 return ExitType.FirstExit;
             }

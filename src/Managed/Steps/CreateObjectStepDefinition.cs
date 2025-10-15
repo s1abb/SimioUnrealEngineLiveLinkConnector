@@ -55,21 +55,21 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
             zProperty.Description = "Z coordinate in Simio coordinate system (meters)";
             zProperty.CategoryName = "Transform";
 
-            // Orientation properties (in degrees)
-            var orientXProperty = schema.AddExpressionProperty("OrientationX", "0");
-            orientXProperty.DisplayName = "X Rotation";
-            orientXProperty.Description = "Rotation around X axis in degrees";
-            orientXProperty.CategoryName = "Transform";
+            // Rotation properties using Simio movement conventions (in degrees)
+            var headingProperty = schema.AddExpressionProperty("Heading", "Entity.Movement.Heading");
+            headingProperty.DisplayName = "Heading";
+            headingProperty.Description = "Rotation around vertical axis (0° = North, 90° = East, 180° = South, 270° = West)";
+            headingProperty.CategoryName = "Rotation";
 
-            var orientYProperty = schema.AddExpressionProperty("OrientationY", "0");
-            orientYProperty.DisplayName = "Y Rotation";
-            orientYProperty.Description = "Rotation around Y axis in degrees";
-            orientYProperty.CategoryName = "Transform";
+            var pitchProperty = schema.AddExpressionProperty("Pitch", "Entity.Movement.Pitch");
+            pitchProperty.DisplayName = "Pitch";
+            pitchProperty.Description = "Rotation relative to floor (positive = climb, negative = descend)";
+            pitchProperty.CategoryName = "Rotation";
 
-            var orientZProperty = schema.AddExpressionProperty("OrientationZ", "Entity.Heading");
-            orientZProperty.DisplayName = "Z Rotation";
-            orientZProperty.Description = "Rotation around Z axis in degrees (typically heading)";
-            orientZProperty.CategoryName = "Transform";
+            var rollProperty = schema.AddExpressionProperty("Roll", "Entity.Movement.Roll");
+            rollProperty.DisplayName = "Roll";
+            rollProperty.Description = "Banking/tilting rotation (standard aviation roll convention)";
+            rollProperty.CategoryName = "Rotation";
         }
 
         public IStep CreateStep(IPropertyReaders propertyReaders)

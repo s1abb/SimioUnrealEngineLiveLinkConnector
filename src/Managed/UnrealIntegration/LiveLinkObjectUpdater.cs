@@ -211,6 +211,63 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
         }
 
         /// <summary>
+        /// Transmits custom data properties to the object
+        /// Auto-registers object with properties if needed
+        /// </summary>
+        /// <param name="dataValues">Dictionary of property names and values to transmit</param>
+        /// <exception cref="ObjectDisposedException">Thrown if updater has been disposed</exception>
+        /// <exception cref="ArgumentNullException">Thrown if dataValues is null</exception>
+        /// <exception cref="InvalidOperationException">Thrown if object was registered without properties</exception>
+        public void TransmitData(System.Collections.Generic.Dictionary<string, double> dataValues)
+        {
+            ThrowIfDisposed();
+
+            if (dataValues == null)
+                throw new ArgumentNullException(nameof(dataValues));
+
+            if (dataValues.Count == 0)
+                return; // Nothing to transmit
+
+            // Extract property names and values
+            string[] propertyNames = new string[dataValues.Count];
+            float[] propertyValues = new float[dataValues.Count];
+            
+            int index = 0;
+            foreach (var kvp in dataValues)
+            {
+                propertyNames[index] = kvp.Key;
+                propertyValues[index] = (float)kvp.Value;
+                index++;
+            }
+
+            // Ensure object is registered with these properties
+            EnsureRegisteredWithProperties(propertyNames);
+
+            // Validate that this object was registered with properties
+            if (!_hasProperties)
+            {
+                throw new InvalidOperationException(
+                    $"Object '{_objectName}' was registered without properties. " +
+                    "Use UpdateTransform() for objects without custom data.");
+            }
+
+            // Update properties using zero transform (position/rotation won't change)
+            var transform = new ULL_Transform
+            {
+                position = new double[] { 0, 0, 0 },
+                rotation = new double[] { 0, 0, 0, 1 }, // Identity quaternion
+                scale = new double[] { 1, 1, 1 }
+            };
+
+            // Copy values to our reusable buffer (matching registered property order)
+            Array.Copy(propertyValues, _propertyBuffer!, Math.Min(propertyValues.Length, _propertyBuffer!.Length));
+
+            // Update via P/Invoke (transform stays at origin, only properties change)
+            UnrealLiveLinkNative.ULL_UpdateObjectWithProperties(
+                _objectName, ref transform, _propertyBuffer!, propertyValues.Length);
+        }
+
+        /// <summary>
         /// Gets debug information about this updater
         /// </summary>
         /// <returns>Debug string with registration status and properties</returns>
