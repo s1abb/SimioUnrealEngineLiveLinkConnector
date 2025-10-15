@@ -140,7 +140,7 @@ This document provides high-level guidance for implementing the C# managed layer
 - UnrealEngineConnector (Element reference)
 - ObjectName (Expression)
 - X, Y, Z (Expression) - initial position
-- OrientationX, OrientationY, OrientationZ (Expression) - initial rotation in degrees
+- Heading, Pitch, Roll (Expression) - initial rotation using Simio movement conventions
 
 **Execution Logic:**
 1. Resolve element reference, validate connection
@@ -162,7 +162,7 @@ This document provides high-level guidance for implementing the C# managed layer
 - UnrealEngineConnector (Element reference)
 - ObjectName (Expression)
 - X, Y, Z (Expression) - current position
-- OrientationX, OrientationY, OrientationZ (Expression) - current rotation
+- Heading, Pitch, Roll (Expression) - current rotation using Simio movement conventions
 
 **Execution Logic:**
 1. Validate connection

@@ -70,7 +70,7 @@ Build Simio Unreal Engine LiveLink Connector in manageable phases, starting with
 ### Day 8: Create & Update Steps ✅
 - [x] Generate GUIDs for Step definitions
 - [x] `src/Managed/Steps/CreateObjectStepDefinition.cs`
-  - [x] Schema: UnrealEngineConnector (Element), ObjectName, X, Y, Z, OrientationX/Y/Z
+  - [x] Schema: UnrealEngineConnector (Element), ObjectName, X, Y, Z, Heading/Pitch/Roll
   - [x] Implement `IStepDefinition` interface
 - [x] `src/Managed/Steps/CreateObjectStep.cs`
   - [x] Validate element reference and connection health
