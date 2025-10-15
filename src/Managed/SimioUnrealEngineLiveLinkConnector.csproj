@@ -41,14 +41,16 @@
     </Content>
   </ItemGroup>
 
-  <!-- Reference assemblies (will be added when we implement Simio integration) -->
-  <!--
+  <!-- Simio API References for Element and Step implementations -->
   <ItemGroup>
     <Reference Include="SimioAPI">
       <HintPath>$(SIMIO_INSTALL_DIR)\SimioAPI.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="SimioAPI.Extensions">
+      <HintPath>$(SIMIO_INSTALL_DIR)\SimioAPI.Extensions.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
-  -->
 
 </Project>
