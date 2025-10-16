@@ -83,175 +83,102 @@ Enhancement to existing LiveLinkManagerTests.cs
 [TestMethod] public void LiveLinkManager_Shutdown_WithConfiguration_ShouldClearConfig()
 
 Priority 4: Element Property Reading Tests
-New Test File: ElementPropertyTests.cs
+// Priority 4: Element Property Reading Tests REMOVED FROM SCOPE
+# Development Plan
 
-[TestClass]
-public class ElementPropertyTests
-{
-    // Property Reader Tests (7 tests - one per Phase 4 property)
-    [TestMethod] public void ElementProperty_ReadSourceName_ValidProperty_ShouldReturnValue()
-    [TestMethod] public void ElementProperty_ReadEnableLogging_ValidProperty_ShouldReturnValue()
-    [TestMethod] public void ElementProperty_ReadLogFilePath_ValidProperty_ShouldReturnValue()
-    [TestMethod] public void ElementProperty_ReadUnrealEnginePath_ValidProperty_ShouldReturnValue()
-    [TestMethod] public void ElementProperty_ReadHost_ValidProperty_ShouldReturnValue()
-    [TestMethod] public void ElementProperty_ReadPort_ValidProperty_ShouldReturnValue()
-    [TestMethod] public void ElementProperty_ReadConnectionTimeout_ValidProperty_ShouldReturnValue()
-    [TestMethod] public void ElementProperty_ReadRetryAttempts_ValidProperty_ShouldReturnValue()
+## Overview
+Phased, checklist-style plan for the Simio → Unreal LiveLink connector. All day/week counters removed; everything is organized by phase and actionable checklists.
 
-    // Property Validation Integration (4 tests)
-    [TestMethod] public void ElementProperty_ReadAndValidate_AllValid_ShouldCreateConfig()
-    [TestMethod] public void ElementProperty_ReadAndValidate_InvalidValues_ShouldReportErrors()
-    [TestMethod] public void ElementProperty_ReadAndValidate_MissingRequired_ShouldUseDefaults()
-    [TestMethod] public void ElementProperty_ReadAndValidate_BoundaryValues_ShouldValidateCorrectly()
-}
+## Phase 1 — Foundation (completed)
+- [x] Core data types and marshaling (`UnrealIntegration/Types.cs`) implemented and unit-tested.
+- [x] Coordinate conversion utilities (`CoordinateConverter.cs`) implemented and tested.
+- [x] P/Invoke surface (`UnrealLiveLinkNative.cs`) declared with lifecycle and transform/data APIs.
+- [x] High-level managed API (`LiveLinkManager.cs`, `LiveLinkObjectUpdater.cs`) implemented with thread-safety and lazy registration.
 
-Priority 5: Step TraceInformation Tests
-New Test File: StepTraceInformationTests.cs
+## Phase 2 — Simio Integration (completed)
+- [x] Element definition and schema implemented (`SimioUnrealEngineLiveLinkElementDefinition.cs`).
+- [x] Element implementation reads properties and initializes configuration (`SimioUnrealEngineLiveLinkElement.cs`).
+- [x] Steps implemented: CreateObject, SetObjectPositionOrientation, DestroyObject, TransmitValues.
+- [x] Build and deploy automation for Simio UserExtensions available (`BuildManaged.ps1`, `DeployToSimio.ps1`).
 
-[TestClass]
-public class StepTraceInformationTests
-{
-    // Loop Protection Tests (4 tests)
-    [TestMethod] public void SetPositionStep_TraceInformation_HighFrequency_ShouldUseLooProtection()
-    [TestMethod] public void SetPositionStep_TraceInformation_LowFrequency_ShouldTraceEachCall()
-    [TestMethod] public void CreateObjectStep_TraceInformation_ShouldAlwaysTrace()
-    [TestMethod] public void DestroyObjectStep_TraceInformation_ShouldAlwaysTrace()
+## Phase 3 — Native (mock) & Integration (mock completed)
+- [x] Mock native DLL built and used for integration tests (`lib/native/win-x64/UnrealLiveLink.Native.dll`).
+- [x] Mock supports the required C API surface for P/Invoke and simulates LiveLink behavior.
+- [x] Integration tests with the mock validate Initialize → Create → Update → Destroy → Shutdown flows.
 
-    // Message Format Tests (4 tests)
-    [TestMethod] public void CreateObjectStep_TraceMessage_ShouldIncludeObjectNameAndPosition()
-    [TestMethod] public void SetPositionStep_TraceMessage_ShouldIncludePositionCoordinates()
-    [TestMethod] public void DestroyObjectStep_TraceMessage_ShouldIncludeObjectName()
-    [TestMethod] public void TransmitValuesStep_TraceMessage_ShouldIncludeValueCount()
-}
+## Phase 4 — Essential Properties & Configuration (completed)
+- [x] Element exposes essential properties: SourceName, EnableLogging (ExpressionProperty, default True), LogFilePath, UnrealEnginePath (user-specified), LiveLinkHost, LiveLinkPort, ConnectionTimeout, RetryAttempts.
+- [x] `LiveLinkConfiguration` implemented with validation helpers and `CreateValidated()`.
+- [x] PropertyValidation, PathUtils, NetworkUtils implemented under `src/Managed/Utils/`.
+- [x] TraceInformation added with loop-protection; shutdown trace no longer overwrites Simio CSV traces.
 
-est Coverage Impact Analysis
-Current Coverage: 37 tests
-Proposed Additional: 52 new tests
-Total Coverage: 89 tests
+## Phase 5 — Testing & Hardening (current)
+Goal: Increase confidence in property handling and reduce regressions by adding focused unit tests and a small set of integration tests that use the mock DLL.
 
-Coverage Areas:
+### Test Coverage & Priorities
+- [ ] `tests/Unit.Tests/UtilsTests.cs` — PathUtils, PropertyValidation, NetworkUtils
+- [ ] `tests/Unit.Tests/LiveLinkConfigurationTests.cs` — Defaults, CreateValidated, Validate edge-cases, ToString
+    - [ ] ~~`tests/Unit.Tests/ElementPropertyTests.cs` — ExpressionProperty handling, defaults, validation reporting~~ (removed from scope)
+- [ ] `tests/Unit.Tests/LiveLinkManagerTests.cs` — Initialize/Shutdown with valid/invalid configs, config available after init
+- [ ] `tests/Unit.Tests/StepTraceInformationTests.cs` — Loop protection, message format, shutdown behavior
 
-✅ Phase 1-2 Foundation: Complete coverage (37 tests)
-🆕 Phase 4 Utils: Comprehensive coverage (23 tests)
-🆕 Phase 4 Configuration: Complete coverage (15 tests)
-🆕 Phase 4 Enhanced Manager: Extended coverage (6 tests)
-🆕 Phase 4 Element Properties: Complete coverage (12 tests)
-🆕 Phase 4 TraceInformation: Complete coverage (8 tests)
-🎯 Implementation Priority Recommendation
-Week 1:
+### Coverage Impact
+- Current tests: 37 passing
+- Proposed additional: ~50 focused tests
+- Expected total: 80–90 after Phase 4 coverage
 
-UtilsTests.cs (23 tests) - HIGHEST PRIORITY
-Tests core validation infrastructure
-Critical for property system reliability
-Week 2:
-2. LiveLinkConfigurationTests.cs (15 tests) - HIGH PRIORITY
+### Implementation Priority
+- [ ] UtilsTests — highest priority, core validation infrastructure
+- [ ] LiveLinkConfigurationTests — central configuration system
+- [ ] Enhanced LiveLinkManagerTests — new configuration features
+- [ ] StepTraceInformationTests — integration-level, completes coverage
 
-Tests the central configuration system
-Essential for Phase 4 validation
-Week 3:
-3. Enhanced LiveLinkManager tests (6 tests) - MEDIUM PRIORITY
+### Expected Benefits
+- Reliability: Catch edge cases in property validation
+- Confidence: Full coverage of Phase 4 enhancements
+- Regression Protection: Prevent future bugs in Utils and Configuration
+- Documentation: Tests serve as usage examples
+- Phase 5 Readiness: Solid foundation for native layer development
 
-Extends existing coverage
-Tests new configuration features
-Week 4:
-4. ElementPropertyTests.cs (12 tests) + StepTraceInformationTests.cs (8 tests) - LOWER PRIORITY
+## Phase 6 — Native Implementation (next)
+Goal: Replace the mock DLL with a real Unreal Engine LiveLink plugin exposing a minimal C API used by the managed layer via P/Invoke.
 
-Integration-level testing
-Completes comprehensive coverage
-🚀 Expected Benefits
-Reliability: Catch edge cases in property validation
-Confidence: Full coverage of Phase 4 enhancements
-Regression Protection: Prevent future bugs in Utils and Configuration
-Documentation: Tests serve as usage examples
-Phase 5 Readiness: Solid foundation for native layer development
-Recommendation: Start with Priority 1 (UtilsTests.cs) as it provides the most critical coverage for the new infrastructure that all other components depend on.
+### Native Implementation Checklist
+- [ ] Add UBT target & build config (`UnrealLiveLink.Native.Target.cs`, `UnrealLiveLink.Native.Build.cs`)
+- [ ] Add public headers (`UnrealLiveLink.Native.h`, `UnrealLiveLink.Types.h`)
+- [ ] Implement LiveLinkBridge singleton (provider creation, subject registry, name caching)
+- [ ] Implement C exports (`ULL_Initialize`, `ULL_Shutdown`, `ULL_IsConnected`, `ULL_RegisterObject`, `ULL_UpdateObject`, `ULL_RemoveObject`, `ULL_RegisterDataSubject`, `ULL_UpdateDataSubject`)
+- [ ] Validate marshaling (native test harness or console app)
+- [ ] Build & integration test (UBT build, verify exports, run managed P/Invoke tests, replace mock DLL, run end-to-end checks)
 
+### Risks & Mitigations
+- Unreal is heavy: use mock for CI; reserve real-UE runs for developer machines or a self-hosted runner
+- Marshaling mismatches: protect with explicit struct layout tests and a small native test harness
 
+## Phase 7 — End-to-End Testing & Integration
+Goal: Validate the complete managed and native layers in Simio and Unreal.
 
-
-
-### Day 17-18: Project Setup
-
-- [ ] `src/Native/UnrealLiveLink.Native/UnrealLiveLink.Native.Target.cs`
-  - [ ] UBT target configuration for Program type
-  - [ ] Minimal dependencies, Development configuration
-- [ ] `src/Native/UnrealLiveLink.Native/UnrealLiveLink.Native.Build.cs`
-  - [ ] Required modules: Core, CoreUObject, LiveLink, LiveLinkInterface, Messaging, UdpMessaging
-  - [ ] Public definitions for exports
-- [ ] Verify UBT can generate project and build skeleton
-
-### Day 19-20: C++ Implementation  
-- [ ] `src/Native/UnrealLiveLink.Native/Public/UnrealLiveLink.Types.h`
-  - [ ] `ULL_Transform` struct matching C# layout exactly
-  - [ ] Return codes: `ULL_OK`, `ULL_ERROR`, `ULL_NOT_CONNECTED`, `ULL_NOT_INITIALIZED`
-- [ ] `src/Native/UnrealLiveLink.Native/Public/UnrealLiveLink.Native.h`
-  - [ ] Complete C API declarations with documentation
-  - [ ] Enhanced `ULL_Initialize()` signature accepting configuration parameters
-  - [ ] All lifecycle, transform, and data subject functions
-- [ ] `src/Native/UnrealLiveLink.Native/Private/LiveLinkBridge.h`
-  - [ ] Modern C++ wrapper class with singleton pattern
-  - [ ] Configuration storage (host, port, timeouts, logging settings)
-  - [ ] Subject registry (`TMap<FString, FSubjectInfo>`)
-  - [ ] Name caching for performance
-  - [ ] Support for Transform and Data subject types
-
-### Day 21-22: Core Implementation
-- [ ] `src/Native/UnrealLiveLink.Native/Private/LiveLinkBridge.cpp`
-  - [ ] Singleton lifecycle with Unreal Engine initialization
-  - [ ] `Initialize()` creates `ILiveLinkProvider` with configuration parameters
-  - [ ] Network endpoint configuration (host, port from managed layer)
-  - [ ] Transform subject registration and updates
-  - [ ] Data subject registration and updates (with identity transform)
-  - [ ] Subject registry management
-  - [ ] Configurable logging implementation
-  - [ ] Connection retry logic with exponential backoff
-  - [ ] Error handling and timeout management
-
-### Day 23: C Exports & Configuration Integration
-- [ ] `src/Native/UnrealLiveLink.Native/Private/UnrealLiveLink.Native.cpp`
-  - [ ] Enhanced `ULL_Initialize()` accepting configuration:
-    ```cpp
-    extern "C" int ULL_Initialize(const char* providerName, 
-                                  const char* logFilePath,
-                                  bool enableLogging,
-                                  const char* unrealEnginePath,
-                                  const char* host,
-                                  int port,
-                                  double timeoutSeconds,
-                                  int retryAttempts);
-    ```
-  - [ ] All `extern "C"` exports calling LiveLinkBridge
-  - [ ] Parameter validation and array conversion helpers
-  - [ ] Configuration parameter marshaling to C++ structures
-  - [ ] Error code translation with detailed logging
-  - [ ] Memory safety (null checks, bounds validation)
-
-### Day 24: Build & Export Validation
-- [ ] Build with UBT, verify DLL exports (`dumpbin /exports`)
-- [ ] Test basic P/Invoke from C# test program
-- [ ] Verify struct marshaling matches expectations
-- [ ] Replace mock DLL with real implementation
-
-## Phase 6: End-to-End Testing (Days 25-26)
-
-### Day 25: Essential Properties Integration Testing
-- [ ] Test Element creation with all new properties in Simio UI
+### Essential Properties / Integration Tests
+- [ ] Test element creation with all properties in Simio UI
 - [ ] Validate property defaults and user input handling
-- [ ] Test file path normalization with relative/absolute paths
-- [ ] Test Unreal Engine path validation (user-provided paths)
-- [ ] Test network endpoint validation (valid/invalid hosts and ports)
-- [ ] Test configuration validation error reporting
-- [ ] Validate enhanced mock DLL with configurable logging
-- [ ] Test connection retry logic and timeout handling
+- [ ] Test file path normalization (relative/absolute)
+- [ ] Test Unreal Engine path validation (user-specified)
+- [ ] Test network endpoint validation and error reporting
+- [ ] Validate mock DLL logging and error simulation for retry logic
 
-### Day 26: Complete Integration Testing  
-- [ ] Test complete managed layer with real native DLL
-- [ ] Validate initialization and connection flow with all properties
-- [ ] Test transform objects with Unreal Editor LiveLink window
-- [ ] Test data subjects and property reading in Unreal Blueprints
-- [ ] Performance testing with multiple objects
-- [ ] Manual testing in Simio with sample model
-- [ ] Test all Steps work in actual Simio simulation
-- [ ] Verify objects appear and move correctly in Unreal
-- [ ] Test TransmitValuesStep with dashboard in Unreal
-- [ ] Error handling validation (no Unreal running, connection lost, invalid paths)
+### Complete Integration / System Tests
+- [ ] Replace mock DLL locally with native plugin and validate P/Invoke
+- [ ] Validate Initialize → Create → Update → Destroy → Shutdown flows with Unreal Editor LiveLink
+- [ ] Verify transforms show in Unreal actors/components
+- [ ] Validate data subjects and property reading in Blueprints
+- [ ] Performance sanity check (many objects @ moderate frequency)
+- [ ] Manual Simio model test with sample model exercising steps
+
+## CI & Packaging
+Checklist
+- [ ] Add GitHub Actions: restore → build → run unit tests (skip Simio-dependent tests unless artifacts available)
+- [ ] Add packaging script to produce deployable ZIP for Simio UserExtensions
+
+## Immediate Choices
+- [ ] Implement `tests/Unit.Tests/UtilsTests.cs` and run `dotnet test` locally
+- [ ] Add a GitHub Actions workflow that runs the existing unit tests and reports results (skipping integration tests that need Simio)

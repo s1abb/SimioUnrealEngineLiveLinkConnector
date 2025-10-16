@@ -52,10 +52,12 @@ Notes and gotchas
 - If you see a System.Drawing.Common version mismatch when building, tests include an `App.config` binding redirect to the build-chosen version; it is safe to ignore the MSB3277 warnings if tests run.
 - Use the mock native DLL for development when Unreal Engine isn't available.
 
-Quick troubleshooting
-- "csc.exe not found": run `.build\\SetupVSEnvironment.ps1` in this PowerShell session.
-- Tests failing with FileNotFoundException for Simio assemblies: install Simio or set `SimioInstallDir` when running tests.
-- Locked files during cleanup: close any running process using the DLL and re-run the cleanup script.
+
+Unit Test Best Practices
+- Utility unit tests should avoid requiring Simio context objects (`IExecutionContext`, `IExecutionInformation`).
+- Do not create custom dummy implementations of Simio interfaces for unit tests; these interfaces require many members and are best handled by real Simio objects or integration tests.
+- For context-dependent logic, use integration tests or real Simio objects as test context.
+- Follow the patterns in existing test files: focus on context-independent logic and managed code.
 
 Useful commands
 - Build everything with scripts:
