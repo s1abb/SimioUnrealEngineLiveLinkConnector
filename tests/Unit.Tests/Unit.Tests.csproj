@@ -19,4 +19,24 @@
     <ProjectReference Include="..\..\src\Managed\SimioUnrealEngineLiveLinkConnector.csproj" />
   </ItemGroup>
 
+  <!-- Post-build target: copy Simio runtime assemblies into the test output folder if present.
+       This makes tests reproducible on developer machines and CI where Simio is installed.
+       The copy is conditional: it will only run if the source files exist. -->
+  <Target Name="CopySimioRuntimeAssemblies" AfterTargets="Build">
+    <PropertyGroup>
+      <!-- Default Simio installation path; can be overridden by setting SimioInstallDir MSBuild property -->
+      <SimioInstallDir Condition=" '$(SimioInstallDir)'=='' ">C:\Program Files\Simio LLC\Simio</SimioInstallDir>
+      <SimioApiExtensions>$(SimioInstallDir)\SimioAPI.Extensions.dll</SimioApiExtensions>
+      <SimioApi>$(SimioInstallDir)\SimioAPI.dll</SimioApi>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_SimioRuntimeFiles Include="$(SimioApiExtensions)" Condition="Exists('$(SimioApiExtensions)')" />
+      <_SimioRuntimeFiles Include="$(SimioApi)" Condition="Exists('$(SimioApi)')" />
+    </ItemGroup>
+
+    <Message Importance="High" Text="Copying Simio runtime assemblies to test output if present (SimioInstallDir=$(SimioInstallDir))." />
+    <Copy SourceFiles="@(_SimioRuntimeFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

@@ -51,9 +51,9 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
             retryAttemptsProperty.CategoryName = "LiveLink Connection";
 
             // === Logging Category ===
-            var enableLoggingProperty = schema.PropertyDefinitions.AddRealProperty("EnableLogging", 0);
+                var enableLoggingProperty = schema.PropertyDefinitions.AddExpressionProperty("EnableLogging", "True");
             enableLoggingProperty.DisplayName = "Enable Logging";
-            enableLoggingProperty.Description = "Enable detailed logging for troubleshooting (0=disabled, 1=enabled)";
+                enableLoggingProperty.Description = "Enable or disable detailed logging for troubleshooting (True/False, default True)";
             enableLoggingProperty.CategoryName = "Logging";
 
             var logFilePathProperty = schema.PropertyDefinitions.AddStringProperty("LogFilePath", "SimioUnrealLiveLink.log");
