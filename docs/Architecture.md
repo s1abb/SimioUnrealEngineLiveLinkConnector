@@ -44,7 +44,7 @@ C:.
 +---lib
 |   \---native
 |       \---win-x64
-|               UnrealLiveLink.Native.dll
+|               <!-- Note: the mock native DLL is produced locally by build scripts and is intentionally untracked -->
 |               UnrealLiveLink.Native.pdb
 |               VERSION.txt
 |
@@ -58,287 +58,73 @@ C:.
 |   |   |
 |   |   +---Steps
 |   |   |       CreateObjectStep.cs
-|   |   |       CreateObjectStepDefinition.cs
-|   |   |       DestroyObjectStep.cs
-|   |   |       DestroyObjectStepDefinition.cs
-|   |   |       SetObjectPositionOrientationStep.cs
-|   |   |       SetObjectPositionOrientationStepDefinition.cs
-|   |   |       TransmitValuesStep.cs
-|   |   |       TransmitValuesStepDefinition.cs
-|   |   |
-|   |   \---UnrealIntegration
-|   |           CoordinateConverter.cs
-|   |           LiveLinkManager.cs
-|   |           LiveLinkObjectUpdater.cs
-|   |           Types.cs
-|   |           UnrealLiveLinkNative.cs
-|   |
-|
-\---Native
-    \---UnrealLiveLink.Native
-        |   UnrealLiveLink.Native.Build.cs
-        |   UnrealLiveLink.Native.Target.cs
-        |
-        +---Private
-        |       CoordinateHelpers.h
-        |       LiveLinkBridge.cpp
-        |       LiveLinkBridge.h
-        |       UnrealLiveLink.Native.cpp
-        |
-        \---Public
-                UnrealLiveLink.Native.h
-                UnrealLiveLink.Types.h
-|
-\---tests
-    \---Integration.Tests
+# Architecture (Concise)
 
-## System Components
+Purpose
+- Provide a short, accurate description of the system architecture for contributors and reviewers.
 
-### Managed Layer (C#)
-**Purpose:** Simio extension providing custom Elements and Steps for Unreal Engine integration.
+Current status (short)
+- Managed layer (C#): implemented and validated. Provides Simio Element and 4 Steps (Create, SetPositionOrientation, TransmitValues, Destroy).
+- Native layer (C++): mock native DLL implemented for development/testing. A real Unreal Engine LiveLink plugin is scaffolded but not yet implemented.
+- Tests: unit tests and integration tests run locally with the mock; unit tests are passing after test-run fixes.
+- Build: scripts exist for environment setup, mock native build, managed build, test and deployment. Deployment script requests elevation when writing to Program Files.
 
-- **Simio Integration** (`Element/`, `Steps/`)
-  - **SimioUnrealEngineLiveLinkElement:** Manages LiveLink connection lifecycle and health
-  - **CreateObjectStep:** Registers new 3D objects with LiveLink and sets initial transform
-  - **SetObjectPositionOrientationStep:** Updates object transforms each simulation step
-  - **TransmitValuesStep (NEW!):** Streams pure simulation data/metrics without 3D objects
-  - **DestroyObjectStep:** Unregisters objects from LiveLink
+High-level components
 
-- **UnrealIntegration** (`UnrealIntegration/`)
-  - `Types.cs`: C# structs matching native layout (`ULL_Transform`) for P/Invoke marshaling
-  - `UnrealLiveLinkNative.cs`: P/Invoke declarations for all native DLL functions
-  - `CoordinateConverter.cs`: Simio ↔ Unreal coordinate system and rotation conversion
-  - `LiveLinkObjectUpdater.cs`: Per-object wrapper with lazy registration and property management
-  - `LiveLinkManager.cs`: Singleton managing connection lifecycle and object registry
+1) Managed layer (Simio integration)
 
-### Native Layer (C++)
-**Purpose:** Simplified, purpose-built LiveLink bridge designed specifically for Simio's requirements.
+- Purpose: Implement Simio Element and Steps, coordinate conversion, and marshal data to the native bridge.
+- Key classes/files:
+    - `Element/SimioUnrealEngineLiveLinkElementDefinition.cs` — element schema. Exposes 7 essential properties (SourceName, EnableLogging, LogFilePath, UnrealEnginePath, LiveLinkHost, LiveLinkPort, ConnectionTimeout, RetryAttempts). Note: `EnableLogging` is an ExpressionProperty (default True).
+    - `Element/SimioUnrealEngineLiveLinkElement.cs` — reads configuration into `LiveLinkConfiguration`, validates it, and manages lifecycle via `LiveLinkManager`.
+    - `UnrealIntegration/LiveLinkManager.cs` — singleton that owns the native integration and object registry.
+    - `UnrealIntegration/LiveLinkObjectUpdater.cs` — per-object wrapper, lazy registration, property management.
+    - `UnrealIntegration/Types.cs` and `UnrealIntegration/UnrealLiveLinkNative.cs` — P/Invoke types and declarations.
+    - `UnrealIntegration/CoordinateConverter.cs` — Simio ↔ Unreal conversion utilities.
 
-**Design Principles:**
-- Minimal API surface (only what Simio needs)
-- Two subject types: Transform objects (3D) and Data subjects (metrics)
-- Modern C++ with clean internal implementation
-- Simple P/Invoke interface for C# interop
+2) Native layer (C++ bridge)
 
-- **Public API** (`Public/`)
-  - `UnrealLiveLink.Native.h`: Clean C API with lifecycle, transform, and data functions
-  - `UnrealLiveLink.Types.h`: C-compatible structs (`ULL_Transform`, return codes)
+- Purpose: Bridge from managed P/Invoke into Unreal's LiveLink APIs (subject registration and frame updates).
+- Current state:
+    - Mock DLL (`build/BuildMockDLL.ps1` → `lib/native/win-x64/UnrealLiveLink.Native.dll`) exists and is used for testing.
+    - The Unreal plugin scaffold is present under `src/Native/UnrealLiveLink.Native/` for future implementation.
+- Design notes:
+    - Minimal, C-compatible API for P/Invoke (`ULL_Initialize`, `ULL_RegisterObject`, `ULL_UpdateObject`, `ULL_UpdateDataSubject`, `ULL_RemoveObject`, `ULL_Shutdown`).
+    - Two subject types: Transform (3D) and Data (named float properties).
 
-- **Implementation** (`Private/`)
-  - `UnrealLiveLink.Native.cpp`: C API exports with parameter validation
-  - `LiveLinkBridge.h/.cpp`: Modern C++ wrapper with subject registry and name caching
-  - `CoordinateHelpers.h`: Transform utilities (optional)
+Data flow (summary)
+- Simio Step (Create/Set/Transmit) → LiveLinkObjectUpdater / LiveLinkManager → CoordinateConverter → P/Invoke call → native bridge → Unreal LiveLink provider → LiveLink message bus → Unreal actors/components or Blueprints.
 
-**Build:** Compiled using Unreal Build Tool (UBT) as a Program target linking against LiveLink, CoreUObject, and messaging modules.
+Key decisions & rationale
+- Mock-first approach: The mock native DLL enables rapid development and CI-friendly integration tests without requiring a full Unreal Engine environment.
+- Untracked mock binary: The mock DLL is produced locally and intentionally untracked to avoid committing generated binaries.
+- Configuration object: `LiveLinkConfiguration` centralizes element properties and validation, improving testability and clarity.
+- TraceInformation policy: initialization writes a trace line. Shutdown does not write a final TraceInformation to avoid overwriting Simio trace files at simulation end.
+- Test runtime behavior: the test project copies Simio runtime DLLs into test output when available and uses an `App.config` redirect for System.Drawing.Common to avoid FileLoadExceptions.
 
-## Data Flow
+Build & test notes
+- Run `.
+\build\SetupVSEnvironment.ps1` (once per session) to prepare toolchain.
+- Build mock native: `.
+\build\BuildMockDLL.ps1` (produces local mock DLL).
+- Build managed: `.
+\build\BuildManaged.ps1` or `dotnet build`.
+- Run unit tests: `dotnet test tests/Unit.Tests/Unit.Tests.csproj` (post-build copies Simio DLLs if present).
 
-### Transform Objects (3D Visualization)
-```
-Simio Model Entity
-    ↓ (Execute Step)
-SetObjectPositionOrientationStep
-    ↓ (Get or create updater)
-LiveLinkManager.GetOrCreateObject(name)
-    ↓ (Coordinate conversion)
-CoordinateConverter.SimioToUnreal(position, euler) → (position, quaternion)
-    ↓ (P/Invoke)
-UnrealLiveLinkNative.ULL_UpdateObject(name, transform)
-    ↓ (DLL boundary)
-UnrealLiveLink.Native.dll → LiveLinkBridge.UpdateTransformSubject()
-    ↓ (LiveLink API)
-FLiveLinkProvider.UpdateSubjectFrameData(FLiveLinkTransformFrameData)
-    ↓ (UDP Message Bus)
-Unreal Engine LiveLink Plugin
-    ↓ (Apply to scene)
-Actor with LiveLinkComponent
-```
+Next priorities (top 3)
+1. Native: implement the real Unreal LiveLink plugin and validate P/Invoke compatibility (high priority).
+2. CI: add a GitHub Actions workflow to run restore → build → test (medium-high). Consider self-hosted runner for integration tests or provide Simio runtime artifacts to CI.
+3. Packaging: create a reproducible UserExtensions package and optionally an installer for easier deployment (medium).
 
-### Data Subjects (Metrics/KPIs) - NEW!
-```
-Simio Model (System State)
-    ↓ (Execute Step)
-TransmitValuesStep
-    ↓ (Collect metrics)
-Repeat Group: PropertyName + PropertyValue expressions
-    ↓ (P/Invoke)
-UnrealLiveLinkNative.ULL_UpdateDataSubject(subjectName, propNames[], values[])
-    ↓ (DLL boundary)
-UnrealLiveLink.Native.dll → LiveLinkBridge.UpdateDataSubject()
-    ↓ (LiveLink API, identity transform)
-FLiveLinkProvider.UpdateSubjectFrameData(FLiveLinkBaseFrameData)
-    ↓ (UDP Message Bus)
-Unreal Engine LiveLink Plugin
-    ↓ (Read in Blueprints)
-Get LiveLink Property Value("PropertyName") → float
-```
+Notes for contributors
+- Do not commit generated binaries. Use `build/BuildMockDLL.ps1` to produce the mock locally.
+- If tests fail with System.Drawing.Common, ensure the test project's `App.config` is present or run tests on a machine with matching System.Drawing.Common.
 
-## Coordinate Systems
+Contact / ownership
+- Managed layer: primary maintained in `src/Managed/` (C# team / dev)
+- Native layer: `src/Native/UnrealLiveLink.Native/` (native lead)
+- CI & packaging: devops / release owner
 
-**Simio:** Right-handed, Y-up, meters, Euler angles (degrees)  
-**Unreal:** Left-handed, Z-up, centimeters, Quaternions  
+---
 
-**Conversion:** Performed in `CoordinateConverter.cs`
-- **Position:** (X, Y, Z) → (X×100, -Z×100, Y×100) - axis remapping with unit conversion
-- **Rotation:** Euler degrees → Quaternion [X,Y,Z,W] with axis remapping
-- **Scale:** (X, Y, Z) → (X, Z, Y) - axis remapping only
-
-## Communication Protocol
-
-**LiveLink Message Bus (UDP)**
-- **Auto-discovery:** Native bridge broadcasts provider presence, Unreal discovers automatically
-- **Stateless:** Each update is independent (no session state)
-- **Subject-based:** Objects/data streams identified by string names
-- **Frame timing:** Includes world time for synchronization
-- **Two subject types:**
-  - **Transform Role:** 3D objects with position/rotation/scale + optional properties
-  - **Basic Role:** Data-only subjects with named float properties (identity transform)
-
-**Connection Flow:**
-1. `ULL_Initialize("ProviderName")` - Create provider, start broadcasting
-2. Unreal Editor LiveLink window shows provider in Message Bus Sources
-3. Add source - establishes connection
-4. `ULL_IsConnected()` returns true when handshake complete
-5. Register subjects, stream updates at desired frequency
-
-## Build Dependencies
-
-**Managed:**
-- .NET Framework 4.8
-- SimioAPI.dll (Simio SDK)
-- UnrealLiveLink.Native.dll (pre-built or built via BuildNative.ps1)
-
-**Native:**
-- Unreal Engine 5.6+ source code
-- Unreal Build Tool (UBT)
-- Required UE modules: Core, CoreUObject, LiveLink, LiveLinkInterface, Messaging, UdpMessaging
-- MSVC 2022 (required by UBT)
-- Windows 10/11 x64
-
-## Deployment
-
-**Simio Extension:**
-1. Managed DLL → `%USERPROFILE%\Documents\Simio\UserExtensions\`
-2. Native DLL → Same directory (automatically copied by .csproj)
-
-**Unreal Engine:**
-1. Enable LiveLink plugin
-2. Add Message Bus Source in LiveLink window
-3. Add LiveLinkComponent to actors, set Subject Name to match Simio object names
-
-## Design Patterns
-
-**Managed Layer:**
-- **Factory Pattern:** StepDefinitions create Step instances via Simio's plugin architecture
-- **Singleton Pattern:** LiveLinkManager manages single connection per process
-- **Wrapper Pattern:** LiveLinkObjectUpdater encapsulates per-object state and lazy registration
-- **Strategy Pattern:** CoordinateConverter handles different coordinate system transformations
-
-**Native Layer:**
-- **Singleton Pattern:** FLiveLinkBridge manages single FLiveLinkProvider instance
-- **Bridge Pattern:** C++ classes bridge between C exports and Unreal's C++ API
-- **Registry Pattern:** Subject registry tracks registration state and property schemas
-- **RAII Pattern:** Automatic resource cleanup in destructors
-- **Export Pattern:** `extern "C"` functions with `CallingConvention.Cdecl` for P/Invoke
-
-## Error Handling
-
-**Connection Failures:** 
-- Steps check `Element.IsConnectionHealthy` before operations
-- Graceful degradation: simulation continues, warnings logged
-- Clear error messages via `context.ExecutionInformation.ReportError()`
-
-**Missing Objects:** 
-- Lazy registration: objects/subjects auto-register on first update
-- `LiveLinkObjectUpdater` tracks registration state per object
-
-**Invalid Data:**
-- Parameter validation in native layer (null checks, array bounds)
-- Property count validation (must match registration)
-- Coordinate conversion handles NaN/infinity gracefully
-
-**DLL Load Failures:** 
-- `DllNotFoundException` with troubleshooting guidance
-- Fallback mode consideration (simulation runs without visualization)
-
-**Native Errors:**
-- Return codes: `ULL_OK`, `ULL_ERROR`, `ULL_NOT_CONNECTED`, `ULL_NOT_INITIALIZED`
-- Comprehensive logging via Unreal's logging system
-
-## Performance Characteristics
-
-**Targets:**
-- **Latency:** < 5ms (C# call to Unreal receipt)
-- **Transform Throughput:** 1000+ objects @ 30 Hz sustained
-- **Data Subject Throughput:** 100+ subjects @ 10 Hz (typical dashboard rate)
-- **Memory per Object:** < 1 KB (static + per-frame overhead)
-- **Initialization Time:** < 2 seconds (from Initialize() to first connection)
-
-**Optimizations:**
-- **Name Caching:** FString→FName conversions cached in native layer
-- **Subject Registry:** Avoid repeated registration calls
-- **Lazy Registration:** Auto-register on first update
-- **Minimal API:** Only functions Simio actually needs
-- **Buffer Reuse:** Property arrays reused in managed layer
-
-## Key Architectural Decisions
-
-### LiveLink vs File-Based Approaches
-- **Memory-based streaming** (not file I/O like USD/Omniverse)
-- **UDP Message Bus** protocol for real-time performance
-- **Subject-based** identification (not file paths)
-- **Stateless updates** (no load/modify/save cycle)
-
-### Two Subject Types (Innovation)
-- **Transform Subjects:** 3D objects with position/rotation/scale
-- **Data Subjects:** Pure metrics/KPIs without 3D representation
-- **Unified API:** Both support custom float properties
-- **Blueprint Integration:** All data accessible via "Get LiveLink Property Value"
-
-### Simplified Design Principles
-- **Minimal API surface:** Only what Simio needs (not general-purpose)
-- **Single provider per process:** Matches Simio's single-simulation model
-- **Auto-registration:** Reduces setup complexity for modelers
-- **Clean separation:** C# handles Simio integration, C++ handles Unreal integration
-
-## Usage Patterns
-
-### Transform Objects
-```csharp
-// Simio modeler workflow:
-1. Add UnrealEngineLiveLinkElement to model (set SourceName)
-2. CreateObjectStep: Register "Forklift_01" with initial position
-3. SetObjectPositionOrientationStep: Update position each simulation step
-4. (Optional) Include custom properties: Speed, Load, BatteryLevel
-5. DestroyObjectStep: Cleanup when entity destroyed
-
-// Unreal side:
-1. Enable LiveLink plugin
-2. Add Message Bus Source → "SimioSimulation" appears
-3. Add LiveLinkComponent to Actor, set Subject Name = "Forklift_01"
-4. Read properties in Blueprint: Get LiveLink Property Value("Speed")
-```
-
-### Data Subjects (NEW!)
-```csharp
-// Simio modeler workflow:
-1. TransmitValuesStep with SubjectName = "ProductionMetrics"
-2. Repeat Group: Add rows for "Throughput", "Utilization", "QueueDepth"
-3. Each row evaluates Simio expressions for current values
-4. Called periodically (e.g., every minute) to update dashboard
-
-// Unreal side:
-1. No 3D actor needed
-2. Blueprint: Get LiveLink Subject Data("ProductionMetrics")
-3. Extract properties: Get Property Value("Throughput") → display on UI
-4. Build real-time dashboards, charts, HUDs
-```
-
-## Future Considerations
-
-- **Cross-Platform:** Linux support (libUnrealLiveLink.Native.so)
-- **Network Distribution:** Multiple Unreal instances via unicast endpoints  
-- **Performance:** Batch updates for high object counts
-- **Advanced Data:** Animation curves, skeletal data beyond transforms
-- **Integration:** Web dashboards consuming same LiveLink data
-- **Reliability:** Connection recovery, automatic reconnection
+This file replaces the previous long-form architecture doc and focuses on current, accurate facts and next steps. If you want, I will commit the tidy and push it to `main`.
