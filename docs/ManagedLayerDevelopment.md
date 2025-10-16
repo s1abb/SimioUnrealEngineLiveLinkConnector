@@ -502,8 +502,20 @@ public static class PropertyValidation
     
     public static string ValidateUnrealEnginePath(string path, IExecutionContext context)
     {
-        // Check for UE installation, validate UE4Editor.exe or UnrealEditor.exe
-        // Return normalized path or report error
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            context.ExecutionInformation.ReportError("Unreal Engine installation path is required. Please specify the full path to your Unreal Engine installation directory.");
+            return string.Empty;
+        }
+        
+        // Use UnrealEngineDetection to validate the installation
+        if (!UnrealEngineDetection.IsValidUnrealEngineInstallation(path))
+        {
+            context.ExecutionInformation.ReportError($"Invalid Unreal Engine installation at '{path}'. Expected UE4Editor.exe or UnrealEditor.exe in Engine/Binaries/Win64/ subdirectory.");
+            return string.Empty;
+        }
+        
+        return Path.GetFullPath(path);
     }
     
     public static void ValidateNetworkEndpoint(string host, int port, IExecutionContext context)
@@ -516,7 +528,7 @@ public static class PropertyValidation
 
 **PathUtils.cs** - Path handling utilities
 **NetworkUtils.cs** - LiveLink connection helpers  
-**UnrealEngineDetection.cs** - Auto-detect UE installations
+**UnrealEngineDetection.cs** - Validate user-provided UE installations
 var repeatGroup = (IRepeatingPropertyReader)_readers.GetProperty("Values");
 int rowCount = repeatGroup.GetCount(context);
 

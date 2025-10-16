@@ -41,10 +41,15 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
                 // Remove the object through LiveLinkManager
                 bool removed = LiveLinkManager.Instance.RemoveObject(objectName);
                 
-                if (!removed)
+                if (removed)
+                {
+                    // 🆕 ADD TRACE INFORMATION - Currently missing!
+                    context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' destroyed successfully");
+                }
+                else
                 {
                     // This is just a warning since the object might already be destroyed
-                    // We can't use ReportWarning here as it doesn't exist in the API
+                    context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' was not found (may have already been destroyed)");
                 }
 
                 return ExitType.FirstExit;

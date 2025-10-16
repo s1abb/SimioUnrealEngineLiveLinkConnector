@@ -2,30 +2,128 @@ using System;
 using SimioAPI;
 using SimioAPI.Extensions;
 using SimioUnrealEngineLiveLinkConnector.UnrealIntegration;
+using SimioUnrealEngineLiveLinkConnector.Utils;
 
 namespace SimioUnrealEngineLiveLinkConnector.Element
 {
     /// <summary>
     /// Element that manages the LiveLink connection lifecycle for a simulation run.
     /// Provides connection health status and manages initialization/shutdown.
+    /// Enhanced with 7 essential properties for comprehensive configuration.
     /// </summary>
     public class SimioUnrealEngineLiveLinkElement : IElement
     {
         private readonly IElementData _elementData;
-        private readonly string _sourceName;
+        private readonly LiveLinkConfiguration _configuration;
 
         public SimioUnrealEngineLiveLinkElement(IElementData elementData)
         {
             _elementData = elementData ?? throw new ArgumentNullException(nameof(elementData));
             
-            // Read the SourceName property from the element data
-            IPropertyReader sourceNameReader = elementData.Properties.GetProperty("SourceName");
-            _sourceName = sourceNameReader.GetStringValue(elementData.ExecutionContext);
+            // Read ALL 7 essential properties with validation
+            _configuration = ReadAndValidateProperties(elementData);
+        }
+
+        /// <summary>
+        /// Reads all 7 essential properties from ElementData and creates validated configuration
+        /// </summary>
+        private LiveLinkConfiguration ReadAndValidateProperties(IElementData elementData)
+        {
+            var context = elementData.ExecutionContext;
             
-            // Ensure we have a valid source name
-            if (string.IsNullOrWhiteSpace(_sourceName))
+            // Read properties with defaults
+            string sourceName = ReadStringProperty("SourceName", elementData, "SimioSimulation");
+            bool enableLogging = ReadBooleanProperty("EnableLogging", elementData, false);
+            string logFilePath = ReadStringProperty("LogFilePath", elementData, "SimioUnrealLiveLink.log");
+            string unrealEnginePath = ReadStringProperty("UnrealEnginePath", elementData, string.Empty);
+            string liveLinkHost = ReadStringProperty("LiveLinkHost", elementData, "localhost");
+            int liveLinkPort = ReadIntegerProperty("LiveLinkPort", elementData, 11111);
+            double connectionTimeout = ReadRealProperty("ConnectionTimeout", elementData, 5.0);
+            int retryAttempts = ReadIntegerProperty("RetryAttempts", elementData, 3);
+
+            // Validate and normalize properties
+            var config = new LiveLinkConfiguration
             {
-                _sourceName = "SimioSimulation"; // Default fallback
+                SourceName = sourceName,
+                EnableLogging = enableLogging,
+                LogFilePath = PropertyValidation.NormalizeFilePath(logFilePath, context),
+                UnrealEnginePath = PropertyValidation.ValidateUnrealEnginePath(unrealEnginePath, context),
+                Host = liveLinkHost,
+                Port = liveLinkPort,
+                ConnectionTimeout = TimeSpan.FromSeconds(PropertyValidation.ValidateTimeout(connectionTimeout, context)),
+                RetryAttempts = PropertyValidation.ValidateRetryAttempts(retryAttempts, context)
+            };
+
+            // Additional network validation
+            PropertyValidation.ValidateNetworkEndpoint(config.Host, config.Port, context);
+
+            return config;
+        }
+
+        /// <summary>
+        /// Helper method to read string properties with defaults
+        /// </summary>
+        private string ReadStringProperty(string propertyName, IElementData elementData, string defaultValue)
+        {
+            try
+            {
+                IPropertyReader reader = elementData.Properties.GetProperty(propertyName);
+                string value = reader.GetStringValue(elementData.ExecutionContext);
+                return string.IsNullOrWhiteSpace(value) ? defaultValue : value.Trim();
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to read boolean properties with defaults
+        /// </summary>
+        private bool ReadBooleanProperty(string propertyName, IElementData elementData, bool defaultValue)
+        {
+            try
+            {
+                IPropertyReader reader = elementData.Properties.GetProperty(propertyName);
+                // Convert double to boolean (0 = false, non-zero = true)
+                double value = reader.GetDoubleValue(elementData.ExecutionContext);
+                return Math.Abs(value) > 1e-10;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to read integer properties with defaults
+        /// </summary>
+        private int ReadIntegerProperty(string propertyName, IElementData elementData, int defaultValue)
+        {
+            try
+            {
+                IPropertyReader reader = elementData.Properties.GetProperty(propertyName);
+                return (int)reader.GetDoubleValue(elementData.ExecutionContext);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to read real properties with defaults
+        /// </summary>
+        private double ReadRealProperty(string propertyName, IElementData elementData, double defaultValue)
+        {
+            try
+            {
+                IPropertyReader reader = elementData.Properties.GetProperty(propertyName);
+                return reader.GetDoubleValue(elementData.ExecutionContext);
+            }
+            catch
+            {
+                return defaultValue;
             }
         }
 
@@ -52,27 +150,39 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
         /// <summary>
         /// Gets the source name configured for this LiveLink connection.
         /// </summary>
-        public string SourceName => _sourceName;
+        public string SourceName => _configuration.SourceName;
+
+        /// <summary>
+        /// Gets the complete configuration for this Element
+        /// </summary>
+        public LiveLinkConfiguration Configuration => _configuration;
 
         /// <summary>
         /// Initialize the LiveLink connection when the simulation starts.
         /// Called by Simio at the beginning of simulation execution.
+        /// Enhanced with TraceInformation for user visibility.
         /// </summary>
         public void Initialize()
         {
-            if (string.IsNullOrWhiteSpace(_sourceName))
+            // Validate configuration first
+            var validationErrors = _configuration.Validate();
+            if (validationErrors.Length > 0)
             {
-                _elementData.ExecutionContext.ExecutionInformation.ReportError(
-                    "Source Name must not be empty");
+                foreach (string error in validationErrors)
+                {
+                    _elementData.ExecutionContext.ExecutionInformation.ReportError(error);
+                }
                 return;
             }
 
             try
             {
                 // Initialize the LiveLink connection via the singleton manager
-                LiveLinkManager.Instance.Initialize(_sourceName);
+                LiveLinkManager.Instance.Initialize(_configuration);
                 
-                // Note: We don't report success here as Simio expects Initialize to be quiet on success
+                // 🆕 ADD TRACE INFORMATION - Currently missing!
+                _elementData.ExecutionContext.ExecutionInformation.TraceInformation(
+                    $"LiveLink connection initialized with source '{_configuration.SourceName}' on {_configuration.Host}:{_configuration.Port}");
             }
             catch (Exception ex)
             {
@@ -84,12 +194,16 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
         /// <summary>
         /// Shutdown the LiveLink connection when the simulation ends.
         /// Called by Simio at the end of simulation execution.
+        /// Enhanced with TraceInformation for user visibility.
         /// </summary>
         public void Shutdown()
         {
             try
             {
                 LiveLinkManager.Instance.Shutdown();
+                
+                // Note: TraceInformation removed from shutdown to prevent overwriting simulation traces
+                // Shutdown happens after simulation ends and may clear the trace file
             }
             catch (Exception ex)
             {

@@ -21,6 +21,7 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
 
         private bool _isInitialized;
         private string? _currentSourceName;
+        private LiveLinkConfiguration? _currentConfiguration; // 🆕 Store full configuration
         private volatile bool _lastConnectionCheck;
         private DateTime _lastConnectionCheckTime = DateTime.MinValue;
 
@@ -41,6 +42,11 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
         /// Gets the current source name (null if not initialized)
         /// </summary>
         public string? SourceName => _currentSourceName;
+
+        /// <summary>
+        /// Gets the current configuration (null if not initialized with configuration object)
+        /// </summary>
+        public LiveLinkConfiguration? Configuration => _currentConfiguration;
 
         /// <summary>
         /// Gets whether LiveLink connection is healthy (cached for performance)
@@ -94,6 +100,38 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
         {
             _isInitialized = false;
             _currentSourceName = null;
+        }
+
+        /// <summary>
+        /// Initializes LiveLink with comprehensive configuration (Phase 4 Enhancement)
+        /// Safe to call multiple times - subsequent calls are ignored if already initialized with same source name
+        /// </summary>
+        /// <param name="configuration">Complete LiveLink configuration object</param>
+        /// <returns>True if initialization succeeded or was already initialized</returns>
+        /// <exception cref="ArgumentNullException">Thrown if configuration is null</exception>
+        /// <exception cref="ArgumentException">Thrown if configuration is invalid</exception>
+        /// <exception cref="InvalidOperationException">Thrown if already initialized with different source name</exception>
+        /// <exception cref="DllNotFoundException">Thrown if native DLL is not available</exception>
+        /// <exception cref="LiveLinkInitializationException">Thrown if native initialization fails</exception>
+        public bool Initialize(LiveLinkConfiguration configuration)
+        {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
+            // Validate configuration
+            var validationErrors = configuration.Validate();
+            if (validationErrors.Length > 0)
+            {
+                throw new ArgumentException($"Configuration validation failed: {string.Join(", ", validationErrors)}", nameof(configuration));
+            }
+
+            // Store the configuration for use by other components
+            _currentConfiguration = configuration;
+
+            // Call the existing Initialize method with the source name
+            return Initialize(configuration.SourceName);
         }
 
         /// <summary>

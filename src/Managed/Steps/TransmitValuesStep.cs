@@ -12,6 +12,7 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
     {
         private readonly IPropertyReaders _readers;
         private readonly IRepeatingPropertyReader _prValues;
+        private DateTime? _lastTraceTime = null; // 🆕 Add loop protection for high-frequency tracing
 
         public TransmitValuesStep(IPropertyReaders readers)
         {
@@ -95,6 +96,13 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
                                     context.ExecutionInformation.ReportError($"Error transmitting to object '{objectName}': {ex.Message}");
                                 }
                             }
+                        }
+
+                        // 🆕 Loop protection: trace max once per second for high-frequency steps
+                        if (!_lastTraceTime.HasValue || (DateTime.Now - _lastTraceTime.Value).TotalSeconds >= 1.0)
+                        {
+                            context.ExecutionInformation.TraceInformation($"LiveLink data transmitted to {objectNames.Count} objects with {dataValues.Count} values");
+                            _lastTraceTime = DateTime.Now;
                         }
                     }
                     else

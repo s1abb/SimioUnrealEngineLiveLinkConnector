@@ -13,6 +13,7 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
     internal class SetObjectPositionOrientationStep : IStep
     {
         private readonly IPropertyReaders _readers;
+        private DateTime? _lastTraceTime = null; // 🆕 Add loop protection for high-frequency tracing
 
         public SetObjectPositionOrientationStep(IPropertyReaders readers)
         {
@@ -71,6 +72,13 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
                 // Note: GetOrCreateObject handles both new objects and existing ones
                 var objectUpdater = LiveLinkManager.Instance.GetOrCreateObject(objectName);
                 objectUpdater.UpdateTransform(x, y, z, heading, pitch, roll);
+
+                // 🆕 Loop protection: trace max once per second for high-frequency steps
+                if (!_lastTraceTime.HasValue || (DateTime.Now - _lastTraceTime.Value).TotalSeconds >= 1.0)
+                {
+                    context.ExecutionInformation.TraceInformation($"LiveLink position updated for '{objectName}' ({x:F2}, {y:F2}, {z:F2})");
+                    _lastTraceTime = DateTime.Now;
+                }
 
                 return ExitType.FirstExit;
             }
