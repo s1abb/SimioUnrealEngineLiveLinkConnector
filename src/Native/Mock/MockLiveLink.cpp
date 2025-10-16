@@ -6,6 +6,9 @@
 #include <vector>
 #include <iomanip>
 #include <sstream>
+#include <fstream>
+#include <ctime>
+#include <windows.h>
 
 //
 // Mock State Management
@@ -22,15 +25,54 @@ static std::unordered_map<std::string, std::vector<std::string>> g_dataSubjectPr
 //
 
 void LogCall(const std::string& functionName, const std::string& params = "") {
-    std::cout << "[MOCK] " << functionName;
+    // Get current timestamp
+    auto now = std::time(nullptr);
+    auto tm = *std::localtime(&now);
+    char timestamp[20];
+    std::strftime(timestamp, sizeof(timestamp), "%H:%M:%S", &tm);
+    
+    std::string message = "[" + std::string(timestamp) + "] [MOCK] " + functionName;
     if (!params.empty()) {
-        std::cout << "(" << params << ")";
+        message += "(" + params + ")";
     }
-    std::cout << std::endl;
+    
+    // Write to log file in tests directory
+    std::ofstream logFile("C:\\repos\\SimioUnrealEngineLiveLinkConnector\\tests\\Simio.Tests\\SimioUnrealLiveLink_Mock.log", std::ios::app);
+    if (logFile.is_open()) {
+        logFile << message << std::endl;
+        logFile.close();
+    }
+    
+    // Also output to console for standalone testing
+    std::cout << message << std::endl;
 }
 
 void LogError(const std::string& functionName, const std::string& error) {
-    std::cout << "[MOCK ERROR] " << functionName << ": " << error << std::endl;
+    // Get current timestamp
+    auto now = std::time(nullptr);
+    auto tm = *std::localtime(&now);
+    char timestamp[20];
+    std::strftime(timestamp, sizeof(timestamp), "%H:%M:%S", &tm);
+    
+    std::string message = "[" + std::string(timestamp) + "] [MOCK ERROR] " + functionName + ": " + error;
+    
+    // Write to log file
+    std::ofstream logFile("C:\\repos\\SimioUnrealEngineLiveLinkConnector\\tests\\Simio.Tests\\SimioUnrealLiveLink_Mock.log", std::ios::app);
+    if (logFile.is_open()) {
+        logFile << message << std::endl;
+        logFile.close();
+    }
+    
+    // Also output to console
+    std::cout << message << std::endl;
+}
+
+void ClearLogFile() {
+    // Clear the log file at the start of each simulation run
+    std::ofstream logFile("C:\\repos\\SimioUnrealEngineLiveLinkConnector\\tests\\Simio.Tests\\SimioUnrealLiveLink_Mock.log", std::ios::trunc);
+    if (logFile.is_open()) {
+        logFile.close();
+    }
 }
 
 std::string FormatTransform(const ULL_Transform* transform) {
@@ -87,6 +129,9 @@ int ULL_Initialize(const char* providerName) {
         LogError("ULL_Initialize", "Already initialized with provider '" + g_providerName + "'");
         return 1; // Error
     }
+    
+    // Clear the log file at the start of each new simulation run
+    ClearLogFile();
     
     g_providerName = providerName;
     g_isInitialized = true;

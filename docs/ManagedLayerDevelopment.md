@@ -91,32 +91,169 @@ This document provides high-level guidance for implementing the C# managed layer
 **Pattern from Omniverse:**
 - Constructor reads properties from `IElementData`
 - `Initialize()` called when simulation starts
-- `Shutdown()` called when simulation ends
+- `Shutdown()` called when simulation ends  
 - Provides connection health status
 
-**Key Changes from Omniverse:**
-- Remove: USD file path, live session name, timeout properties
-- Add: Source name property (appears in Unreal LiveLink window)
-- Replace: USD handle with LiveLinkManager singleton
+**🆕 Enhanced Constructor Implementation**:
+```csharp
+public SimioUnrealEngineLiveLinkElement(IElementData elementData)
+{
+    _elementData = elementData ?? throw new ArgumentNullException(nameof(elementData));
+    
+    // Read ALL properties with validation
+    _sourceName = ReadStringProperty("SourceName", elementData, "SimioSimulation");
+    _enableLogging = ReadBooleanProperty("EnableLogging", elementData);
+    
+    // Path properties with normalization (TextFileReadWrite pattern)
+    string rawLogPath = ReadStringProperty("LogFilePath", elementData, "SimioUnrealLiveLink.log");
+    _logFilePath = PropertyValidation.NormalizeFilePath(rawLogPath, elementData.ExecutionContext);
+    
+    string rawUnrealPath = ReadStringProperty("UnrealEnginePath", elementData, @"C:\Program Files\Epic Games\UE_5.3");
+    _unrealEnginePath = PropertyValidation.ValidateUnrealEnginePath(rawUnrealPath, elementData.ExecutionContext);
+    
+    // Network properties
+    _liveLinkHost = ReadStringProperty("LiveLinkHost", elementData, "localhost");
+    _liveLinkPort = ReadIntegerProperty("LiveLinkPort", elementData, 11111);
+    _connectionTimeout = ReadRealProperty("ConnectionTimeout", elementData, 5.0);
+    _retryAttempts = ReadIntegerProperty("RetryAttempts", elementData, 3);
+    
+    // Validate network endpoint
+    PropertyValidation.ValidateNetworkEndpoint(_liveLinkHost, _liveLinkPort, elementData.ExecutionContext);
+}
+```
+
+**🆕 Enhanced Initialize() with TraceInformation**:
+```csharp
+public void Initialize()
+{
+    if (string.IsNullOrWhiteSpace(_sourceName))
+    {
+        _elementData.ExecutionContext.ExecutionInformation.ReportError("Source Name must not be empty");
+        return;
+    }
+
+    try
+    {
+        // Create configuration object
+        var config = new LiveLinkConfiguration
+        {
+            SourceName = _sourceName,
+            EnableLogging = _enableLogging,
+            LogFilePath = _logFilePath,
+            UnrealEnginePath = _unrealEnginePath,
+            Host = _liveLinkHost,
+            Port = _liveLinkPort,
+            ConnectionTimeout = TimeSpan.FromSeconds(_connectionTimeout),
+            RetryAttempts = _retryAttempts
+        };
+
+        // Initialize the LiveLink connection via the singleton manager
+        LiveLinkManager.Instance.Initialize(config);
+        
+        // 🆕 ADD TRACE INFORMATION - Currently missing!
+        _elementData.ExecutionContext.ExecutionInformation.TraceInformation(
+            $"LiveLink connection initialized with source '{_sourceName}' on {_liveLinkHost}:{_liveLinkPort}");
+    }
+    catch (Exception ex)
+    {
+        _elementData.ExecutionContext.ExecutionInformation.ReportError(
+            $"Failed to initialize LiveLink connection: {ex.Message}");
+    }
+}
+```
+
+**🆕 Enhanced Shutdown() with TraceInformation**:
+```csharp
+public void Shutdown()
+{
+    try
+    {
+        LiveLinkManager.Instance.Shutdown();
+        
+        // 🆕 ADD TRACE INFORMATION - Currently missing!
+        _elementData.ExecutionContext.ExecutionInformation.TraceInformation("LiveLink connection shutdown completed");
+    }
+    catch (Exception ex)
+    {
+        _elementData.ExecutionContext.ExecutionInformation.ReportError(
+            $"Warning: Error during LiveLink shutdown: {ex.Message}");
+    }
+}
+```
 
 **Implementation Notes:**
-- Call `LiveLinkManager.Instance.Initialize(sourceName)` in Initialize()
+- **NEW**: Pass complete `LiveLinkConfiguration` to `LiveLinkManager.Initialize()`
+- **NEW**: Add TraceInformation for successful operations (currently missing entirely)
+- **NEW**: Property validation using `Utils/PropertyValidation.cs`
 - Expose `IsConnectionHealthy` property for Steps to check
 - Store reference to `IElementData` for error reporting
-- Implement proper error handling for initialization failures
+- Implement property reader helpers following TextFileReadWrite patterns
 
 **2.2 SimioUnrealEngineLiveLinkElementDefinition.cs**
 
 **Purpose:** Defines Element schema and properties
 
-**Schema Properties:**
+**Schema Properties** 🆕 **EXPANDED TO 7 ESSENTIAL PROPERTIES**:
+
+#### **LiveLink Connection** (CategoryName: "LiveLink Connection"):
 - **SourceName** (String, default: "SimioSimulation"): Name displayed in Unreal's LiveLink window
+- **LiveLinkHost** (String, default: "localhost"): IP address or hostname of Unreal Engine LiveLink server  
+- **LiveLinkPort** (Integer, default: 11111): Network port for LiveLink message bus
+- **ConnectionTimeout** (Real, default: 5.0): Connection timeout in seconds
+- **RetryAttempts** (Integer, default: 3): Number of connection retry attempts
+
+#### **Logging** (CategoryName: "Logging"):
+- **EnableLogging** (Boolean, default: false): Enable logging of LiveLink operations to file
+- **LogFilePath** (String, default: "SimioUnrealLiveLink.log"): Path to log file (relative paths resolved to Simio project folder)
+
+#### **Unreal Engine** (CategoryName: "Unreal Engine"):
+- **UnrealEnginePath** (String, default: "C:\\Program Files\\Epic Games\\UE_5.3"): Path to UE installation (required for native DLL runtime)
+
+**Property Implementation Pattern** (Following TextFileReadWrite Examples):
+```csharp
+// In DefineSchema():
+var enableLoggingProperty = schema.PropertyDefinitions.AddBooleanProperty("EnableLogging", false);
+enableLoggingProperty.DisplayName = "Enable Logging";
+enableLoggingProperty.Description = "Enable logging of LiveLink operations to file";
+enableLoggingProperty.CategoryName = "Logging";
+
+var logFilePathProperty = schema.PropertyDefinitions.AddStringProperty("LogFilePath", "SimioUnrealLiveLink.log");
+logFilePathProperty.DisplayName = "Log File Path";
+logFilePathProperty.Description = "Path to log file (relative paths resolved to Simio project folder)";
+logFilePathProperty.CategoryName = "Logging";
+
+var unrealEnginePathProperty = schema.PropertyDefinitions.AddStringProperty("UnrealEnginePath", @"C:\Program Files\Epic Games\UE_5.3");
+unrealEnginePathProperty.DisplayName = "Unreal Engine Path";
+unrealEnginePathProperty.Description = "Path to UE installation (required for native DLL runtime)";
+unrealEnginePathProperty.CategoryName = "Unreal Engine";
+
+var liveLinkHostProperty = schema.PropertyDefinitions.AddStringProperty("LiveLinkHost", "localhost");
+liveLinkHostProperty.DisplayName = "LiveLink Host";
+liveLinkHostProperty.Description = "IP address or hostname of Unreal Engine LiveLink server";
+liveLinkHostProperty.CategoryName = "LiveLink Connection";
+
+var liveLinkPortProperty = schema.PropertyDefinitions.AddIntegerProperty("LiveLinkPort", 11111);
+liveLinkPortProperty.DisplayName = "LiveLink Port";
+liveLinkPortProperty.Description = "Network port for LiveLink message bus";
+liveLinkPortProperty.CategoryName = "LiveLink Connection";
+
+var connectionTimeoutProperty = schema.PropertyDefinitions.AddRealProperty("ConnectionTimeout", 5.0);
+connectionTimeoutProperty.DisplayName = "Connection Timeout (seconds)";
+connectionTimeoutProperty.Description = "Connection timeout in seconds";
+connectionTimeoutProperty.CategoryName = "LiveLink Connection";
+
+var retryAttemptsProperty = schema.PropertyDefinitions.AddIntegerProperty("RetryAttempts", 3);
+retryAttemptsProperty.DisplayName = "Retry Attempts";
+retryAttemptsProperty.Description = "Number of connection retry attempts";
+retryAttemptsProperty.CategoryName = "LiveLink Connection";
+```
 
 **Implementation:**
 - Generate unique GUID for `MY_ID` constant
 - Implement `IElementDefinition` interface
 - Define schema in `DefineSchema(IElementSchema schema)`
 - Factory method `CreateElement(IElementData data)` returns element instance
+- **NEW**: Requires `src/Managed/Utils/` folder for property validation utilities
 
 ---
 
@@ -231,7 +368,65 @@ This document provides high-level guidance for implementing the C# managed layer
 
 ---
 
-### Phase 4: Property Reading Patterns
+### Phase 4: Essential Step Implementation Patterns
+
+#### 4.1 🚨 CRITICAL: TraceInformation Implementation
+
+**Current State Analysis:** Extension provides ZERO user visibility for successful operations!
+
+**Required TraceInformation Strategy:**
+
+**For Low-Frequency Steps (CreateObject/DestroyObject):**
+```csharp
+public override ExecutionStatus Execute(IStepExecutionContext context)
+{
+    try
+    {
+        // ... operation logic ...
+        
+        // 🆕 ALWAYS add success trace for user visibility
+        context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' created successfully");
+        return ExecutionStatus.Continue;
+    }
+    catch (Exception ex)
+    {
+        context.ExecutionInformation.ReportError($"Failed to create LiveLink object '{objectName}': {ex.Message}");
+        return ExecutionStatus.Continue;
+    }
+}
+```
+
+**For High-Frequency Steps (SetPosition/TransmitValues):**
+```csharp
+public class SetObjectPositionOrientationStep : IStep
+{
+    private DateTime? _lastTraceTime = null; // 🆕 Add loop protection
+    
+    public override ExecutionStatus Execute(IStepExecutionContext context)
+    {
+        try
+        {
+            // ... update position logic ...
+            
+            // 🆕 Loop protection: trace max once per second
+            if (!_lastTraceTime.HasValue || (DateTime.Now - _lastTraceTime.Value).TotalSeconds >= 1.0)
+            {
+                context.ExecutionInformation.TraceInformation($"LiveLink position updated for '{objectName}' ({x:F2}, {y:F2}, {z:F2})");
+                _lastTraceTime = DateTime.Now;
+            }
+            
+            return ExecutionStatus.Continue;
+        }
+        catch (Exception ex)
+        {
+            context.ExecutionInformation.ReportError($"Failed to update position for '{objectName}': {ex.Message}");
+            return ExecutionStatus.Continue;
+        }
+    }
+}
+```
+
+#### 4.2 Property Reading Patterns
 
 **Common Pattern Across All Steps:**
 
@@ -261,6 +456,67 @@ private double GetDoubleProperty(string propertyName, IStepExecutionContext cont
 
 **For Repeat Groups:**
 ```csharp
+private void ProcessRepeatGroup(string groupPropertyName, IStepExecutionContext context, 
+    Action<string, object> processRow)
+{
+    var repeatGroup = (IRepeatingPropertyReader)_readers.GetProperty(groupPropertyName);
+    int rowCount = repeatGroup.GetRowCount(context);
+    
+    for (int i = 0; i < rowCount; i++)
+    {
+        var rowContext = repeatGroup.GetRow(i, context);
+        // Process each row...
+    }
+}
+```
+
+#### 4.3 Utils Folder Structure (NEW!)
+
+**Location:** `src/Managed/Utils/`
+
+**Purpose:** Shared validation and utility functions across Element and Steps
+
+**Files:**
+
+**PropertyValidation.cs** - Element property validation following TextFileReadWrite patterns:
+```csharp
+public static class PropertyValidation
+{
+    public static string NormalizeFilePath(string rawPath, IExecutionContext context)
+    {
+        if (string.IsNullOrWhiteSpace(rawPath)) return string.Empty;
+        
+        try
+        {
+            // Expand relative paths, validate directory exists
+            string fullPath = Path.GetFullPath(rawPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+            return fullPath;
+        }
+        catch (Exception ex)
+        {
+            context.ExecutionInformation.ReportError($"Invalid file path '{rawPath}': {ex.Message}");
+            return string.Empty;
+        }
+    }
+    
+    public static string ValidateUnrealEnginePath(string path, IExecutionContext context)
+    {
+        // Check for UE installation, validate UE4Editor.exe or UnrealEditor.exe
+        // Return normalized path or report error
+    }
+    
+    public static void ValidateNetworkEndpoint(string host, int port, IExecutionContext context)
+    {
+        // Validate host format and port range
+        // Report descriptive errors for common issues
+    }
+}
+```
+
+**PathUtils.cs** - Path handling utilities
+**NetworkUtils.cs** - LiveLink connection helpers  
+**UnrealEngineDetection.cs** - Auto-detect UE installations
 var repeatGroup = (IRepeatingPropertyReader)_readers.GetProperty("Values");
 int rowCount = repeatGroup.GetCount(context);
 

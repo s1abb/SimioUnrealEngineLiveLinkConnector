@@ -552,6 +552,13 @@ coverage/
 *.coverage
 *.coveragexml
 
+# Simio test logs and traces (generated during testing)
+tests/Simio.Tests/SimioUnrealLiveLink_Mock.log
+tests/Simio.Tests/*_trace.csv
+tests/Simio.Tests/Model_Model_trace.csv
+tests/Simio.Tests/*.spfx
+tests/Simio.Tests/*.backup
+
 # ==============================================================================
 # Package managers
 # ==============================================================================
