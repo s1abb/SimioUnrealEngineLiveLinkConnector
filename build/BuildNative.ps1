@@ -45,6 +45,7 @@ $NativeSourceDir = Join-Path $RepoRoot "src\Native\UnrealLiveLink.Native"
 $UEProgramsDir = Join-Path $UEPath "Engine\Source\Programs"
 $UETargetDir = Join-Path $UEProgramsDir "UnrealLiveLinkNative"
 $UEBinariesDir = Join-Path $UEPath "Engine\Binaries\$Platform"
+$OutputDll = Join-Path $UEBinariesDir "UnrealLiveLinkNative.dll"
 $OutputExe = Join-Path $UEBinariesDir "UnrealLiveLinkNative.exe"
 $RepoOutputDir = Join-Path $RepoRoot "lib\native\win-x64"
 
@@ -142,13 +143,33 @@ Write-Host "✅ UBT build completed" -ForegroundColor Green
 # Step 4: Verify output and copy to repository
 Write-Host "Verifying build output..." -ForegroundColor Yellow
 
-if (-not (Test-Path $OutputExe)) {
-    Write-Error "Expected executable not found at: $OutputExe"
-    Write-Host "Contents of binaries directory:"
+# Check for DLL first (Sub-Phase 6.3+), then fallback to EXE (Sub-Phase 6.1)
+$OutputFile = $null
+$OutputType = $null
+$TargetRepoName = $null
+
+if (Test-Path $OutputDll) {
+    $OutputFile = $OutputDll
+    $OutputType = "DLL"
+    $TargetRepoName = "UnrealLiveLink.Native.dll"
+    Write-Host "Found DLL output (Sub-Phase 6.3+): $OutputDll" -ForegroundColor Green
+} elseif (Test-Path $OutputExe) {
+    $OutputFile = $OutputExe
+    $OutputType = "EXE"
+    $TargetRepoName = "UnrealLiveLinkNative.exe"
+    Write-Host "Found EXE output (Sub-Phase 6.1): $OutputExe" -ForegroundColor Yellow
+} else {
+    Write-Error "No build output found. Expected DLL or EXE at:"
+    Write-Host "  DLL: $OutputDll" -ForegroundColor Yellow
+    Write-Host "  EXE: $OutputExe" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Contents of binaries directory:" -ForegroundColor Yellow
     if (Test-Path $UEBinariesDir) {
-        Get-ChildItem $UEBinariesDir -Filter "UnrealLiveLink*" | ForEach-Object { Write-Host "  $($_.Name)" }
+        Get-ChildItem $UEBinariesDir -Filter "UnrealLiveLink*" | ForEach-Object { 
+            Write-Host "  $($_.Name) ($($_.Length) bytes)" 
+        }
     } else {
-        Write-Host "  Binaries directory does not exist: $UEBinariesDir"
+        Write-Host "  Binaries directory does not exist: $UEBinariesDir" -ForegroundColor Red
     }
     exit 1
 }
@@ -156,26 +177,56 @@ if (-not (Test-Path $OutputExe)) {
 # Create repository output directory
 New-Item -ItemType Directory -Path $RepoOutputDir -Force | Out-Null
 
-# Copy executable and PDB to repository
-Copy-Item $OutputExe $RepoOutputDir -Force
-$OutputPdb = $OutputExe -replace '\.exe$', '.pdb'
+# Copy output file to repository with correct name
+$TargetRepoPath = Join-Path $RepoOutputDir $TargetRepoName
+Copy-Item $OutputFile $TargetRepoPath -Force
+
+# Copy PDB if available
+$OutputPdb = $OutputFile -replace '\.(exe|dll)$', '.pdb'
 if (Test-Path $OutputPdb) {
-    Copy-Item $OutputPdb $RepoOutputDir -Force
-    Write-Host "✅ Copied executable and PDB to: $RepoOutputDir" -ForegroundColor Green
+    $TargetPdbName = $TargetRepoName -replace '\.(exe|dll)$', '.pdb'
+    $TargetPdbPath = Join-Path $RepoOutputDir $TargetPdbName
+    Copy-Item $OutputPdb $TargetPdbPath -Force
+    Write-Host "✅ Copied $OutputType and PDB to: $RepoOutputDir" -ForegroundColor Green
 } else {
-    Write-Host "✅ Copied executable to: $RepoOutputDir (PDB not found)" -ForegroundColor Green
+    Write-Host "✅ Copied $OutputType to: $RepoOutputDir (PDB not found)" -ForegroundColor Green
+}
+
+# Copy additional DLL artifacts (export and import libraries)
+if ($OutputType -eq "DLL") {
+    $OutputExp = $OutputFile -replace '\.dll$', '.exp'
+    $OutputLib = $OutputFile -replace '\.dll$', '.lib'
+    
+    if (Test-Path $OutputExp) {
+        $TargetExpPath = Join-Path $RepoOutputDir "UnrealLiveLink.Native.exp"
+        Copy-Item $OutputExp $TargetExpPath -Force
+        Write-Host "  Copied export library (.exp)" -ForegroundColor Gray
+    }
+    
+    if (Test-Path $OutputLib) {
+        $TargetLibPath = Join-Path $RepoOutputDir "UnrealLiveLink.Native.lib"
+        Copy-Item $OutputLib $TargetLibPath -Force
+        Write-Host "  Copied import library (.lib)" -ForegroundColor Gray
+    }
 }
 
 # Display build results
-$ExeInfo = Get-Item (Join-Path $RepoOutputDir "UnrealLiveLinkNative.exe")
+$OutputInfo = Get-Item $TargetRepoPath
 Write-Host ""
 Write-Host "🎉 BUILD SUCCESS!" -ForegroundColor Green
-Write-Host "Output Executable: $($ExeInfo.FullName)" -ForegroundColor Green
-Write-Host "Size: $($ExeInfo.Length) bytes"
-Write-Host "Modified: $($ExeInfo.LastWriteTime)"
+Write-Host "Output Type: $OutputType" -ForegroundColor Green
+Write-Host "Output File: $($OutputInfo.FullName)" -ForegroundColor Green
+Write-Host "Size: $($OutputInfo.Length) bytes ($([math]::Round($OutputInfo.Length / 1MB, 2)) MB)"
+Write-Host "Modified: $($OutputInfo.LastWriteTime)"
 
-Write-Host ""
-Write-Host "Native DLL build completed successfully!" -ForegroundColor Green
-Write-Host "Ready for Sub-Phase 6.2: Type Definitions" -ForegroundColor Cyan
+if ($OutputType -eq "DLL") {
+    Write-Host ""
+    Write-Host "Native DLL build completed successfully!" -ForegroundColor Green
+    Write-Host "Ready for integration testing and Sub-Phase 6.4" -ForegroundColor Cyan
+} else {
+    Write-Host ""
+    Write-Host "Native executable build completed successfully!" -ForegroundColor Green
+    Write-Host "Ready for Sub-Phase 6.2: Type Definitions" -ForegroundColor Cyan
+}
 
 exit 0
