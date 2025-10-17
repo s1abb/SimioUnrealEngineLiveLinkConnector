@@ -7,6 +7,7 @@ public class UnrealLiveLinkNativeTarget : TargetRules
     public UnrealLiveLinkNativeTarget(TargetInfo Target) : base(Target)
     {
         Type = TargetType.Program;
+        bShouldCompileAsDLL = true;  // Output as DLL instead of EXE for P/Invoke
         LinkType = TargetLinkType.Monolithic;
         LaunchModuleName = "UnrealLiveLinkNative";
         

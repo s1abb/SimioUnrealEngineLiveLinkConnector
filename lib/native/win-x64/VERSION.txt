@@ -1,8 +1,15 @@
-Phase 6.1 Complete - UBT Project Setup
+Phase 6.3 Complete - C API Stub Functions  
 Build Date: October 17, 2025
 Version: 0.1.0-alpha
-Output: UnrealLiveLinkNative.exe (25,153,536 bytes)
+Output: UnrealLiveLink.Native.dll (75,264 bytes)
 UE Version: 5.6
 Build Tool: UnrealBuildTool (UBT)
-Status: Working executable with UE Core integration
-Next: Phase 6.2 - Type Definitions
+Status: Working DLL with 12 exported C API functions (stubs)
+Next: Phase 6.4 - LiveLinkBridge State Management
+
+Exports (verified with dumpbin):
+- ULL_Initialize, ULL_Shutdown, ULL_GetVersion, ULL_IsConnected
+- ULL_RegisterObject, ULL_RegisterObjectWithProperties
+- ULL_UpdateObject, ULL_UpdateObjectWithProperties, ULL_RemoveObject
+- ULL_RegisterDataSubject, ULL_UpdateDataSubject, ULL_RemoveDataSubject
+
