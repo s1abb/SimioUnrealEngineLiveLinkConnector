@@ -1,5 +1,29 @@
 # Phase 6: Native Layer Implementation Plan
 
+**Last Updated:** October 17, 2025  
+**Status:** 🔄 IN PROGRESS (Sub-Phase 6.1 Complete, 6.2 In Progress)  
+**Progress:** 1/11 sub-phases complete (~9%)  
+**Estimated Completion:** Mid-November 2025
+
+---
+
+## Executive Summary
+
+**Objective:** Implement real native DLL with Unreal Engine LiveLink Message Bus integration, replacing the mock DLL used for managed layer development.
+
+**Current Status:**
+- ✅ **Sub-Phase 6.1 COMPLETE:** UBT project setup, build automation, and compilation pipeline established
+- 🔄 **Sub-Phase 6.2 IN PROGRESS:** Type definitions and C API contracts
+- 📋 **Sub-Phases 6.3-6.11 PLANNED:** API implementation, LiveLink integration, optimization, and deployment
+
+**Key Achievement:** Successfully established UE 5.6 source build environment (20.7GB) with working BuildNative.ps1 automation producing 25MB native executable in 3-5 second incremental builds.
+
+**Architecture Validation:** Approach confirmed viable based on production reference project (UnrealLiveLinkCInterface) that successfully handles "thousands of floats @ 60Hz" - our use case is 6x lighter.
+
+---
+
+## Goal & Scope
+
 **Goal:** Implement the 12-function C API as a standalone DLL using Unreal Build Tool, providing real LiveLink integration.
 
 **Scope:** ONLY implement what's specified in Architecture.md and NativeLayerDevelopment.md. No additions.
@@ -202,9 +226,20 @@ public class UnrealLiveLinkNativeTarget : TargetRules
 
 ---
 
-## Sub-Phase 6.2: Type Definitions (C API Structs)
+## Sub-Phase 6.2: Type Definitions (C API Structs) 🔄 IN PROGRESS
 
 **Objective:** Define `ULL_Transform` and return codes matching the managed layer exactly.
+
+**Status:** 🔄 **IN PROGRESS** - Started October 17, 2025
+
+### File to Create
+
+**`src/Native/UnrealLiveLink.Native/Source/UnrealLiveLinkNative/Public/UnrealLiveLinkTypes.h`**
+
+This header must:
+- Be pure C-compatible (no C++ classes)
+- Have no Unreal Engine dependencies (standalone)
+- Match C# marshaling layout exactly
 
 ### Return Code Constants
 
@@ -216,37 +251,105 @@ public const int ULL_OK = 0;
 public const int ULL_ERROR = -1;
 public const int ULL_NOT_CONNECTED = -2;
 public const int ULL_NOT_INITIALIZED = -3;
+public const int ULL_API_VERSION = 1;
 ```
 
-**Important:** Mock DLL uses positive error codes (1, 2), but managed layer expects NEGATIVE error codes. 
-Real implementation MUST use negative values for errors.
-
-**Reference Project Note:** UnrealLiveLinkCInterface avoids `bool` types entirely, using `int` with values 0 and 1.
-Our approach: Use `int` in C API, `bool` acceptable internally in C++.
-
-**Must match C# exactly:**
+**C++ Header Definition:**
 ```cpp
-struct ULL_Transform {
+// Return codes (MUST be negative for errors)
+#define ULL_OK                  0
+#define ULL_ERROR              -1
+#define ULL_NOT_CONNECTED      -2
+#define ULL_NOT_INITIALIZED    -3
+
+// API version for compatibility checking
+#define ULL_API_VERSION         1
+```
+
+**Important:** Mock DLL uses positive error codes (1, 2) for simplicity, but managed layer expects NEGATIVE error codes. 
+Real implementation MUST use negative values for errors as shown above.
+
+### ULL_Transform Structure
+
+**CRITICAL:** Must match C# layout exactly (verified in managed layer via `Marshal.SizeOf<ULL_Transform>()`)
+
+```cpp
+#pragma pack(push, 8)  // Ensure 8-byte alignment for doubles
+
+typedef struct {
+    double position[3];  // X, Y, Z in centimeters (Unreal coordinates)
+    double rotation[4];  // Quaternion [X, Y, Z, W] (normalized)
+    double scale[3];     // X, Y, Z scale factors
+} ULL_Transform;
+
+#pragma pack(pop)
+
+// Compile-time validation
+static_assert(sizeof(ULL_Transform) == 80, "ULL_Transform size must be 80 bytes to match C# marshaling");
+static_assert(sizeof(double) == 8, "double must be 8 bytes");
+```
+
+**Memory Layout Verification:**
+- Position: 3 × 8 bytes = 24 bytes
+- Rotation: 4 × 8 bytes = 32 bytes  
+- Scale: 3 × 8 bytes = 24 bytes
+- **Total: 80 bytes** ✅
+
+### Complete Header Template
+
+```cpp
+#pragma once
+
+// Pure C API - no C++ types in this header
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Return codes
+#define ULL_OK                  0
+#define ULL_ERROR              -1
+#define ULL_NOT_CONNECTED      -2
+#define ULL_NOT_INITIALIZED    -3
+
+// API version
+#define ULL_API_VERSION         1
+
+// Transform structure (80 bytes total)
+#pragma pack(push, 8)
+
+typedef struct {
     double position[3];  // X, Y, Z in centimeters
-    double rotation[4];  // Quaternion X, Y, Z, W
-    double scale[3];     // X, Y, Z scale
-};
-// Size MUST be 80 bytes
-static_assert(sizeof(ULL_Transform) == 80, "Size mismatch with C#");
+    double rotation[4];  // Quaternion [X, Y, Z, W]
+    double scale[3];     // X, Y, Z scale factors
+} ULL_Transform;
+
+#pragma pack(pop)
+
+// Compile-time validation
+static_assert(sizeof(ULL_Transform) == 80, "Size mismatch with C# marshaling");
+
+#ifdef __cplusplus
+}
+#endif
 ```
 
 ### Success Criteria
-- ✅ `sizeof(ULL_Transform) == 80` (verified at compile time)
-- ✅ Header compiles standalone (no Unreal dependencies in header)
-- ✅ Pure C types (no C++ classes in struct)
+- [ ] Header created in correct location
+- [ ] `sizeof(ULL_Transform) == 80` (verified at compile time)
+- [ ] Header compiles standalone (no Unreal dependencies)
+- [ ] Pure C types (no C++ classes in struct)
+- [ ] Return codes match managed layer (negative for errors)
+- [ ] Can be included in both C and C++ files
 
 **Deliverable:** Type header that matches managed layer exactly
 
 ---
 
-## Sub-Phase 6.3: C API Export Layer (Stub Functions)
+## Sub-Phase 6.3: C API Export Layer (Stub Functions) 📋 PLANNED
 
 **Objective:** Export all 12 functions with stub implementations (logging only, no LiveLink yet).
+
+**Status:** 📋 **PLANNED**
 
 **Reference:** Match `MockLiveLink.h` function signatures exactly.
 
@@ -290,12 +393,20 @@ void ULL_UpdateDataSubject(const char* subjectName, const char** propertyNames, 
 void ULL_RemoveDataSubject(const char* subjectName);
 ```
 
-### Build Configuration
-
-Update `.Build.cs` to export symbols:
+**Build Configuration:** Update `.Build.cs` to export symbols:
 ```csharp
+// In UnrealLiveLinkNative.Build.cs
+PublicDependencyModuleNames.AddRange(new string[] {
+    "Core",
+    "CoreUObject"
+    // LiveLink modules added in later sub-phases
+});
+
+// Define export macro for DLL
 PublicDefinitions.Add("ULL_API=__declspec(dllexport)");
 ```
+
+**Note:** Target type should be changed from TargetType.Program to a configuration that produces a DLL instead of an EXE. This will be updated based on UBT documentation research in Sub-Phase 6.3.
 
 ### Success Criteria
 - ✅ DLL exports exactly 12 functions (verify with `dumpbin /EXPORTS`)
@@ -315,9 +426,11 @@ Replace mock DLL with stub native DLL, run Simio test:
 
 ---
 
-## Sub-Phase 6.4: LiveLinkBridge Class (No LiveLink Integration)
+## Sub-Phase 6.4: LiveLinkBridge Class (No LiveLink Integration) 📋 PLANNED
 
 **Objective:** Create C++ bridge class that tracks state but doesn't use LiveLink APIs yet.
+
+**Status:** 📋 **PLANNED**
 
 **Reference:** Architecture.md specifies singleton pattern, subject registry, thread safety.
 
@@ -387,11 +500,13 @@ Modify `UnrealLiveLinkAPI.cpp` to call `FLiveLinkBridge::Get()` methods instead 
 
 ---
 
-## Sub-Phase 6.5: ILiveLinkProvider Creation
+## Sub-Phase 6.5: ILiveLinkProvider Creation 📋 PLANNED
 
-**Objective:** Create real `ILiveLinkProvider` and register it with LiveLink system.
+**Objective:** Create real LiveLink Message Bus source and register it with LiveLink system.
 
-**Reference:** Architecture.md - "Creates ILiveLinkProvider via ILiveLinkClient"
+**Status:** 📋 **PLANNED**
+
+**Reference:** Architecture.md - "Creates FLiveLinkMessageBusSource via ILiveLinkClient"
 
 ### Modify LiveLinkBridge.cpp
 
@@ -437,16 +552,19 @@ private:
 
 ### Update Build.cs Dependencies
 
-Add modules:
+Add LiveLink modules:
 ```csharp
 PublicDependencyModuleNames.AddRange(new string[] {
     "Core",
     "CoreUObject", 
     "LiveLink",
     "LiveLinkInterface",
-    "LiveLinkMessageBusFramework"
+    "Messaging",
+    "UdpMessaging"
 });
 ```
+
+**Note:** UE 5.3+ includes LiveLink modules by default. The exact module names and availability should be verified against UE 5.6 documentation.
 
 ### Success Criteria
 - ✅ Compiles with LiveLink headers
@@ -460,9 +578,11 @@ PublicDependencyModuleNames.AddRange(new string[] {
 
 ---
 
-## Sub-Phase 6.6: Transform Subject Registration & Updates
+## Sub-Phase 6.6: Transform Subject Registration & Updates 📋 PLANNED
 
 **Objective:** Implement transform subject registration and frame updates.
+
+**Status:** 📋 **PLANNED**
 
 **Reference:** Architecture.md data flow - "LiveLink provider submits FLiveLinkFrameDataStruct"
 
@@ -550,26 +670,38 @@ void ULL_UpdateObject(const char* subjectName, const ULL_Transform* transform) {
 
 ---
 
-## Sub-Phase 6.7: Coordinate Conversion (If Needed)
+## Sub-Phase 6.7: Coordinate Conversion Validation 📋 PLANNED
 
 **Objective:** Verify coordinate system handling between managed layer and Unreal.
 
-**Reference:** Architecture.md - "CoordinateConverter.cs in managed layer (before P/Invoke)"
+**Status:** 📋 **PLANNED**
+
+**Reference:** Architecture.md - "CoordinateConverter.cs in managed layer (before P/Invoke) - Native layer receives already-converted Unreal coordinates"
 
 ### Analysis Required
 
 The managed layer already converts Simio → Unreal coordinates before calling P/Invoke. The native layer receives values in **Unreal coordinate space**.
 
-**Question for verification:**
-- Does `FTransform` expect the same coordinate system as our `ULL_Transform`?
-- Test: Place object at Simio origin (0,0,0) → Should appear at Unreal origin
+**Expected behavior:**
+- `ULL_Transform` arrives with position in centimeters (Unreal units)
+- Position already converted from Simio's coordinate system (Z-up) to Unreal's (Z-up, axis-swapped)
+- Rotation already converted from Euler angles to normalized quaternion
+- Native layer should perform **direct pass-through**: `ULL_Transform` → `FTransform`
 
-### If Conversion Needed
+**Test plan:**
+- Place object at Simio origin (0,0,0) → Should appear at Unreal origin (0,0,0)
+- Place object at Simio (5m, 0, 0) → Should appear at Unreal (500cm, 0, 0)
+- Verify rotations match expected orientation
+- Confirm no mirroring or axis flips
 
-Create `CoordinateHelpers.h` with:
+### If Unexpected Conversion Needed
+
+If testing reveals coordinate issues, create `CoordinateHelpers.h` with:
 ```cpp
 FTransform ConvertULLTransformToUnreal(const ULL_Transform* transform);
 ```
+
+**However:** Architecture.md explicitly states native layer should NOT do coordinate conversion. Any issues found should be addressed in managed layer's `CoordinateConverter.cs`.
 
 ### Success Criteria
 - ✅ Object at Simio (0,0,0) appears at Unreal origin
@@ -581,9 +713,11 @@ FTransform ConvertULLTransformToUnreal(const ULL_Transform* transform);
 
 ---
 
-## Sub-Phase 6.8: String/FName Caching
+## Sub-Phase 6.8: String/FName Caching 📋 PLANNED
 
-**Objective:** Cache FName conversions for performance.
+**Objective:** Cache FName conversions for performance optimization.
+
+**Status:** 📋 **PLANNED**
 
 **Reference:** Architecture.md - "String/FName conversion with caching for performance"
 
@@ -630,11 +764,13 @@ Replace `FName(subjectName)` with `FLiveLinkBridge::Get().GetCachedName(subjectN
 
 ---
 
-## Sub-Phase 6.9: Properties & Data Subjects
+## Sub-Phase 6.9: Properties & Data Subjects 📋 PLANNED
 
 **Objective:** Implement property streaming for transform+properties and data-only subjects.
 
-**Reference:** Architecture.md - Transform+properties and Data subjects with BasicRole
+**Status:** 📋 **PLANNED**
+
+**Reference:** Architecture.md - Transform+properties with TransformRole and Data subjects with BasicRole
 
 ### Implement Property Support
 
@@ -706,9 +842,11 @@ Similar implementation but use:
 
 ---
 
-## Sub-Phase 6.10: Error Handling & Validation
+## Sub-Phase 6.10: Error Handling & Validation 📋 PLANNED
 
-**Objective:** Add comprehensive error checking and validation.
+**Objective:** Add comprehensive error checking and validation for production readiness.
+
+**Status:** 📋 **PLANNED**
 
 **Reference:** Architecture.md - "Parameter validation with error messages"
 
@@ -764,9 +902,11 @@ bool IsFinite(double value) {
 
 ---
 
-## Sub-Phase 6.11: Dependency Analysis & Deployment Package
+## Sub-Phase 6.11: Dependency Analysis & Deployment Package 📋 PLANNED
 
-**Objective:** Identify all DLL dependencies and create deployment package.
+**Objective:** Identify all DLL dependencies and create complete deployment package.
+
+**Status:** 📋 **PLANNED**
 
 **Reference:** UnrealLiveLinkCInterface warns: "copying just the dll may not be enough. There may be other dependencies that need to be copied such as the tbbmalloc.dll"
 
@@ -873,47 +1013,71 @@ Copy-Item lib\native\win-x64\UnrealLiveLink.Native.dll `
 
 ## Known Issues & Questions
 
-### Issues Found During Planning
+### Issues Resolved in Sub-Phase 6.1
 
-**ISSUE 1: Build System Clarity**
-- Documents mention both "Program target" and "Plugin"
-- Need to clarify: Is this a UBT Program or different structure?
-- **Question:** What's the correct UBT target type for a standalone DLL?
+**✅ RESOLVED: Build System Clarity**
+- ~~Documents mention both "Program target" and "Plugin"~~
+- **RESOLUTION:** Confirmed as UBT Program target (`TargetType.Program`)
+- Successfully built UnrealLiveLinkNative.exe (25MB) using Program target configuration
+- **Note:** Need to investigate how to output DLL instead of EXE for Sub-Phase 6.3
 
-**ISSUE 2: ILiveLinkProvider vs FLiveLinkMessageBusSource**
-- Architecture.md says "Creates ILiveLinkProvider via ILiveLinkClient"
-- Code examples use FLiveLinkMessageBusSource
-- **Question:** Which approach is correct for external DLL?
+**✅ RESOLVED: Module Dependencies**
+- ~~Need complete list of required Unreal modules~~
+- **RESOLUTION:** Current Build.cs successfully compiles with Core and CoreUObject
+- LiveLink modules will be added incrementally in Sub-Phases 6.5-6.9
+- Current minimal dependencies validated in Sub-Phase 6.1
 
-**ISSUE 3: Module Dependencies**
-- Need complete list of required Unreal modules
-- LiveLinkMessageBusFramework vs LiveLinkInterface unclear
-- **Question:** Minimum required modules for basic transform streaming?
+### Active Questions for Sub-Phase 6.2+
 
-**ISSUE 4: Coordinate System**
-- Managed layer converts Simio → Unreal
-- Native layer receives Unreal coords
-- **Question:** Does FTransform need any further conversion?
+**QUESTION 1: DLL vs EXE Output**
+- Current configuration produces UnrealLiveLinkNative.exe (25MB)
+- Need to change configuration to produce UnrealLiveLinkNative.dll
+- **Action:** Research UBT documentation for DLL output from Program target
+- **Priority:** HIGH - Required for Sub-Phase 6.3
 
-**ISSUE 5: Thread Safety**
-- LiveLink APIs have `_AnyThread` suffix
-- **Question:** Are our FCriticalSection locks sufficient? Any other concerns?
+**QUESTION 2: LiveLink API Usage Patterns**
+- Architecture.md references "FLiveLinkMessageBusSource"
+- NativeLayerDevelopment.md shows code examples
+- **Question:** Verify exact API patterns work in UE 5.6
+- **Priority:** MEDIUM - Needed for Sub-Phase 6.5
 
-### Suggestions for Plan Updates
+**QUESTION 3: Coordinate System Verification**
+- Managed layer converts Simio → Unreal coordinates
+- Native layer should do direct pass-through
+- **Question:** Does FTransform constructor need specific axis ordering?
+- **Priority:** LOW - Will be validated in Sub-Phase 6.7 testing
 
-**SUGGESTION 1: Add Sub-Phase 0**
-- Create build script skeleton first
-- Verify UBT setup before writing code
-- Test compilation of empty project
+**QUESTION 4: Thread Safety Implementation**
+- LiveLink APIs have `_AnyThread` suffix variants
+- FCriticalSection locks planned for bridge class
+- **Question:** Are there additional thread safety concerns in UE 5.6?
+- **Priority:** LOW - Will be validated during implementation
 
-**SUGGESTION 2: Split Sub-Phase 6.6**
-- 6.6a: Registration only (subjects appear)
-- 6.6b: Updates (transforms move)
-- Smaller validation steps
+### Suggestions for Plan Improvements
 
-**SUGGESTION 3: Add Rollback Strategy**
-- Each sub-phase should be git-committable
-- Document how to revert to previous working state
+**✅ IMPLEMENTED: Build Script Automation**
+- ~~Create build script skeleton first~~
+- **DONE:** BuildNative.ps1 created with intelligent UE detection
+- Automated project copying, UBT compilation, and output management
+- Successfully validated in Sub-Phase 6.1
+
+**SUGGESTION 1: Research DLL Output Configuration**
+- Current output is EXE, need DLL for P/Invoke
+- Research UBT Target.cs configuration for DLL output
+- May need `LinkType = TargetLinkType.Modular` or similar
+- **Action:** Document findings before Sub-Phase 6.3
+
+**SUGGESTION 2: Incremental LiveLink Integration**
+- Sub-Phase 6.5 adds LiveLink modules to Build.cs
+- Verify modules compile before implementing actual code
+- Test with minimal "hello world" LiveLink source creation
+- Reduces risk of discovering compilation issues late
+
+**SUGGESTION 3: Testing Checkpoints**
+- Add git tag after each completed sub-phase
+- Example: `phase6.1-complete`, `phase6.2-complete`
+- Enables easy rollback to known-good state
+- Documents progression for future reference
 
 ---
 
@@ -922,40 +1086,65 @@ Copy-Item lib\native\win-x64\UnrealLiveLink.Native.dll `
 ### Current Progress
 
 **✅ COMPLETED:**
-- **Sub-Phase 6.1**: UBT Project Setup
-  - UE 5.6 source installation (20.7GB)
-  - Complete UBT project structure
-  - Working BuildNative.ps1 automation
-  - Successful native executable compilation (25MB)
-  - Full build environment established
+- **Sub-Phase 6.1**: UBT Project Setup (October 17, 2025)
+  - UE 5.6 source installation (20.7GB at C:\UE\UE_5.6_Source)
+  - Complete UBT project structure created
+  - Working BuildNative.ps1 automation with UE auto-detection
+  - Successful native executable compilation (25MB UnrealLiveLinkNative.exe)
+  - Full build environment established and validated
+  - Build time: 3-5 seconds (incremental)
 
-**🔄 NEXT:**
+**🔄 IN PROGRESS:**
 - **Sub-Phase 6.2**: Type Definitions (C API Structs)
-  - Define ULL_Transform struct (80 bytes)
-  - Implement return codes (ULL_OK, ULL_ERROR, etc.)
-  - Add compile-time size validation
+  - Started: October 17, 2025
+  - Next: Define ULL_Transform struct (80 bytes) in UnrealLiveLinkTypes.h
+  - Next: Implement return codes (ULL_OK=-0, ULL_ERROR=-1, etc.)
+  - Next: Add compile-time size validation with static_assert
 
-**📊 Progress:** Phase 6.1 complete (1/11 sub-phases) = ~9% complete
+**� PLANNED:**
+- Sub-Phases 6.3 through 6.11 (detailed above)
+
+**📊 Progress:** 1/11 sub-phases complete = ~9% of Phase 6 complete
 
 ### Key Technical Achievements
 
-1. **UE Source Build Environment**: Successfully overcame UE source setup challenges
-2. **UBT Integration**: Working UnrealBuildTool compilation pipeline  
-3. **Build Automation**: Intelligent PowerShell script with UE auto-detection
-4. **Native Foundation**: 25MB executable with proper UE integration
-5. **Architecture Validation**: Confirmed approach using UnrealLiveLinkCInterface reference
+1. **✅ UE Source Build Environment**: Successfully set up and validated UE 5.6 source installation
+2. **✅ UBT Integration**: Established working UnrealBuildTool compilation pipeline  
+3. **✅ Build Automation**: Created intelligent PowerShell script with automatic UE detection
+4. **✅ Native Foundation**: Generated 25MB executable with proper UE Core integration
+5. **✅ Architecture Validation**: Confirmed approach viable using reference project as guide
+6. **✅ Windows Integration**: Proper WinMain entry point and required UE globals defined
 
 ### Build System Status
 
 ```
-BuildNative.ps1: ✅ Working
-UE Installation: ✅ Source build at C:\UE\UE_5.6_Source  
-Compilation: ✅ 3-5 second incremental builds
-Output: ✅ UnrealLiveLinkNative.exe (25MB)
-Testing: ✅ Executable runs successfully
+BuildNative.ps1:      ✅ Working
+UE Installation:      ✅ C:\UE\UE_5.6_Source (source build, 20.7GB)
+UE Version:           ✅ 5.6  
+Compilation:          ✅ 3-5 second incremental builds
+Output:               ✅ UnrealLiveLinkNative.exe (25MB)
+Output Location:      ✅ lib\native\win-x64\UnrealLiveLinkNative.exe
+Testing:              ✅ Executable runs successfully
 ```
 
-**Ready for Phase 6.2** - Type definitions and C API structures
+### Next Immediate Steps
+
+1. **Sub-Phase 6.2 Implementation:**
+   - Create `UnrealLiveLinkTypes.h` with ULL_Transform struct
+   - Define return codes matching managed layer expectations
+   - Add static_assert for 80-byte struct size validation
+   - Verify header compiles standalone (no UE dependencies)
+
+2. **DLL Output Research:**
+   - Investigate UBT configuration for DLL output vs current EXE
+   - Update Target.cs or Build.cs as needed
+   - Required before Sub-Phase 6.3 can begin
+
+3. **Validation:**
+   - Ensure types header matches C# marshaling exactly
+   - Test struct size with sizeof() in test compilation
+
+**Ready for Phase 6.2 implementation** - Type definitions and C API structure contracts
 
 ---
 
@@ -991,9 +1180,60 @@ Testing: ✅ Executable runs successfully
 
 ## Next Steps
 
-1. **Review this plan** - Confirm approach and address questions above
-2. **Resolve issues** - Get clarity on build system, APIs, and architecture questions
-3. **Update Architecture.md** - Document any corrections to planned design
-4. **Begin Sub-Phase 6.1** - Start with project setup when ready
+### Immediate Actions (Sub-Phase 6.2)
 
-**Ready to address issues and start implementation when you give the go-ahead.**
+1. **Create UnrealLiveLinkTypes.h**
+   - Location: `src/Native/UnrealLiveLink.Native/Source/UnrealLiveLinkNative/Public/UnrealLiveLinkTypes.h`
+   - Define ULL_Transform struct with exact 80-byte layout
+   - Define return code constants (negative for errors)
+   - Add API version constant
+   - Include static_assert for compile-time validation
+   - Ensure pure C compatibility (extern "C" guards)
+
+2. **Verify Type Definitions**
+   - Test compilation with minimal program
+   - Confirm sizeof(ULL_Transform) == 80
+   - Verify no UE dependencies in types header
+   - Validate against C# marshaling expectations
+
+3. **Research DLL Output Configuration**
+   - Investigate UBT Target.cs settings for DLL vs EXE output
+   - Document required changes to configuration files
+   - Prepare for Sub-Phase 6.3 implementation
+
+### Short-term Roadmap (Next 1-2 weeks)
+
+- Complete Sub-Phases 6.2 and 6.3 (Types + Stub API)
+  - Get DLL exporting 12 stub functions
+  - Verify P/Invoke compatibility from C# managed layer
+  - Validate function signatures match mock DLL exactly
+
+- Complete Sub-Phases 6.4 and 6.5 (Bridge + LiveLink Integration)
+  - Implement LiveLinkBridge singleton with state tracking
+  - Add LiveLink modules to build dependencies
+  - Create first real LiveLink Message Bus source
+  - Verify source appears in Unreal Editor LiveLink window
+
+### Medium-term Roadmap
+
+- Sub-Phases 6.6, 6.7, 6.8 (Transform Streaming + Optimization)
+  - Implement transform subject registration and updates
+  - Validate coordinate system handling
+  - Add FName caching for performance
+
+- Sub-Phases 6.9, 6.10, 6.11 (Properties + Polish + Deployment)
+  - Implement property streaming for all subject types
+  - Add comprehensive error handling and validation
+  - Perform dependency analysis and create deployment package
+
+### Completion Criteria
+
+**Phase 6 will be complete when:**
+- ✅ All 11 sub-phases completed and validated
+- ✅ All 12 C API functions working with real LiveLink integration
+- ✅ Drop-in replacement for mock DLL (no C# changes required)
+- ✅ All managed layer tests still pass (47/47)
+- ✅ Performance targets met (100 objects @ 30 Hz)
+- ✅ Complete deployment package with dependencies identified
+- ✅ Tested on clean machine without UE installation
+
