@@ -5,11 +5,13 @@
 **Scope:** Timeless design decisions, component relationships, technical constraints  
 **Not Included:** Implementation details (see layer dev docs), current status (see DevelopmentPlan.md)
 
+**Last Updated:** October 17, 2025
+
 ---
 
 ## System Overview
 
-SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio to Unreal Engine via the LiveLink protocol. It enables visualization of discrete-event simulation models with 3D graphics, providing both geometric transforms and custom data properties.
+SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio to Unreal Engine via the LiveLink Message Bus protocol. It enables visualization of discrete-event simulation models with 3D graphics, providing both geometric transforms and custom data properties.
 
 **Key Capabilities:**
 - **Transform Streaming:** 3D object position, rotation, and scale at simulation runtime
@@ -21,6 +23,30 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 - **Graceful Degradation:** Simulation continues even if visualization connection fails
 - **Lazy Registration:** Objects auto-register on first use, reducing boilerplate
 - **Configuration-Driven:** Comprehensive Element properties for flexible deployment
+- **Message Bus Architecture:** Uses Unreal's LiveLink Message Bus for loose coupling (third-party integration pattern)
+
+---
+
+## Architecture Validation
+
+### Reference Implementation: UnrealLiveLinkCInterface
+
+Our architecture is based on a **proven production system**:
+
+> "provides a C Interface to the Unreal Live Link Message Bus API. This allows for third party packages to stream to Unreal Live Link without requiring to compile with the Unreal Build Tool (UBT). This is done by exposing the Live Link API via a C interface in a shared object compiled using UBT."
+
+**Validated Design Decisions:**
+- ✅ **Third-Party Integration:** External application → UBT-compiled DLL → LiveLink Message Bus → Unreal Editor
+- ✅ **Standalone Program:** Built with UBT as a Program target (NOT a plugin)
+- ✅ **C API:** `extern "C"` functions for language interoperability
+- ✅ **Performance:** Proven to handle "thousands of float values @ 60Hz" in production
+- ✅ **Deployment Reality:** Additional Unreal DLLs required (tbbmalloc.dll, etc.)
+- ✅ **Message Bus Protocol:** Stable across Unreal versions (4.26 through 5.x)
+
+**Performance Baseline:**
+- Reference system: ~3,000+ floats @ 60Hz = ~180,000 values/sec
+- Our target: 100 objects @ 30Hz × 10 doubles = 30,000 values/sec
+- **Safety margin: 6x lighter than proven reference**
 
 ---
 
@@ -42,20 +68,44 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 - Uses `IPropertyReader` for runtime property evaluation
 - Reports via `IExecutionInformation.TraceInformation` and `ReportError`
 
+---
+
 ### Native Layer (C++)
 
 **Purpose:** P/Invoke bridge between managed C# and Unreal LiveLink Message Bus
 
+**Architecture Type:** Standalone UBT Program (NOT a plugin)
+- Built with Unreal Build Tool as a Program target
+- Lives in `Engine/Source/Programs/UnrealLiveLinkNative/`
+- Outputs standalone executable/DLL
+- No Unreal Editor required for third-party integration
+
 **Key Components:**
 - **P/Invoke API Surface:** 12 exported C functions with `__cdecl` calling convention
-- **LiveLinkBridge:** Singleton managing ILiveLinkProvider and subject registry
-- **Coordinate Helpers:** ULL_Transform → FTransform conversion utilities
+- **LiveLinkBridge:** Singleton managing FLiveLinkMessageBusSource and subject registry
+- **Coordinate Helpers:** ULL_Transform → FTransform conversion utilities (optional, managed layer handles primary conversion)
 - **String Conversion:** C string → FName caching for performance
 
-**Unreal LiveLink Integration:**
-- Creates `ILiveLinkProvider` via `ILiveLinkClient`
+**Unreal LiveLink Integration via Message Bus:**
+- Creates `FLiveLinkMessageBusSource` via `ILiveLinkClient`
 - Registers subjects with `ULiveLinkTransformRole` or `ULiveLinkBasicRole`
-- Submits frame data via `UpdateSubjectFrameData`
+- Submits frame data via `PushSubjectFrameData_AnyThread`
+- Communicates over UDP (port 6666 default) to Unreal Editor
+- No direct coupling - Editor and DLL run as separate processes
+
+**Deployment Dependencies (Critical):**
+> "copying just the dll may not be enough. There may be other dependencies that need to be copied such as the tbbmalloc.dll" - Reference Project Warning
+
+Expected additional DLLs (50-200MB total):
+- tbbmalloc.dll (Intel Threading Building Blocks)
+- UnrealEditor-Core.dll
+- UnrealEditor-CoreUObject.dll
+- UnrealEditor-LiveLink.dll
+- UnrealEditor-LiveLinkInterface.dll
+- UnrealEditor-Messaging.dll
+- UnrealEditor-UdpMessaging.dll
+
+---
 
 ### Mock Native Layer
 
@@ -63,14 +113,15 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 
 **Role in Workflow:**
 - Implements complete 12-function API surface
-- Provides console logging for debugging P/Invoke calls
+- Provides file logging for debugging P/Invoke calls
 - Enables CI/CD testing without Unreal Engine installation
 - Validates managed layer independently of native implementation
 
 **Relationship to Real Implementation:**
 - Binary-compatible API (same function signatures, struct layouts)
-- Mock responses simulate success paths for testing
-- Real implementation provides actual LiveLink integration
+- Mock simulates success paths with state tracking
+- Real implementation provides actual LiveLink Message Bus integration
+- Mock useful for: Development, unit testing, CI/CD, rapid iteration
 
 ---
 
@@ -114,18 +165,19 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│              Native Bridge (C++ / Mock DLL)                          │
+│           Native Bridge (UBT-Compiled Standalone Program)            │
 │  - LiveLinkBridge singleton                                          │
-│  - ILiveLinkProvider management                                      │
+│  - FLiveLinkMessageBusSource management                              │
 │  - Subject registration/updates                                      │
+│  - Thread-safe operations (FCriticalSection)                         │
 └────────────────────────────────┬────────────────────────────────────┘
                                  │
-                                 ▼
+                                 ▼ (LiveLink Message Bus - UDP)
 ┌─────────────────────────────────────────────────────────────────────┐
-│                  Unreal Engine LiveLink                              │
+│                  Unreal Engine LiveLink System                       │
 │  - LiveLink window (source visibility)                               │
 │  - Actor binding (transform subjects)                                │
-│  - Blueprint access (data subjects)                                  │
+│  - Blueprint access (data subjects via Get LiveLink Property Value)  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -143,9 +195,10 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
    - Scale: Pass-through (typically `[1, 1, 1]`)
 3. `LiveLinkObjectUpdater.UpdateTransform()` marshals to `ULL_Transform` struct
 4. P/Invoke call: `ULL_UpdateObject(name, transform)`
-5. Native bridge constructs Unreal `FTransform`
-6. LiveLink provider submits `FLiveLinkFrameDataStruct` to message bus
-7. Unreal Editor displays object in LiveLink window, bound actors update
+5. Native bridge constructs Unreal `FTransform` (direct pass-through expected)
+6. LiveLink Message Bus source submits `FLiveLinkFrameDataStruct`
+7. Frame transmitted over UDP to Unreal Editor (separate process)
+8. Unreal Editor displays object in LiveLink window, bound actors update
 
 ### Data Streaming Pipeline
 
@@ -154,8 +207,9 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 2. Step builds property name array: `["Throughput", "WIP", "Utilization"]`
 3. Step builds property value array: `[247.5f, 42.0f, 0.87f]`
 4. P/Invoke call: `ULL_UpdateDataSubject(subjectName, propertyNames, values, count)`
-5. Native bridge creates/updates data subject (no transform, only properties)
-6. Unreal Blueprint reads via `Get LiveLink Property Value` node
+5. Native bridge creates/updates data subject with `ULiveLinkBasicRole` (no transform, only properties)
+6. Frame transmitted via Message Bus to Unreal Editor
+7. Unreal Blueprint reads via `Get LiveLink Property Value` node
 
 ### Object Lifecycle
 
@@ -171,6 +225,20 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 
 ## Key Technical Decisions
 
+### Message Bus Architecture (Validated)
+
+**Why Message Bus vs Direct Plugin:**
+- **Loose Coupling:** Simio and Unreal run as separate processes
+- **No UBT for Consumer:** Third-party apps use standard P/Invoke (no Unreal dependency)
+- **Production Proven:** Reference project validates this approach
+- **Protocol Stability:** Message Bus protocol stable across UE versions
+- **Network Capable:** Can stream to remote Unreal instances (UDP)
+
+**Trade-offs:**
+- **Extra Memory Copy:** One additional copy per frame (proven acceptable in reference)
+- **Deployment Size:** Requires Unreal DLLs (50-200MB vs ~1MB for pure native)
+- **Connection Dependency:** Requires Unreal Editor running with LiveLink Message Bus Source active
+
 ### Coordinate System Conversion
 
 **Why Needed:**
@@ -181,7 +249,8 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 **Where Conversion Happens:**
 - `CoordinateConverter.cs` in managed layer (before P/Invoke)
 - Native layer receives already-converted Unreal coordinates
-- No coordinate math in native bridge (single responsibility)
+- No coordinate math expected in native bridge (single responsibility)
+- Native performs direct pass-through: `ULL_Transform` → `FTransform`
 
 **Rotation Handling:**
 - Simio uses Euler angles (Heading, Pitch, Roll in degrees)
@@ -240,9 +309,10 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 - Initialization lock prevents race conditions during setup
 
 **Native Layer Synchronization:**
-- `FCriticalSection` protects ILiveLinkProvider access
+- `FCriticalSection` protects LiveLink API access
 - Subject registry access serialized (Unreal APIs not thread-safe)
 - C API functions may be called from multiple threads (protect shared state)
+- LiveLink provides `_AnyThread` function variants for thread-safe operations
 
 ---
 
@@ -326,13 +396,15 @@ void ULL_RemoveDataSubject(const char* subjectName);
 **String Marshaling:** ANSI strings (`CharSet.Ansi`, `UnmanagedType.LPStr`)  
 **Array Marshaling:** Pointer + count (no length prefix)
 
+---
+
 ### Simio Extension Points
 
 **IElementDefinition / IElement:**
 - **Connection lifecycle management:** Initialize on simulation start, Shutdown on end
 - **8 properties total:**
   - **LiveLink Connection (5):** SourceName, LiveLinkHost, LiveLinkPort, ConnectionTimeout, RetryAttempts
-  - **Logging (2):** EnableLogging (ExpressionProperty - evaluates at runtime, supports dynamic expressions), LogFilePath
+  - **Logging (2):** EnableLogging (ExpressionProperty - evaluates at runtime), LogFilePath
   - **Unreal Engine (1):** UnrealEnginePath (user-specified installation path)
 - **Configuration object:** `LiveLinkConfiguration` with validation
 - **Health status:** `IsConnectionHealthy` property for Steps to check
@@ -357,23 +429,27 @@ void ULL_RemoveDataSubject(const char* subjectName);
 **Update Frequency:**
 - Target: 30-60 Hz for moving objects (transform updates)
 - Achievable: 100+ Hz for data subjects (lighter payload)
-- Bottleneck: P/Invoke overhead (~0.1ms per call)
+- Bottleneck: P/Invoke overhead (~0.1ms per call) + Message Bus transmission
 
 **Object Count:**
 - Target: 100+ concurrent objects
 - Tested: Mock DLL handles 500+ objects in unit tests
+- Reference: Production system handles "thousands of floats @ 60Hz"
 - Limitation: Unreal LiveLink UI performance degrades beyond ~200 subjects
 
 **Memory Footprint:**
 - Target: <100MB for typical simulation (50 objects, 10 data subjects)
 - Managed layer: ~10MB base + ~1KB per object (including updater, buffers)
-- Native layer: ~20MB (Unreal Engine LiveLink provider overhead)
+- Native layer: ~20MB base (Unreal Engine LiveLink modules overhead)
+- Deployment: 50-200MB total (including Unreal DLL dependencies)
 
 **Connection Health Check Caching:**
 - Cache duration: 1 second
-- Rationale: `ULL_IsConnected()` is expensive P/Invoke call
+- Rationale: `ULL_IsConnected()` is expensive P/Invoke + Message Bus check
 - Implementation: `LiveLinkManager._lastConnectionCheckTime` timestamp
 - Impact: Reduces P/Invoke overhead by ~99% for frequent health checks
+
+---
 
 ### Deployment Model
 
@@ -381,8 +457,17 @@ void ULL_RemoveDataSubject(const char* subjectName);
 ```
 %PROGRAMFILES%\Simio LLC\Simio\UserExtensions\SimioUnrealEngineLiveLinkConnector\
 ├── SimioUnrealEngineLiveLinkConnector.dll  (managed layer)
-├── UnrealLiveLink.Native.dll               (native layer or mock)
-└── System.Drawing.Common.dll               (dependency)
+├── UnrealLiveLink.Native.dll               (native layer)
+├── System.Drawing.Common.dll               (managed dependency)
+└── [Unreal Engine Dependencies - 50-200MB total:]
+    ├── tbbmalloc.dll
+    ├── UnrealEditor-Core.dll
+    ├── UnrealEditor-CoreUObject.dll
+    ├── UnrealEditor-LiveLink.dll
+    ├── UnrealEditor-LiveLinkInterface.dll
+    ├── UnrealEditor-Messaging.dll
+    ├── UnrealEditor-UdpMessaging.dll
+    └── [additional Unreal runtime DLLs]
 ```
 
 **DLL Loading Sequence:**
@@ -391,12 +476,18 @@ void ULL_RemoveDataSubject(const char* subjectName);
 3. Simio discovers `IElementDefinition` and `IStepDefinition` implementations
 4. Element.Initialize() triggers first P/Invoke call
 5. .NET Framework loads `UnrealLiveLink.Native.dll` from same directory
-6. Native DLL initializes LiveLink provider
+6. Native DLL dynamically loads Unreal dependencies (must be in same folder)
+7. Native DLL initializes LiveLink Message Bus source
 
-**Dependency Management:**
-- System.Drawing.Common version 6.0.0 (NuGet package)
-- App.config binding redirect resolves version conflicts
-- Native DLL must be in same folder as managed DLL (no PATH search)
+**Dependency Management (Critical):**
+> "copying just the dll may not be enough. There may be other dependencies that need to be copied such as the tbbmalloc.dll" - Reference Project Warning
+
+- Use Dependencies.exe tool to identify required DLLs
+- Test deployment on machine without Unreal Engine installed
+- All dependencies must be in same folder as native DLL
+- No PATH search - .NET loads from managed DLL location
+
+---
 
 ### Version Compatibility
 
@@ -407,8 +498,9 @@ void ULL_RemoveDataSubject(const char* subjectName);
 
 **Unreal Engine:**
 - Supported: 5.1+
-- Tested: 5.3, 5.4
-- LiveLink API: Stable since UE 4.26, minimal changes in UE5
+- Tested: 5.3, 5.4, 5.6
+- LiveLink Message Bus Protocol: Stable since UE 4.26
+- Note: "The Unreal Live Link Message Bus line protocol doesn't change that often. As such, you will find that building the Unreal DLL will work for a number of Unreal versions." - Reference Project
 
 **.NET Framework:**
 - Required: 4.8
@@ -420,6 +512,8 @@ void ULL_RemoveDataSubject(const char* subjectName);
 - Native layer reports version via `ULL_GetVersion()`
 - Initialization fails if mismatch detected
 - Future versions: Increment version number for breaking changes
+
+---
 
 ### Security Considerations
 
@@ -436,7 +530,7 @@ void ULL_RemoveDataSubject(const char* subjectName);
 **Network Endpoint Validation:**
 - Host format validated (DNS name or IP address)
 - Port range checked (1-65535)
-- No raw socket access (LiveLink handles network layer)
+- No raw socket access (LiveLink Message Bus handles network layer)
 - Connection timeout enforced (prevents infinite hangs)
 
 **Privilege Requirements:**
@@ -449,12 +543,12 @@ void ULL_RemoveDataSubject(const char* subjectName);
 
 **Languages:**
 - C# 10.0 (.NET Framework 4.8) - Managed layer
-- C++ (Unreal Engine modules) - Native layer
+- C++ (Unreal Engine UBT) - Native layer
 - C (P/Invoke surface) - Exported API
 
 **Key APIs:**
 - Simio Extensions API - IElementDefinition, IStepDefinition, IPropertyReader
-- Unreal LiveLink API - ILiveLinkProvider, ILiveLinkClient, FLiveLinkFrameDataStruct
+- Unreal LiveLink API - FLiveLinkMessageBusSource, ILiveLinkClient, FLiveLinkFrameDataStruct
 - .NET P/Invoke - DllImport, marshaling, struct layout
 
 **Build Tools:**
@@ -489,7 +583,7 @@ Unit Tests (Coordinate, Utils)
 
 **Unit Tests:**
 - **Coordinate Conversion:** Known transformations, edge cases, inverse operations
-- **Types:** Struct size validation, marshaling correctness
+- **Types:** Struct size validation (80 bytes), marshaling correctness
 - **Utils:** Path normalization, network validation, UE detection
 - **Configuration:** Validation rules, default values, error cases
 
@@ -502,15 +596,16 @@ Unit Tests (Coordinate, Utils)
 
 **E2E Tests (Real Simio + Unreal):**
 - **Transform Streaming:** Objects appear and move in Unreal viewport
-- **Data Subject Streaming:** Blueprint reads property values correctly
+- **Data Subject Streaming:** Blueprint reads property values correctly via Get LiveLink Property Value
 - **Performance:** 100 objects at 30 Hz sustained
 - **Connection Recovery:** Unreal restart, network interruption
+- **Message Bus:** Verify UDP communication (port 6666 default)
 
 **Mock vs Real:**
 - **Development:** Mock for rapid iteration (no Unreal Engine needed)
 - **CI/CD:** Mock for automated testing (no GUI dependencies)
-- **Validation:** Real for final integration testing
-- **Production:** Real DLL deployed to end users
+- **Validation:** Real for final integration testing with Message Bus
+- **Production:** Real DLL with dependencies deployed to end users
 
 [See TestAndBuildInstructions.md for test execution commands]
 
@@ -518,10 +613,19 @@ Unit Tests (Coordinate, Utils)
 
 ## Related Documentation
 
-- **Implementation guides:** 
-  - [ManagedLayerDevelopment.md](ManagedLayerDevelopment.md) - C# implementation patterns and development sequence
-  - [NativeLayerDevelopment.md](NativeLayerDevelopment.md) - C++ implementation and LiveLink integration
-- **Build/test workflows:** [TestAndBuildInstructions.md](TestAndBuildInstructions.md) - Commands and troubleshooting
-- **Current status:** [DevelopmentPlan.md](DevelopmentPlan.md) - Phase tracking and task checklists
-- **Mathematical details:** [CoordinateSystems.md](CoordinateSystems.md) - Coordinate transformation derivations
-- **User guides:** [SimioInstructions.md](SimioInstructions.md), [UnrealSetup.md](UnrealSetup.md)
+**Implementation Guides:** 
+- [ManagedLayerDevelopment.md](ManagedLayerDevelopment.md) - C# implementation patterns and development sequence
+- [NativeLayerDevelopment.md](NativeLayerDevelopment.md) - C++ implementation, LiveLink Message Bus integration, build procedures
+
+**Build/Test Workflows:** 
+- [TestAndBuildInstructions.md](TestAndBuildInstructions.md) - Build commands and troubleshooting
+
+**Project Status:** 
+- [DevelopmentPlan.md](DevelopmentPlan.md) - Current phase, milestones, completion tracking
+
+**Technical Details:** 
+- [CoordinateSystems.md](CoordinateSystems.md) - Coordinate transformation derivations
+
+**User Guides:** 
+- [SimioInstructions.md](SimioInstructions.md) - Simio deployment and usage
+- [UnrealSetup.md](UnrealSetup.md) - Unreal Editor LiveLink configuration
