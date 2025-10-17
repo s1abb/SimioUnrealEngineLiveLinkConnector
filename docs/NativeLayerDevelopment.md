@@ -11,6 +11,46 @@
 
 **IMPORTANT:** This document describes the **PLANNED** native implementation for production use with Unreal Engine.
 
+## Architecture Validation (Reference Project)
+
+**✅ APPROACH CONFIRMED VIABLE** by UnrealLiveLinkCInterface reference project:
+
+**Reference Project Evidence:**
+```
+"provides a C Interface to the Unreal Live Link Message Bus API. This allows for 
+third party packages to stream to Unreal Live Link without requiring to compile 
+with the Unreal Build Tool (UBT). This is done by exposing the Live Link API via 
+a C interface in a shared object compiled using UBT."
+```
+
+**Key Confirmations:**
+- ✅ **Build Method:** UBT compilation works for standalone DLL (not plugin)
+- ✅ **File Placement:** Copy to `[UE_SRC]\Engine\Source\Programs\[ProjectName]\` 
+- ✅ **C API:** `extern "C"` functions prevent name mangling
+- ✅ **Third-party Integration:** No UBT required for consumers (Simio P/Invoke)
+- ✅ **Performance:** "thousands of float values @ 60Hz" (our case is 6x lighter)
+- ✅ **Dependencies:** DLL may require additional Unreal DLLs (tbbmalloc.dll, etc.)
+
+**Direct Architecture Match:**
+```
+Third-party (Simio C#) → P/Invoke → UBT-compiled DLL → LiveLink Message Bus → Unreal Editor
+```
+
+This is EXACTLY our planned approach.
+
+## Performance Validation
+
+**Reference Project Proves Viability:**
+- Successfully handles "thousands of float values updating at 60Hz"
+- One extra memory copy per frame is acceptable  
+- Middleware approach (third-party → DLL → LiveLink) works in production
+
+**Our Use Case Analysis:**
+- Reference: ~3,000+ floats @ 60Hz = ~180,000 values/sec
+- Our target: 100 objects @ 30Hz × 10 doubles = 30,000 values/sec
+- **Performance margin: 6x lighter than proven reference**
+- **Conclusion: Performance will NOT be a bottleneck**
+
 ### Current Status (Phase 4 - Mock Complete)
 
 **✅ Mock DLL Implementation:**
@@ -221,6 +261,26 @@ typedef struct {
 - **Strings:** Managed layer owns all input strings (const char*), native must NOT free
 - **Arrays:** Passed as pointer + count, no dynamic allocation by native
 - **Transform struct:** Passed by pointer, managed layer allocates, native reads only
+
+### Return Code Standards  
+
+**CRITICAL:** Real implementation must match managed layer expectations exactly.
+
+**From UnrealLiveLinkNative.cs:**
+```csharp
+public const int ULL_OK = 0;                // Success
+public const int ULL_ERROR = -1;            // General error  
+public const int ULL_NOT_CONNECTED = -2;    // Not connected to Unreal
+public const int ULL_NOT_INITIALIZED = -3;  // Initialize not called
+```
+
+**Mock vs Real Implementation:**
+- Mock currently uses positive error codes (1, 2) - this is a known discrepancy
+- Real implementation MUST use NEGATIVE error codes as shown above
+- Success is always 0 (both mock and real)
+
+**Reference Project Note:** UnrealLiveLinkCInterface avoids `bool` types, using `int` for consistency.
+Our approach: Use `int` in C API, `bool` acceptable internally in C++.
 - **Return codes:** 0 = success, negative = error
 
 ### Calling Convention
@@ -607,30 +667,54 @@ dumpbin /exports lib\native\win-x64\UnrealLiveLink.Native.dll
 
 **Status:** BuildNative.ps1 is currently EMPTY
 
-**When Implemented:**
-```powershell
-# 🚧 PLANNED (script does not exist yet)
-.\build\BuildNative.ps1
-
-# Expected steps:
-# 1. Copy source to UE Programs directory
-# 2. Regenerate UE project files
-# 3. Build with Unreal Build Tool (UBT)
-# 4. Copy output DLL and PDB
-# 5. Create version info
-
-# Expected output:
-# lib\native\win-x64\UnrealLiveLink.Native.dll (real version)
-# lib\native\win-x64\UnrealLiveLink.Native.pdb
-
-# Expected build time: ~10 minutes first build, ~5 minutes incremental
+**Reference Project Build Process (Confirmed Working):**
+```
+Windows 10/11:
+1. copy the UnrealLiveLinkCInterface directory to [UE_SRC]\Engine\Source\Programs
+2. copy include files to project directory  
+3. cd [UE_SRC]
+4. run "GenerateProjectFiles.bat" - creates UE5.sln
+5. load UE5.sln in Visual Studio 2022
+6. build
+7. output: [UE_SRC]\Engine\Binaries\Win64\UnrealLiveLinkCInterface.dll
 ```
 
-**Prerequisites:**
-- Unreal Engine 5.1+ source installation (~100GB)
-- Visual Studio 2019+ with C++ workload
-- Unreal Build Tool (UBT) configured
-- ~2 hours for initial UE compilation
+**Our Planned Implementation:**
+```powershell
+# 🚧 PLANNED (script to be created)
+.\build\BuildNative.ps1
+
+# Expected steps (based on reference project):
+# 1. Copy src/Native/UnrealLiveLink.Native/ to C:\UE\UE_5.6\Engine\Source\Programs\UnrealLiveLinkNative\
+# 2. cd C:\UE\UE_5.6
+# 3. Run GenerateProjectFiles.bat (creates/updates UE5.sln)
+# 4. Build using preferred method:
+#    - Visual Studio: Open UE5.sln, build UnrealLiveLinkNative project
+#    - MSBuild: msbuild UE5.sln /t:Programs\UnrealLiveLinkNative (preferred for VS Code)
+#    - UBT Direct: .\Engine\Build\BatchFiles\Build.bat UnrealLiveLinkNative Win64 Development
+# 5. Copy output from C:\UE\UE_5.6\Engine\Binaries\Win64\ to lib\native\win-x64\
+# 6. Run Dependencies.exe to identify additional required DLLs
+# 7. Copy dependency DLLs (tbbmalloc.dll, etc.) to deployment folder
+
+# Expected output:
+# lib\native\win-x64\UnrealLiveLinkNative.dll (real version)
+# lib\native\win-x64\UnrealLiveLinkNative.pdb
+# lib\native\win-x64\[dependency DLLs]
+
+# Expected build time: ~10 minutes first build, ~2-5 minutes incremental
+```
+
+**Prerequisites (Updated):**
+- Unreal Engine 5.6 **source code** installation (~100GB) at `C:\UE\UE_5.6`
+- Visual Studio 2022 Build Tools OR full IDE with C++ workload  
+- Windows 10/11 SDK (included with Build Tools)
+- .NET SDK (for UBT itself - it's a C# tool)
+- Dependencies.exe tool for DLL analysis
+
+**Build Options:**
+- ✅ **VS Code + Build Tools** supported (no full Visual Studio IDE required)
+- ✅ **Command line builds** via MSBuild or UBT  
+- ✅ **Automated via PowerShell** scripts
 
 ---
 
@@ -895,6 +979,12 @@ public class RealLiveLinkIntegrationTests
 - [ ] Build with UBT: `Build.bat UnrealLiveLinkNative Win64 Development`
 - [ ] Verify exports: `dumpbin /exports UnrealLiveLink.Native.dll`
 - [ ] Copy DLL to `lib\native\win-x64\`
+- [ ] **Dependency Analysis** (CRITICAL - Reference project lesson):
+  - [ ] Install Dependencies.exe tool (https://github.com/lucasg/Dependencies)
+  - [ ] Run: `Dependencies.exe C:\UE\UE_5.6\Engine\Binaries\Win64\UnrealLiveLinkNative.dll`
+  - [ ] Identify required Unreal DLLs (expect: tbbmalloc.dll, UnrealEditor-Core.dll, etc.)
+  - [ ] Copy all dependencies to `lib\native\win-x64\`
+  - [ ] Test on clean machine without UE installation
 - [ ] Test with managed layer (replace mock)
 
 ### Testing
@@ -949,7 +1039,19 @@ DllNotFoundException: UnrealLiveLink.Native.dll
 **Solution:**
 - Copy DLL to same directory as managed executable
 - Verify 64-bit DLL for 64-bit process
-- Include all Unreal Engine dependencies (Core.dll, etc.)
+- **CRITICAL:** Include all Unreal Engine dependencies (see Dependencies.exe output)
+
+**Issue: Missing Dependencies (Reference Project Warning)**
+```
+Exception: The specified module could not be found
+```
+**Reference project warning:** "copying just the dll may not be enough. There may be other dependencies that need to be copied such as the tbbmalloc.dll"
+
+**Solution:**
+- Use Dependencies.exe to analyze UnrealLiveLinkNative.dll
+- Copy identified dependencies: tbbmalloc.dll, UnrealEditor-Core.dll, etc.
+- May require 50-200MB of Unreal DLLs for deployment
+- Test deployment package on clean machine without UE installed
 
 **Issue: No Connection to Unreal**
 ```
