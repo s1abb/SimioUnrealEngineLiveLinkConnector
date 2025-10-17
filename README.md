@@ -3,13 +3,15 @@
 **Purpose:** Project landing page, quick orientation, and navigation hub.
 
 ## Overview
-[2-3 sentence description of what this project does]
+A C# Simio extension and C++ native bridge that enables real-time streaming of simulation data from Simio to Unreal Engine via LiveLink protocol. Allows Simio simulation entities to control virtual objects in Unreal Engine for visualization, digital twin applications, and mixed reality experiences.
 
 ## Quick Start
-[Absolute minimal steps to build and run]
 ```powershell
-# Link to TestAndBuildInstructions.md for full details
-```
+# Clone and navigate to repository
+git clone https://github.com/s1abb/SimioUnrealEngineLiveLinkConnector.git
+cd SimioUnrealEngineLiveLinkConnector
+
+See [Test & Build Instructions](docs/TestAndBuildInstructions.md) for detailed setup and troubleshooting.
 
 ## Documentation Map
 
@@ -28,23 +30,51 @@
 ## Repository Structure
 ```
 SimioUnrealEngineLiveLinkConnector/
-├── src/Managed/          # C# Simio extension
-├── src/Native/           # C++ Unreal plugin & mock
-├── tests/                # Unit, integration, E2E tests
-├── build/                # Build automation scripts
-├── docs/                 # Documentation
-└── examples/             # Reference implementations
+├── src/
+│   ├── Managed/          # C# Simio extension (✅ Complete)
+│   └── Native/           # C++ UE Program & mock (🔄 Phase 6.1+ in progress)
+├── tests/
+│   ├── Unit.Tests/       # Unit tests (✅ 33+ passing)
+│   ├── Integration.Tests/# Integration tests (✅ Working)
+│   └── E2E.Tests/        # End-to-end tests (📋 Planned)
+├── build/                # Build automation scripts (✅ Complete)
+├── lib/native/win-x64/   # Build outputs (DLL + EXE)
+├── docs/                 # Comprehensive documentation (✅ Current)
+└── examples/             # Reference implementations & patterns
 ```
 
 ## Prerequisites
-- Windows with Visual Studio Build Tools or full VS
+### Required
+- Windows 10/11
+- Visual Studio 2022 Build Tools (with C++ workload)
 - .NET Framework 4.8 Developer Pack
-- PowerShell
-- Simio (optional for local testing)
-- Unreal Engine (optional for native development)
+- PowerShell 5.1+
 
-## Contributing
-[Brief guidelines or link to contributing doc]
+### Optional
+- **Simio** (for local testing and deployment)
+- **Unreal Engine 5.6 Source** (for native development) 
+  - Binary installation insufficient - source build required at `C:\UE\UE_5.6_Source\`
+  - See [Native Layer Development](docs/NativeLayerDevelopment.md) for setup details
 
-## License
-[License information]
+## Key Features
+
+### Managed Layer (C# Simio Extension)
+- ✅ **4 Custom Steps**: CreateObject, SetPosition, TransmitValues, DestroyObject
+- ✅ **1 Custom Element**: UnrealEngineConnector with comprehensive properties
+- ✅ **Coordinate System Integration**: Simio ↔ Unreal transformations
+- ✅ **P/Invoke Bridge**: Seamless native DLL integration
+- ✅ **Production Ready**: All tests passing, deployable to Simio
+
+### Native Layer (C++ UE Integration)
+- ✅ **UBT Build System**: Complete UnrealBuildTool integration
+- ✅ **UE 5.6 Compatibility**: Source build environment operational  
+- 🔄 **LiveLink Protocol**: Implementation in progress (Phase 6.2+)
+- 🔄 **Message Bus Integration**: Planned real-time data streaming
+- 📋 **C API**: 12-function interface for Simio P/Invoke
+
+### Development & Testing
+- ✅ **Mock DLL**: Complete API simulation for development
+- ✅ **Automated Builds**: PowerShell scripts for all components
+- ✅ **Comprehensive Testing**: Unit, integration, and validation tests
+- ✅ **Documentation**: Complete technical and user documentation
+

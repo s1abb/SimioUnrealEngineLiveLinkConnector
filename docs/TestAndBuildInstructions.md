@@ -17,7 +17,9 @@
 
 ### Optional Software
 - Simio (for Simio UI testing) - Install location: `C:\Program Files\Simio LLC\Simio\`
-- Unreal Engine 5.1+ (for native layer development and E2E testing)
+- Unreal Engine 5.6 Source (for native layer development) - Install location: `C:\UE\UE_5.6_Source\`
+  - **Note:** Binary installation at `C:\UE\UE_5.6` insufficient for native builds
+  - Source build required for UnrealBuildTool compilation
 
 ### Environment Setup
 ```powershell
@@ -90,13 +92,20 @@ dotnet build src/Managed/SimioUnrealEngineLiveLinkConnector.csproj --configurati
 
 **Output:** `src/Managed/bin/Release/net48/SimioUnrealEngineLiveLinkConnector.dll`
 
-### Native Layer (Real Implementation)
-**Purpose:** Build Unreal Engine plugin (future - Phase 6)
+### Native Layer (Real Implementation) ✅ AVAILABLE
+**Purpose:** Build Unreal Engine native executable (Phase 6.1+ complete)
 
 ```powershell
-# Not yet implemented - see NativeLayerDevelopment.md for future steps
+# Build native UE executable (WORKING - requires UE 5.6 source)
 .\build\BuildNative.ps1
+
+# Prerequisites:
+# - UE 5.6 source installation at C:\UE\UE_5.6_Source
+# - Visual Studio 2022 Build Tools
+# - Completed Setup.bat and GenerateProjectFiles.bat
 ```
+
+**Output:** `lib/native/win-x64/UnrealLiveLinkNative.exe` (25MB executable)
 
 ---
 
@@ -144,6 +153,24 @@ dotnet test tests/Unit.Tests/Unit.Tests.csproj -p:SimioInstallDir="D:\Simio"
 # [MOCK] ULL_IsConnected(result=CONNECTED)
 # [MOCK] ULL_Shutdown
 # 🎉 POWERSHELL P/INVOKE TEST PASSED!
+```
+
+### Native Build Validation ✅ AVAILABLE
+**Purpose:** Verify UBT compilation and executable output
+
+```powershell
+# Build and test native executable
+.\build\BuildNative.ps1
+
+# Expected output:
+# ✅ UBT build completed
+# ✅ Copied executable and PDB to: lib\native\win-x64\
+# 🎉 BUILD SUCCESS!
+# Output Executable: UnrealLiveLinkNative.exe (25MB)
+
+# Test executable directly
+& "lib\native\win-x64\UnrealLiveLinkNative.exe"
+# Expected: Program starts and exits successfully
 ```
 
 ---
@@ -230,14 +257,39 @@ msbuild -version
 - Check `lib/native/win-x64/UnrealLiveLink.Native.dll` exists
 - Verify 64-bit PowerShell (not 32-bit)
 
+### Native Build Issues ✅ TROUBLESHOOTING AVAILABLE
+
+**"UE installation not found"**
+- Verify UE 5.6 source installation at `C:\UE\UE_5.6_Source`
+- Run Setup.bat and GenerateProjectFiles.bat if not done
+- Binary UE installation insufficient - source required
+
+**"UnrealBuildTool not found"**
+- Ensure Setup.bat completed successfully
+- Check `C:\UE\UE_5.6_Source\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe` exists
+- Re-run GenerateProjectFiles.bat if needed
+
+**"Compilation errors"**
+- Check UBT log file path shown in output
+- Verify Visual Studio 2022 Build Tools installed
+- Ensure proper UE project structure (Target.cs, Build.cs files)
+
+**"Build succeeds but executable crashes"**
+- Expected for current Phase 6.1 (minimal stub)
+- Phase 6.2+ will add proper functionality
+- Use for build system testing only
+
 ---
 
 ## Advanced Usage
 
 ### Building Everything
 ```powershell
-# One-liner: Setup, build mock, build managed, run tests
+# Complete build: Setup, mock DLL, managed layer, tests
 .\build\SetupVSEnvironment.ps1; .\build\BuildMockDLL.ps1; .\build\BuildManaged.ps1; dotnet test tests/Unit.Tests/Unit.Tests.csproj
+
+# Include native build (requires UE 5.6 source)
+.\build\SetupVSEnvironment.ps1; .\build\BuildMockDLL.ps1; .\build\BuildNative.ps1; .\build\BuildManaged.ps1; dotnet test tests/Unit.Tests/Unit.Tests.csproj
 ```
 
 ### Clean Build
@@ -261,7 +313,7 @@ dotnet test tests/Unit.Tests/Unit.Tests.csproj -p:SimioInstallDir="D:\Custom\Sim
 
 ---
 
-## Mock DLL vs Real Native DLL
+## Mock DLL vs Real Native Build
 
 ### Mock DLL Features
 - ✅ Complete API coverage (11 functions)
@@ -271,18 +323,26 @@ dotnet test tests/Unit.Tests/Unit.Tests.csproj -p:SimioInstallDir="D:\Custom\Sim
 - ✅ Fast build (seconds)
 - ❌ No actual LiveLink integration
 
-### When to Use Mock vs Real
+### Native UE Build Features ✅ AVAILABLE (Phase 6.1+)
+- ✅ UBT compilation with UE 5.6 source
+- ✅ 25MB native executable with UE Core integration
+- ✅ Automated BuildNative.ps1 script
+- ✅ 3-5 second incremental builds
+- ✅ Proper UE Program target structure
+- 🔄 LiveLink integration (Phase 6.2+ in development)
+
+### When to Use Mock vs Native
 **Use Mock DLL:**
 - Managed layer development
 - Unit/integration testing
 - CI/CD pipelines
-- Quick iteration
+- Quick iteration without UE dependencies
 
-**Use Real Native DLL:**
-- Native layer development (Phase 6+)
-- End-to-end integration testing
-- Production deployment
-- Performance profiling
+**Use Native Build:**
+- Phase 6+ native layer development
+- LiveLink protocol implementation
+- Production deployment (when complete)
+- UE integration testing
 
 ---
 
@@ -360,9 +420,9 @@ public class CoordinateConverterTests
 **Managed Layer:** Uses Simio TraceInformation (visible in Simio Trace window)  
 **Deployment:** Check Event Viewer → Application logs
 
----
 
 ## Related Documentation
 - **Architecture:** [Architecture.md](Architecture.md)
 - **Implementation:** [ManagedLayerDevelopment.md](ManagedLayerDevelopment.md), [NativeLayerDevelopment.md](NativeLayerDevelopment.md)
-- **Status:** [DevelopmentPlan.md](DevelopmentPlan.md)
+- **Status:** [Phase6DevelopmentPlan.md](Phase6DevelopmentPlan.md)
+- **Phase 6 Progress:** [Phase6DevelopmentPlan.md](Phase6DevelopmentPlan.md#phase-6-status-update---october-17-2025)
