@@ -1,7 +1,7 @@
 # Phase 6: Native Layer Implementation Plan
 
 **Status:** 🔄 IN PROGRESS  
-**Progress:** 3/11 sub-phases complete (27%)
+**Progress:** 4/11 sub-phases complete (36%)
 
 ---
 
@@ -10,16 +10,18 @@
 **Objective:** Implement real native DLL with Unreal Engine LiveLink Message Bus integration, replacing the mock DLL used for managed layer development.
 
 **Current Status:**
-- ✅ **Sub-Phases 6.1-6.3 COMPLETE:** UBT setup, type definitions, and C API export layer
-- 🔄 **Sub-Phase 6.4 NEXT:** LiveLinkBridge singleton state management
-- 📋 **Sub-Phases 6.5-6.11 PLANNED:** LiveLink integration, optimization, and deployment
+- ✅ **Sub-Phases 6.1-6.4 COMPLETE:** UBT setup, type definitions, C API export layer, and LiveLinkBridge singleton
+- 🔄 **Sub-Phase 6.5 NEXT:** LiveLink Message Bus source creation
+- 📋 **Sub-Phases 6.6-6.11 PLANNED:** LiveLink integration, optimization, and deployment
 
 **Key Achievements:**
 - UE 5.6 source build environment established (20.7GB)
 - Working BuildNative.ps1 automation (3-5 second builds)
-- DLL output with 12 exported stub functions (75KB)
+- LiveLinkBridge singleton with thread-safe state management
+- DLL output with 12 exported functions delegating to LiveLinkBridge (24.04 MB)
 - Binary-compatible type definitions verified
 - Full parameter validation and logging implemented
+- All 25 integration tests passing (100%)
 
 **Architecture Validation:** Approach confirmed viable based on production reference project (UnrealLiveLinkCInterface) handling "thousands of floats @ 60Hz" - our use case is 6x lighter (30,000 values/sec vs 180,000 values/sec).
 
@@ -109,9 +111,124 @@
 
 ---
 
+### ✅ Sub-Phase 6.4: LiveLinkBridge Singleton (State Management)
+**Status:** COMPLETE
+
+**Objective:** Create C++ bridge class that tracks state with thread safety, without actual LiveLink integration yet.
+
+**Deliverables:**
+- `LiveLinkBridge.h` (178 lines) - Singleton class declaration with FSubjectInfo struct
+- `LiveLinkBridge.cpp` (446 lines) - Complete state tracking implementation
+- Updated `UnrealLiveLink.API.cpp` - All functions delegate to LiveLinkBridge
+- Thread safety with FCriticalSection and FScopeLock
+- FName caching for performance optimization
+- Property tracking with FSubjectInfo struct
+
+**Build Results:**
+- Output: UnrealLiveLink.Native.dll (25,210,880 bytes / 24.04 MB)
+- Build time: ~5 seconds incremental
+- All 25 integration tests passing (100%)
+
+**Key Implementation Details:**
+
+**FSubjectInfo Structure:**
+```cpp
+struct FSubjectInfo {
+    TArray<FName> PropertyNames;      // Cached property names
+    int32 ExpectedPropertyCount;      // For validation
+};
+```
+
+**LiveLinkBridge Class (Singleton Pattern):**
+```cpp
+class FLiveLinkBridge {
+public:
+    static FLiveLinkBridge& Get();  // Meyer's singleton
+    
+    // Lifecycle (idempotent Initialize)
+    bool Initialize(const FString& ProviderName);
+    void Shutdown();
+    int GetConnectionStatus() const;
+    
+    // Transform subjects (auto-registration on update)
+    void RegisterTransformSubject(const FName& SubjectName);
+    void RegisterTransformSubjectWithProperties(const FName& SubjectName, const TArray<FName>& PropertyNames);
+    void UpdateTransformSubject(const FName& SubjectName, const FTransform& Transform);
+    void UpdateTransformSubjectWithProperties(const FName& SubjectName, const FTransform& Transform, const TArray<float>& PropertyValues);
+    void RemoveTransformSubject(const FName& SubjectName);
+    
+    // Data subjects
+    void RegisterDataSubject(const FName& SubjectName, const TArray<FName>& PropertyNames);
+    void UpdateDataSubject(const FName& SubjectName, const TArray<float>& PropertyValues);
+    void RemoveDataSubject(const FName& SubjectName);
+    
+    // FName caching (optimization)
+    FName GetCachedName(const char* cString);
+    
+private:
+    FLiveLinkBridge() = default;
+    
+    bool bInitialized = false;
+    FString ProviderName;
+    
+    TMap<FName, FSubjectInfo> TransformSubjects;
+    TMap<FName, FSubjectInfo> DataSubjects;
+    TMap<FString, FName> NameCache;  // UTF8 string → FName cache
+    
+    mutable FCriticalSection CriticalSection;
+};
+```
+
+**Key Features Implemented:**
+- ✅ **Meyer's Singleton:** Static local variable in Get() for thread-safe initialization
+- ✅ **Thread Safety:** All methods use FScopeLock(&CriticalSection) for RAII protection
+- ✅ **Idempotent Initialize:** Returns true on repeat calls (matches test expectations)
+- ✅ **GetConnectionStatus:** Returns ULL_NOT_INITIALIZED or ULL_NOT_CONNECTED
+- ✅ **Auto-Registration:** UpdateTransformSubject registers subject if not already registered
+- ✅ **Property Tracking:** FSubjectInfo stores PropertyNames and ExpectedPropertyCount
+- ✅ **Property Validation:** Warns if property count doesn't match expected
+- ✅ **FName Caching:** GetCachedName() caches UTF8→FName conversions for performance
+- ✅ **Throttled Logging:** Updates log every 60th call to avoid spam
+
+**API Layer Changes:**
+- Removed global `StubState` namespace
+- Added helper functions:
+  - `ConvertToFTransform(const ULL_Transform*)` - Converts ULL_Transform to FTransform
+  - `ConvertPropertyNames(const char**, int)` - Converts C strings to TArray<FName>
+  - `ConvertPropertyValues(const float*, int)` - Converts C array to TArray<float>
+- All 12 C API functions now delegate to `FLiveLinkBridge::Get()`
+
+**Integration Test Results:**
+- All 25 tests passing (100%)
+- Initialize_CalledTwice_ShouldSucceedBothTimes: ✅ (idempotent behavior)
+- Parameter validation: ✅
+- Memory management: ✅
+- Thread safety: ✅ (implicit via FScopeLock)
+
+**Success Criteria Met:**
+- ✅ Singleton returns same instance across calls
+- ✅ Initialize is idempotent (returns true if already initialized)
+- ✅ GetConnectionStatus returns appropriate status codes
+- ✅ Register/Update/Remove track subjects in maps with property info
+- ✅ Property count mismatches logged as warnings
+- ✅ Thread-safe operations with FScopeLock
+- ✅ Shutdown clears all state and allows re-initialization
+- ✅ FName cache improves performance on repeated lookups
+- ✅ No actual LiveLink integration yet (state tracking only)
+
+**TODO Markers Preserved:**
+- Sub-Phase 6.5: Create FLiveLinkMessageBusSource in Initialize
+- Sub-Phase 6.5: Cleanup FLiveLinkMessageBusSource in Shutdown
+- Sub-Phase 6.6: Implement actual transform subject registration
+- Sub-Phase 6.9: Implement property streaming
+
+**Commit:** `47c824a` - "Complete Sub-Phase 6.4: LiveLinkBridge singleton with state management"
+
+---
+
 ## Planned Sub-Phases
 
-### 📋 Sub-Phase 6.4: LiveLinkBridge Class (No LiveLink Integration)
+### 📋 Sub-Phase 6.5: ILiveLinkProvider Creation
 **Status:** NEXT - Ready to implement
 
 **Objective:** Create C++ bridge class that tracks state but doesn't use LiveLink APIs yet.
@@ -197,7 +314,7 @@ private:
 ---
 
 ### 📋 Sub-Phase 6.5: ILiveLinkProvider Creation
-**Status:** PLANNED
+**Status:** NEXT - Ready to implement
 
 **Objective:** Create real LiveLink Message Bus source and register it with LiveLink system.
 

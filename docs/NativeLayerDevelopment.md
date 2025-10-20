@@ -5,7 +5,11 @@
 **Scope:** API contract, build procedures, implementation patterns, technical design  
 **Not Included:** Project status/phase tracking (see DevelopmentPlan.md)
 
-**Last Updated:** October 17, 2025
+**Last Updated:** October 20, 2025
+
+**Implementation Status:**
+- ✅ Sub-Phase 6.1-6.4: UBT setup, type definitions, C API layer, LiveLinkBridge singleton
+- 📋 Sub-Phase 6.5+: LiveLink Message Bus integration (pending)
 
 ---
 
@@ -462,7 +466,9 @@ private:
 
 **Purpose:** Single instance managing all LiveLink connections
 
-**Subject Info Structure (Sub-Phase 6.4):**
+**Status:** ✅ Implemented in Sub-Phase 6.4
+
+**Subject Info Structure:**
 ```cpp
 // Track property information with subjects
 struct FSubjectInfo {
@@ -476,19 +482,19 @@ struct FSubjectInfo {
 };
 ```
 
-**Header (LiveLinkBridge.h):**
+**Header (LiveLinkBridge.h - 178 lines):**
 ```cpp
 class FLiveLinkBridge {
 public:
-    static FLiveLinkBridge& Get();
+    static FLiveLinkBridge& Get();  // Meyer's singleton
     
-    // Lifecycle
+    // Lifecycle (idempotent Initialize)
     bool Initialize(const FString& ProviderName);
     void Shutdown();
     bool IsInitialized() const { return bInitialized; }
     int GetConnectionStatus() const;  // Returns ULL_NOT_INITIALIZED or ULL_NOT_CONNECTED
     
-    // Transform subjects
+    // Transform subjects (auto-registration on update)
     void RegisterTransformSubject(const FName& SubjectName);
     void RegisterTransformSubjectWithProperties(const FName& SubjectName, const TArray<FName>& PropertyNames);
     void UpdateTransformSubject(const FName& SubjectName, const FTransform& Transform);
@@ -500,7 +506,7 @@ public:
     void UpdateDataSubject(const FName& SubjectName, const TArray<float>& PropertyValues);
     void RemoveDataSubject(const FName& SubjectName);
     
-    // FName caching (performance optimization - Sub-Phase 6.4)
+    // FName caching (performance optimization)
     FName GetCachedName(const char* cString);
     
     // No copy/move
@@ -512,37 +518,42 @@ private:
     
     bool bInitialized = false;
     FString ProviderName;
-    FLiveLinkSourceHandle LiveLinkSource;  // Added in Sub-Phase 6.5
+    FLiveLinkSourceHandle LiveLinkSource;  // Will be added in Sub-Phase 6.5
     
-    TMap<FName, FSubjectInfo> TransformSubjects;  // Enhanced in 6.4 with property tracking
-    TMap<FName, FSubjectInfo> DataSubjects;       // Enhanced in 6.4 with property tracking
-    TMap<FString, FName> NameCache;                // Added in Sub-Phase 6.4
+    TMap<FName, FSubjectInfo> TransformSubjects;  // Property tracking
+    TMap<FName, FSubjectInfo> DataSubjects;       // Property tracking
+    TMap<FString, FName> NameCache;               // UTF8 string → FName cache
     
-    FCriticalSection CriticalSection;
+    mutable FCriticalSection CriticalSection;     // Thread safety
 };
 ```
 
-**Implementation (LiveLinkBridge.cpp):**
+**Implementation (LiveLinkBridge.cpp - 446 lines):**
 ```cpp
+// Meyer's singleton with thread-safe initialization
 FLiveLinkBridge& FLiveLinkBridge::Get() {
     static FLiveLinkBridge Instance;
     return Instance;
 }
 
+// Idempotent initialization (returns true on repeat calls)
 bool FLiveLinkBridge::Initialize(const FString& InProviderName) {
     FScopeLock Lock(&CriticalSection);
     
     if (bInitialized) {
-        UE_LOG(LogUnrealLiveLinkNative, Warning, 
-               TEXT("Initialize: Already initialized, returning false"));
-        return false;
+        UE_LOG(LogUnrealLiveLinkNative, Log, 
+               TEXT("Initialize: Already initialized with provider '%s', returning true (idempotent)"), 
+               *ProviderName);
+        return true;  // Idempotent behavior
     }
     
     ProviderName = InProviderName;
     bInitialized = true;
     
     UE_LOG(LogUnrealLiveLinkNative, Log, 
-           TEXT("Initialize: State tracking initialized for '%s'"), *ProviderName);
+           TEXT("Initialize: State tracking initialized for provider '%s'"), *ProviderName);
+    
+    // TODO: Sub-Phase 6.5 - Create FLiveLinkMessageBusSource here
     
     return true;
 }
@@ -620,15 +631,17 @@ void FLiveLinkBridge::SomeMethod() {
 
 ---
 
-### FName Caching Pattern (Sub-Phase 6.4)
+### FName Caching Pattern
 
 **Purpose:** Optimize repeated string→FName conversions (performance critical for 30-60Hz updates)
 
-**Why Included Early:** FName caching is simple, has no dependencies, and provides immediate value during development and testing. Moved from Sub-Phase 6.8 to 6.4.
+**Status:** ✅ Implemented in Sub-Phase 6.4
 
-**Implementation:**
+**Why Included Early:** FName caching is simple, has no dependencies, and provides immediate value during development and testing. Moved from Sub-Phase 6.8 to 6.4 for immediate performance benefits.
+
+**Implementation (LiveLinkBridge.cpp):**
 ```cpp
-// In LiveLinkBridge class
+// Thread-safe FName caching with TMap<FString, FName>
 FName FLiveLinkBridge::GetCachedName(const char* cString) {
     FScopeLock Lock(&CriticalSection);  // Thread-safe access to cache
     
