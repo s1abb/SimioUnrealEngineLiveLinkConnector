@@ -6,6 +6,9 @@ public class UnrealLiveLinkNative : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         
+        // Disable unity builds for cleaner compilation
+        bUseUnity = false;
+        
         // Basic dependencies (Sub-Phase 6.1)
         PublicDependencyModuleNames.AddRange(new string[] 
         {
@@ -13,13 +16,12 @@ public class UnrealLiveLinkNative : ModuleRules
             "CoreUObject"
         });
         
-        // LiveLink dependencies (Sub-Phase 6.5)
+        // LiveLink dependencies (Sub-Phase 6.6)
         PublicDependencyModuleNames.AddRange(new string[] 
         {
             "LiveLinkInterface",            // LiveLink type definitions
-            "LiveLinkMessageBusFramework",  // ILiveLinkProvider API
+            "LiveLinkMessageBusFramework",  // Message Bus source
             "Messaging",                    // Message Bus communication
-            "UdpMessaging"                  // Network transport for Message Bus
         });
         
         // Export symbols for DLL

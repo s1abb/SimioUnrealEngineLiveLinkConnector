@@ -5,21 +5,26 @@
 #include "Math/Transform.h"
 #include "UnrealLiveLink.Types.h"
 
-// LiveLink includes (Sub-Phase 6.5)
-// Note: For DLL usage, we cannot use ILiveLinkProvider (requires full UE engine loop).
-// Sub-Phase 6.5 focuses on architectural readiness for LiveLink integration.
-// Actual source creation will happen when subjects are registered in Sub-Phase 6.6+
+// LiveLink includes (Sub-Phase 6.6)
+#include "ILiveLinkClient.h"
+#include "Features/IModularFeatures.h"
+#include "LiveLinkTypes.h"
+#include "Roles/LiveLinkTransformRole.h"
+#include "Roles/LiveLinkTransformTypes.h"
+
+// Forward declare to avoid include dependency
+class ILiveLinkSource;
 
 //=============================================================================
-// Sub-Phase 6.5: LiveLinkBridge with Message Bus Source
+// Sub-Phase 6.6: LiveLinkBridge with Transform Subject Registration
 //=============================================================================
 // This class manages LiveLink state AND actual LiveLink Message Bus integration.
 // 
 // Implementation Status:
 // - Sub-Phase 6.4 (Complete): State tracking, thread safety, FName caching
-// - Sub-Phase 6.5 (Current): LiveLink Message Bus source creation
-// - Sub-Phase 6.6: Transform subject registration/updates
-// - Sub-Phase 6.9: Property streaming
+// - Sub-Phase 6.5 (Complete): LiveLink framework dependencies integrated
+// - Sub-Phase 6.6 (Current): Transform subject registration and frame updates
+// - Sub-Phase 6.9 (Pending): Property streaming with subjects
 //=============================================================================
 
 /// <summary>
@@ -160,16 +165,26 @@ private:
 	~FLiveLinkBridge() = default;
 	
 	//=============================================================================
+	// Helper Methods (Sub-Phase 6.6)
+	//=============================================================================
+	
+	/// <summary>
+	/// Ensure LiveLink source is created (on-demand creation)
+	/// Called automatically on first subject registration
+	/// </summary>
+	void EnsureLiveLinkSource();
+	
+	//=============================================================================
 	// Member Variables
 	//=============================================================================
 	
 	bool bInitialized = false;
 	FString ProviderName;
 	
-	// LiveLink integration flags (Sub-Phase 6.5)
-	// Note: Actual LiveLink source will be created on-demand in Sub-Phase 6.6
-	//       when first subject is registered
-	bool bLiveLinkReady = false;
+	// LiveLink integration state (Sub-Phase 6.5-6.6)
+	bool bLiveLinkReady = false;           // Framework is ready (6.5)
+	FGuid LiveLinkSourceGuid;              // Source identifier (6.6)
+	bool bLiveLinkSourceCreated = false;   // Track if source created (6.6)
 	
 	// Subject tracking with property metadata
 	TMap<FName, FSubjectInfo> TransformSubjects;
