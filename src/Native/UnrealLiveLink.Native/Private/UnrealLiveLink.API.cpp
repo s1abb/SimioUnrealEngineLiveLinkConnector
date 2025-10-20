@@ -1,28 +1,99 @@
 #include "UnrealLiveLink.API.h"
 #include "UnrealLiveLink.Native.h"
+#include "LiveLinkBridge.h"
+#include "Math/Transform.h"
 #include "Misc/CString.h"
 
 //=============================================================================
-// Sub-Phase 6.3: Stub Implementation
+// Sub-Phase 6.4: C API Implementation with LiveLinkBridge
 //=============================================================================
-// This file implements all 12 C API functions as stubs.
-// Functions log calls via UE_LOG and perform parameter validation.
-// NO actual LiveLink integration yet - that comes in Sub-Phase 6.5+.
+// This file implements all 12 C API functions using the LiveLinkBridge singleton.
+// Functions perform parameter validation and delegate to FLiveLinkBridge.
 //
 // Implementation Status by Sub-Phase:
-// - 6.3 (Current): Stub functions with logging and validation
-// - 6.4: Add LiveLinkBridge state tracking
-// - 6.5: Create actual FLiveLinkMessageBusSource
+// - 6.3 (Complete): Stub functions with logging and validation
+// - 6.4 (Current): LiveLinkBridge state tracking with thread safety
+// - 6.5: Add actual FLiveLinkMessageBusSource
 // - 6.6: Implement transform subject registration and updates
 // - 6.9: Implement property and data subject support
 //=============================================================================
 
-// Global state tracking for stubs (minimal - will be replaced by LiveLinkBridge in 6.4)
-namespace StubState
+//=============================================================================
+// Helper Functions
+//=============================================================================
+
+/// <summary>
+/// Convert ULL_Transform to Unreal's FTransform
+/// </summary>
+static FTransform ConvertToFTransform(const ULL_Transform* transform)
 {
-    static bool bInitialized = false;
-    static int InitializeCallCount = 0;
-    static int ShutdownCallCount = 0;
+    if (!transform)
+    {
+        return FTransform::Identity;
+    }
+    
+    // Position: centimeters (ULL_Transform uses cm, FVector uses cm)
+    FVector Location(
+        transform->position[0],
+        transform->position[1],
+        transform->position[2]
+    );
+    
+    // Rotation: quaternion (X, Y, Z, W)
+    FQuat Rotation(
+        transform->rotation[0],
+        transform->rotation[1],
+        transform->rotation[2],
+        transform->rotation[3]
+    );
+    
+    // Scale: uniform or non-uniform
+    FVector Scale(
+        transform->scale[0],
+        transform->scale[1],
+        transform->scale[2]
+    );
+    
+    return FTransform(Rotation, Location, Scale);
+}
+
+/// <summary>
+/// Convert array of C strings to TArray of FNames using cached names
+/// </summary>
+static TArray<FName> ConvertPropertyNames(const char** propertyNames, int propertyCount)
+{
+    TArray<FName> Result;
+    Result.Reserve(propertyCount);
+    
+    for (int i = 0; i < propertyCount; i++)
+    {
+        if (propertyNames[i])
+        {
+            Result.Add(FLiveLinkBridge::Get().GetCachedName(propertyNames[i]));
+        }
+        else
+        {
+            Result.Add(NAME_None);
+        }
+    }
+    
+    return Result;
+}
+
+/// <summary>
+/// Convert array of floats to TArray
+/// </summary>
+static TArray<float> ConvertPropertyValues(const float* propertyValues, int propertyCount)
+{
+    TArray<float> Result;
+    Result.Reserve(propertyCount);
+    
+    for (int i = 0; i < propertyCount; i++)
+    {
+        Result.Add(propertyValues[i]);
+    }
+    
+    return Result;
 }
 
 //=============================================================================
@@ -46,52 +117,25 @@ extern "C"
             return ULL_ERROR;
         }
 
-        // Convert to TCHAR for logging
+        // Convert to FString and delegate to LiveLinkBridge
         FString ProviderNameStr = UTF8_TO_TCHAR(providerName);
 
-        // Log the call
-        StubState::InitializeCallCount++;
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_Initialize called (count: %d) with providerName: '%s'"),
-               StubState::InitializeCallCount,
-               *ProviderNameStr);
-
-        // Stub implementation - just mark as initialized
-        if (StubState::bInitialized)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                   TEXT("ULL_Initialize: Already initialized, returning success"));
-            return ULL_OK;
-        }
-
-        StubState::bInitialized = true;
-
-        // TODO: Sub-Phase 6.5 - Create FLiveLinkMessageBusSource here
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_Initialize: Stub implementation - no actual LiveLink connection"));
-
-        return ULL_OK;
+        // LiveLinkBridge::Initialize is idempotent - always returns true if valid params
+        bool bSuccess = FLiveLinkBridge::Get().Initialize(ProviderNameStr);
+        
+        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_Initialize: %s"), 
+               bSuccess ? TEXT("Success") : TEXT("Failed"));
+        
+        return bSuccess ? ULL_OK : ULL_ERROR;
     }
 
     __declspec(dllexport) void ULL_Shutdown()
     {
-        StubState::ShutdownCallCount++;
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_Shutdown called (count: %d)"),
-               StubState::ShutdownCallCount);
-
-        if (!StubState::bInitialized)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                   TEXT("ULL_Shutdown: Not initialized, nothing to do"));
-            return;
-        }
-
-        // TODO: Sub-Phase 6.5 - Cleanup FLiveLinkMessageBusSource here
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_Shutdown: Stub implementation - no cleanup needed"));
-
-        StubState::bInitialized = false;
+        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_Shutdown called"));
+        
+        FLiveLinkBridge::Get().Shutdown();
+        
+        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_Shutdown: Complete"));
     }
 
     __declspec(dllexport) int ULL_GetVersion()
@@ -105,20 +149,11 @@ extern "C"
 
     __declspec(dllexport) int ULL_IsConnected()
     {
-        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_IsConnected called"));
-
-        if (!StubState::bInitialized)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                   TEXT("ULL_IsConnected: Not initialized, returning ULL_NOT_INITIALIZED"));
-            return ULL_NOT_INITIALIZED;
-        }
-
-        // TODO: Sub-Phase 6.5 - Check actual LiveLink connection status
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_IsConnected: Stub implementation - returning ULL_NOT_CONNECTED"));
-
-        return ULL_NOT_CONNECTED;
+        int status = FLiveLinkBridge::Get().GetConnectionStatus();
+        
+        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_IsConnected: Status = %d"), status);
+        
+        return status;
     }
 
 //=============================================================================
@@ -135,20 +170,11 @@ extern "C"
         }
 
         FString SubjectNameStr = UTF8_TO_TCHAR(subjectName);
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RegisterObject called with subjectName: '%s'"),
-               *SubjectNameStr);
+        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_RegisterObject: '%s'"), *SubjectNameStr);
 
-        if (!StubState::bInitialized)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                   TEXT("ULL_RegisterObject: Not initialized, ignoring call"));
-            return;
-        }
-
-        // TODO: Sub-Phase 6.6 - Register transform subject with LiveLink
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RegisterObject: Stub implementation - no actual registration"));
+        // Convert to FName and delegate to LiveLinkBridge
+        FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
+        FLiveLinkBridge::Get().RegisterTransformSubject(SubjectFName);
     }
 
     __declspec(dllexport) void ULL_RegisterObjectWithProperties(
@@ -182,39 +208,14 @@ extern "C"
 
         FString SubjectNameStr = UTF8_TO_TCHAR(subjectName);
         UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RegisterObjectWithProperties called with subjectName: '%s', propertyCount: %d"),
-               *SubjectNameStr,
-               propertyCount);
+               TEXT("ULL_RegisterObjectWithProperties: '%s' with %d properties"),
+               *SubjectNameStr, propertyCount);
 
-        // Log property names
-        for (int i = 0; i < propertyCount; i++)
-        {
-            if (propertyNames[i])
-            {
-                FString PropNameStr = UTF8_TO_TCHAR(propertyNames[i]);
-                UE_LOG(LogUnrealLiveLinkNative, Log, 
-                       TEXT("  Property[%d]: '%s'"),
-                       i,
-                       *PropNameStr);
-            }
-            else
-            {
-                UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                       TEXT("  Property[%d]: NULL"),
-                       i);
-            }
-        }
-
-        if (!StubState::bInitialized)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                   TEXT("ULL_RegisterObjectWithProperties: Not initialized, ignoring call"));
-            return;
-        }
-
-        // TODO: Sub-Phase 6.9 - Register transform subject with properties
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RegisterObjectWithProperties: Stub implementation - no actual registration"));
+        // Convert parameters and delegate to LiveLinkBridge
+        FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
+        TArray<FName> PropNamesArray = ConvertPropertyNames(propertyNames, propertyCount);
+        
+        FLiveLinkBridge::Get().RegisterTransformSubjectWithProperties(SubjectFName, PropNamesArray);
     }
 
     __declspec(dllexport) void ULL_UpdateObject(
@@ -234,34 +235,11 @@ extern "C"
             return;
         }
 
-        FString SubjectNameStr = UTF8_TO_TCHAR(subjectName);
+        // Convert parameters and delegate to LiveLinkBridge
+        FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
+        FTransform UnrealTransform = ConvertToFTransform(transform);
         
-        // Log with throttling (only every 60th call to avoid spam)
-        static int UpdateCallCount = 0;
-        UpdateCallCount++;
-        
-        if (UpdateCallCount % 60 == 1)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Log, 
-                   TEXT("ULL_UpdateObject called (count: %d) for '%s' - Position: (%.2f, %.2f, %.2f)"),
-                   UpdateCallCount,
-                   *SubjectNameStr,
-                   transform->position[0],
-                   transform->position[1],
-                   transform->position[2]);
-        }
-
-        if (!StubState::bInitialized)
-        {
-            if (UpdateCallCount % 60 == 1)
-            {
-                UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                       TEXT("ULL_UpdateObject: Not initialized, ignoring call"));
-            }
-            return;
-        }
-
-        // TODO: Sub-Phase 6.6 - Submit frame data to LiveLink
+        FLiveLinkBridge::Get().UpdateTransformSubject(SubjectFName, UnrealTransform);
     }
 
     __declspec(dllexport) void ULL_UpdateObjectWithProperties(
@@ -293,32 +271,13 @@ extern "C"
             return;
         }
 
-        FString SubjectNameStr = UTF8_TO_TCHAR(subjectName);
+        // Convert parameters and delegate to LiveLinkBridge
+        FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
+        FTransform UnrealTransform = ConvertToFTransform(transform);
+        TArray<float> PropertiesArray = ConvertPropertyValues(propertyValues, propertyCount);
         
-        // Log with throttling
-        static int UpdateWithPropsCallCount = 0;
-        UpdateWithPropsCallCount++;
-        
-        if (UpdateWithPropsCallCount % 60 == 1)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Log, 
-                   TEXT("ULL_UpdateObjectWithProperties called (count: %d) for '%s', propertyCount: %d"),
-                   UpdateWithPropsCallCount,
-                   *SubjectNameStr,
-                   propertyCount);
-        }
-
-        if (!StubState::bInitialized)
-        {
-            if (UpdateWithPropsCallCount % 60 == 1)
-            {
-                UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                       TEXT("ULL_UpdateObjectWithProperties: Not initialized, ignoring call"));
-            }
-            return;
-        }
-
-        // TODO: Sub-Phase 6.9 - Submit frame data with properties to LiveLink
+        FLiveLinkBridge::Get().UpdateTransformSubjectWithProperties(
+            SubjectFName, UnrealTransform, PropertiesArray);
     }
 
     __declspec(dllexport) void ULL_RemoveObject(const char* subjectName)
@@ -331,20 +290,11 @@ extern "C"
         }
 
         FString SubjectNameStr = UTF8_TO_TCHAR(subjectName);
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RemoveObject called with subjectName: '%s'"),
-               *SubjectNameStr);
+        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_RemoveObject: '%s'"), *SubjectNameStr);
 
-        if (!StubState::bInitialized)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                   TEXT("ULL_RemoveObject: Not initialized, ignoring call"));
-            return;
-        }
-
-        // TODO: Sub-Phase 6.6 - Mark subject as removed in LiveLink
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RemoveObject: Stub implementation - no actual removal"));
+        // Convert to FName and delegate to LiveLinkBridge
+        FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
+        FLiveLinkBridge::Get().RemoveTransformSubject(SubjectFName);
     }
 
 //=============================================================================
@@ -382,33 +332,14 @@ extern "C"
 
         FString SubjectNameStr = UTF8_TO_TCHAR(subjectName);
         UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RegisterDataSubject called with subjectName: '%s', propertyCount: %d"),
-               *SubjectNameStr,
-               propertyCount);
+               TEXT("ULL_RegisterDataSubject: '%s' with %d properties"),
+               *SubjectNameStr, propertyCount);
 
-        // Log property names
-        for (int i = 0; i < propertyCount; i++)
-        {
-            if (propertyNames[i])
-            {
-                FString PropNameStr = UTF8_TO_TCHAR(propertyNames[i]);
-                UE_LOG(LogUnrealLiveLinkNative, Log, 
-                       TEXT("  Property[%d]: '%s'"),
-                       i,
-                       *PropNameStr);
-            }
-        }
-
-        if (!StubState::bInitialized)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                   TEXT("ULL_RegisterDataSubject: Not initialized, ignoring call"));
-            return;
-        }
-
-        // TODO: Sub-Phase 6.9 - Register data subject with LiveLink (BasicRole)
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RegisterDataSubject: Stub implementation - no actual registration"));
+        // Convert parameters and delegate to LiveLinkBridge
+        FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
+        TArray<FName> PropNamesArray = ConvertPropertyNames(propertyNames, propertyCount);
+        
+        FLiveLinkBridge::Get().RegisterDataSubject(SubjectFName, PropNamesArray);
     }
 
     __declspec(dllexport) void ULL_UpdateDataSubject(
@@ -441,32 +372,11 @@ extern "C"
             return;
         }
 
-        FString SubjectNameStr = UTF8_TO_TCHAR(subjectName);
+        // Convert parameters and delegate to LiveLinkBridge
+        FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
+        TArray<float> PropertiesArray = ConvertPropertyValues(propertyValues, propertyCount);
         
-        // Log with throttling
-        static int DataUpdateCallCount = 0;
-        DataUpdateCallCount++;
-        
-        if (DataUpdateCallCount % 60 == 1)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Log, 
-                   TEXT("ULL_UpdateDataSubject called (count: %d) for '%s', propertyCount: %d"),
-                   DataUpdateCallCount,
-                   *SubjectNameStr,
-                   propertyCount);
-        }
-
-        if (!StubState::bInitialized)
-        {
-            if (DataUpdateCallCount % 60 == 1)
-            {
-                UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                       TEXT("ULL_UpdateDataSubject: Not initialized, ignoring call"));
-            }
-            return;
-        }
-
-        // TODO: Sub-Phase 6.9 - Submit data frame to LiveLink
+        FLiveLinkBridge::Get().UpdateDataSubject(SubjectFName, PropertiesArray);
     }
 
     __declspec(dllexport) void ULL_RemoveDataSubject(const char* subjectName)
@@ -480,20 +390,11 @@ extern "C"
         }
 
         FString SubjectNameStr = UTF8_TO_TCHAR(subjectName);
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RemoveDataSubject called with subjectName: '%s'"),
-               *SubjectNameStr);
+        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_RemoveDataSubject: '%s'"), *SubjectNameStr);
 
-        if (!StubState::bInitialized)
-        {
-            UE_LOG(LogUnrealLiveLinkNative, Warning, 
-                   TEXT("ULL_RemoveDataSubject: Not initialized, ignoring call"));
-            return;
-        }
-
-        // TODO: Sub-Phase 6.9 - Mark data subject as removed in LiveLink
-        UE_LOG(LogUnrealLiveLinkNative, Log, 
-               TEXT("ULL_RemoveDataSubject: Stub implementation - no actual removal"));
+        // Convert to FName and delegate to LiveLinkBridge
+        FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
+        FLiveLinkBridge::Get().RemoveDataSubject(SubjectFName);
     }
 
 } // extern "C"
