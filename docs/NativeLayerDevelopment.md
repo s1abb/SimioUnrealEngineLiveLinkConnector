@@ -383,7 +383,7 @@ void FLiveLinkBridge::UpdateTransformSubject(const FName& SubjectName, const FTr
 
 ---
 
-**Pattern 2: Property Count Validation**
+**Pattern 2: Property Count Validation (Enhanced in Sub-Phase 6.4)**
 ```cpp
 // MockLiveLink.cpp lines 207-215
 if (it != g_transformObjectProperties.end()) {
@@ -396,33 +396,61 @@ if (it != g_transformObjectProperties.end()) {
 
 **Real Implementation Should:**
 ```cpp
-if (const TArray<FName>* RegisteredProps = TransformSubjects.Find(SubjectName)) {
-    if (RegisteredProps->Num() != PropertyValues.Num()) {
-        UE_LOG(LogTemp, Error, TEXT("Property count mismatch for %s"), *SubjectName.ToString());
-        return;
+// Using FSubjectInfo struct (Sub-Phase 6.4)
+void FLiveLinkBridge::UpdateTransformSubjectWithProperties(
+    const FName& SubjectName, 
+    const FTransform& Transform,
+    const TArray<float>& PropertyValues) {
+    
+    FScopeLock Lock(&CriticalSection);
+    
+    if (const FSubjectInfo* SubjectInfo = TransformSubjects.Find(SubjectName)) {
+        if (SubjectInfo->ExpectedPropertyCount != PropertyValues.Num()) {
+            UE_LOG(LogUnrealLiveLinkNative, Error, 
+                   TEXT("Property count mismatch for '%s': expected %d, got %d"),
+                   *SubjectName.ToString(),
+                   SubjectInfo->ExpectedPropertyCount,
+                   PropertyValues.Num());
+            return;
+        }
+        
+        // Property count matches - proceed with update
+        // (Sub-Phase 6.9: Actual LiveLink frame submission)
     }
 }
 ```
 
 ---
 
-**Pattern 3: State Tracking**
+**Pattern 3: State Tracking (Sub-Phase 6.4 Enhancement)**
 ```cpp
-// Mock uses global state
+// Mock uses global state (simple, but not thread-safe)
 static bool g_isInitialized = false;
 static std::unordered_set<std::string> g_transformObjects;
 static std::unordered_map<std::string, std::vector<std::string>> g_transformObjectProperties;
 ```
 
-**Real Implementation Should:**
+**Real Implementation Uses FSubjectInfo:**
 ```cpp
+// Enhanced structure stores property metadata (Sub-Phase 6.4)
+struct FSubjectInfo {
+    TArray<FName> PropertyNames;
+    int32 ExpectedPropertyCount;
+    
+    FSubjectInfo() : ExpectedPropertyCount(0) {}
+    FSubjectInfo(const TArray<FName>& InPropertyNames) 
+        : PropertyNames(InPropertyNames)
+        , ExpectedPropertyCount(InPropertyNames.Num()) {}
+};
+
 // LiveLinkBridge uses member variables with thread safety
 class FLiveLinkBridge {
 private:
     bool bInitialized = false;
-    TMap<FName, TArray<FName>> TransformSubjects;
-    TMap<FName, TArray<FName>> DataSubjects;
-    FCriticalSection CriticalSection;  // Thread safety
+    TMap<FName, FSubjectInfo> TransformSubjects;  // Enhanced with property tracking
+    TMap<FName, FSubjectInfo> DataSubjects;       // Enhanced with property tracking
+    TMap<FString, FName> NameCache;                // Added in Sub-Phase 6.4
+    FCriticalSection CriticalSection;              // Thread safety
 };
 ```
 
@@ -434,6 +462,20 @@ private:
 
 **Purpose:** Single instance managing all LiveLink connections
 
+**Subject Info Structure (Sub-Phase 6.4):**
+```cpp
+// Track property information with subjects
+struct FSubjectInfo {
+    TArray<FName> PropertyNames;
+    int32 ExpectedPropertyCount;
+    
+    FSubjectInfo() : ExpectedPropertyCount(0) {}
+    FSubjectInfo(const TArray<FName>& InPropertyNames) 
+        : PropertyNames(InPropertyNames)
+        , ExpectedPropertyCount(InPropertyNames.Num()) {}
+};
+```
+
 **Header (LiveLinkBridge.h):**
 ```cpp
 class FLiveLinkBridge {
@@ -444,11 +486,22 @@ public:
     bool Initialize(const FString& ProviderName);
     void Shutdown();
     bool IsInitialized() const { return bInitialized; }
+    int GetConnectionStatus() const;  // Returns ULL_NOT_INITIALIZED or ULL_NOT_CONNECTED
     
     // Transform subjects
     void RegisterTransformSubject(const FName& SubjectName);
+    void RegisterTransformSubjectWithProperties(const FName& SubjectName, const TArray<FName>& PropertyNames);
     void UpdateTransformSubject(const FName& SubjectName, const FTransform& Transform);
-    // ... etc
+    void UpdateTransformSubjectWithProperties(const FName& SubjectName, const FTransform& Transform, const TArray<float>& PropertyValues);
+    void RemoveTransformSubject(const FName& SubjectName);
+    
+    // Data subjects
+    void RegisterDataSubject(const FName& SubjectName, const TArray<FName>& PropertyNames);
+    void UpdateDataSubject(const FName& SubjectName, const TArray<float>& PropertyValues);
+    void RemoveDataSubject(const FName& SubjectName);
+    
+    // FName caching (performance optimization - Sub-Phase 6.4)
+    FName GetCachedName(const char* cString);
     
     // No copy/move
     FLiveLinkBridge(const FLiveLinkBridge&) = delete;
@@ -459,11 +512,11 @@ private:
     
     bool bInitialized = false;
     FString ProviderName;
-    FLiveLinkSourceHandle LiveLinkSource;
+    FLiveLinkSourceHandle LiveLinkSource;  // Added in Sub-Phase 6.5
     
-    TMap<FName, TArray<FName>> TransformSubjects;
-    TMap<FName, TArray<FName>> DataSubjects;
-    TMap<FString, FName> NameCache;
+    TMap<FName, FSubjectInfo> TransformSubjects;  // Enhanced in 6.4 with property tracking
+    TMap<FName, FSubjectInfo> DataSubjects;       // Enhanced in 6.4 with property tracking
+    TMap<FString, FName> NameCache;                // Added in Sub-Phase 6.4
     
     FCriticalSection CriticalSection;
 };
@@ -475,17 +528,71 @@ FLiveLinkBridge& FLiveLinkBridge::Get() {
     static FLiveLinkBridge Instance;
     return Instance;
 }
+
+bool FLiveLinkBridge::Initialize(const FString& InProviderName) {
+    FScopeLock Lock(&CriticalSection);
+    
+    if (bInitialized) {
+        UE_LOG(LogUnrealLiveLinkNative, Warning, 
+               TEXT("Initialize: Already initialized, returning false"));
+        return false;
+    }
+    
+    ProviderName = InProviderName;
+    bInitialized = true;
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Initialize: State tracking initialized for '%s'"), *ProviderName);
+    
+    return true;
+}
+
+void FLiveLinkBridge::Shutdown() {
+    FScopeLock Lock(&CriticalSection);
+    
+    if (!bInitialized) {
+        UE_LOG(LogUnrealLiveLinkNative, Warning, 
+               TEXT("Shutdown: Not initialized"));
+        return;
+    }
+    
+    TransformSubjects.Empty();
+    DataSubjects.Empty();
+    NameCache.Empty();
+    bInitialized = false;
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Complete"));
+}
+
+int FLiveLinkBridge::GetConnectionStatus() const {
+    FScopeLock Lock(&CriticalSection);
+    
+    if (!bInitialized) {
+        return ULL_NOT_INITIALIZED;
+    }
+    
+    // Sub-Phase 6.4: No actual LiveLink connection yet
+    // Sub-Phase 6.5+: Will check LiveLinkSource validity
+    return ULL_NOT_CONNECTED;
+}
 ```
 
 **Usage in C API:**
 ```cpp
 extern "C" {
     __declspec(dllexport) int ULL_Initialize(const char* providerName) {
-        if (!providerName) return ULL_ERROR;
+        if (!providerName || providerName[0] == '\0') {
+            UE_LOG(LogUnrealLiveLinkNative, Error, TEXT("ULL_Initialize: Invalid providerName"));
+            return ULL_ERROR;
+        }
         
-        FString ProviderFString(providerName);
+        FString ProviderFString = UTF8_TO_TCHAR(providerName);
         bool success = FLiveLinkBridge::Get().Initialize(ProviderFString);
         return success ? ULL_OK : ULL_ERROR;
+    }
+    
+    __declspec(dllexport) int ULL_IsConnected() {
+        return FLiveLinkBridge::Get().GetConnectionStatus();
     }
 }
 ```
@@ -513,41 +620,62 @@ void FLiveLinkBridge::SomeMethod() {
 
 ---
 
-### FName Caching Pattern
+### FName Caching Pattern (Sub-Phase 6.4)
 
 **Purpose:** Optimize repeated string→FName conversions (performance critical for 30-60Hz updates)
 
+**Why Included Early:** FName caching is simple, has no dependencies, and provides immediate value during development and testing. Moved from Sub-Phase 6.8 to 6.4.
+
 **Implementation:**
 ```cpp
-class FLiveLinkBridge {
-private:
-    TMap<FString, FName> NameCache;
+// In LiveLinkBridge class
+FName FLiveLinkBridge::GetCachedName(const char* cString) {
+    FScopeLock Lock(&CriticalSection);  // Thread-safe access to cache
     
-public:
-    FName GetCachedName(const char* cString) {
-        if (!cString) return NAME_None;
-        
-        FString StringKey(cString);
-        if (FName* CachedName = NameCache.Find(StringKey)) {
-            return *CachedName;  // Cache hit - fast
-        }
-        
-        FName NewName(cString);
-        NameCache.Add(StringKey, NewName);
-        return NewName;  // Cache miss - store for next time
+    if (!cString || cString[0] == '\0') {
+        return NAME_None;
     }
-};
+    
+    FString StringKey = UTF8_TO_TCHAR(cString);
+    
+    if (FName* CachedName = NameCache.Find(StringKey)) {
+        return *CachedName;  // Cache hit - fast path
+    }
+    
+    // Cache miss - create and store
+    FName NewName(*StringKey);
+    NameCache.Add(StringKey, NewName);
+    
+    return NewName;
+}
 ```
 
-**Usage:**
+**Usage in C API:**
 ```cpp
 extern "C" {
-    void ULL_UpdateObject(const char* subjectName, const ULL_Transform* transform) {
+    __declspec(dllexport) void ULL_UpdateObject(
+        const char* subjectName,
+        const ULL_Transform* transform) {
+        
+        if (!subjectName || !transform) return;
+        
+        // Use cached FName instead of creating new one each call
         FName SubjectFName = FLiveLinkBridge::Get().GetCachedName(subjectName);
-        // Use SubjectFName...
+        
+        // Convert ULL_Transform to FTransform
+        FTransform UnrealTransform = ConvertToFTransform(transform);
+        
+        // Update subject
+        FLiveLinkBridge::Get().UpdateTransformSubject(SubjectFName, UnrealTransform);
     }
 }
 ```
+
+**Performance Impact:**
+- First call: Full string→FName conversion + hash insert
+- Subsequent calls: Hash lookup only (much faster)
+- Typical simulation: 10-100 subject names, called 30-60 times/second
+- Cache hits after first frame reduce CPU overhead significantly
 
 ---
 

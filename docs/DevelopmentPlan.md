@@ -121,10 +121,17 @@
 - `LiveLinkBridge.cpp` - State tracking implementation
 - Replace global namespace state with proper class
 - Thread safety with FCriticalSection
-- Subject registry with TMap
+- Subject registry with property tracking
+- FName caching for performance optimization
 
 **Implementation Pattern:**
 ```cpp
+// Subject info with property tracking
+struct FSubjectInfo {
+    TArray<FName> PropertyNames;
+    int32 ExpectedPropertyCount;
+};
+
 class FLiveLinkBridge {
 public:
     static FLiveLinkBridge& Get();  // Singleton
@@ -133,29 +140,58 @@ public:
     bool Initialize(const FString& ProviderName);
     void Shutdown();
     bool IsInitialized() const;
+    int GetConnectionStatus() const;  // For ULL_IsConnected
     
-    // Transform/Data subject methods (stubs)
+    // Transform subjects
+    void RegisterTransformSubject(const FName& SubjectName);
+    void RegisterTransformSubjectWithProperties(const FName& SubjectName, const TArray<FName>& PropertyNames);
+    void UpdateTransformSubject(const FName& SubjectName, const FTransform& Transform);
+    void UpdateTransformSubjectWithProperties(const FName& SubjectName, const FTransform& Transform, const TArray<float>& PropertyValues);
+    void RemoveTransformSubject(const FName& SubjectName);
+    
+    // Data subjects
+    void RegisterDataSubject(const FName& SubjectName, const TArray<FName>& PropertyNames);
+    void UpdateDataSubject(const FName& SubjectName, const TArray<float>& PropertyValues);
+    void RemoveDataSubject(const FName& SubjectName);
+    
+    // FName caching (performance optimization)
+    FName GetCachedName(const char* cString);
+    
+    // No copy/move
+    FLiveLinkBridge(const FLiveLinkBridge&) = delete;
+    FLiveLinkBridge& operator=(const FLiveLinkBridge&) = delete;
     
 private:
     FLiveLinkBridge() = default;
+    
     bool bInitialized = false;
-    TMap<FName, TArray<FName>> TransformSubjects;
-    TMap<FName, TArray<FName>> DataSubjects;
+    FString ProviderName;
+    
+    TMap<FName, FSubjectInfo> TransformSubjects;
+    TMap<FName, FSubjectInfo> DataSubjects;
+    TMap<FString, FName> NameCache;
+    
     FCriticalSection CriticalSection;
 };
 ```
 
 **Changes Required:**
+- Create LiveLinkBridge.h and LiveLinkBridge.cpp files
 - Modify UnrealLiveLink.API.cpp to call FLiveLinkBridge::Get() methods
 - Remove global namespace StubState
 - Add thread-safe operations with FScopeLock
+- Implement FName caching for repeated string conversions
+- Store property counts with subjects for validation
 
 **Success Criteria:**
-- Singleton returns same instance
-- Initialize sets internal state
-- Register/Update/Remove track subjects in maps
-- Thread-safe operations
-- Shutdown clears all subjects
+- Singleton returns same instance across calls
+- Initialize sets internal state, returns false if already initialized
+- GetConnectionStatus returns ULL_NOT_INITIALIZED or ULL_NOT_CONNECTED appropriately
+- Register/Update/Remove track subjects in maps with property info
+- Property count mismatches logged as warnings
+- Thread-safe operations with FScopeLock
+- Shutdown clears all subjects and allows re-initialization
+- FName cache improves performance on repeated subject name lookups
 - Still no actual LiveLink (state only)
 
 ---
@@ -246,35 +282,30 @@ PublicDependencyModuleNames.AddRange(new string[] {
 
 ---
 
-### 📋 Sub-Phase 6.8: String/FName Caching
+### 📋 Sub-Phase 6.8: Performance Optimization & Validation
 **Status:** PLANNED
 
-**Objective:** Cache FName conversions for performance optimization.
+**Objective:** Validate and optimize high-frequency update performance.
 
-**Implementation:**
-```cpp
-class FLiveLinkBridge {
-private:
-    TMap<FString, FName> NameCache;
-    
-public:
-    FName GetCachedName(const char* cString) {
-        FString StringKey(cString);
-        if (FName* Cached = NameCache.Find(StringKey)) {
-            return *Cached;
-        }
-        FName NewName(cString);
-        NameCache.Add(StringKey, NewName);
-        return NewName;
-    }
-};
-```
+**Note:** FName caching was moved to Sub-Phase 6.4 as part of initial LiveLinkBridge implementation.
+
+**Focus Areas:**
+- Measure frame submission performance at 30-60Hz
+- Validate no frame drops or latency spikes
+- Profile memory usage with 100+ subjects
+- Optimize critical path if needed
+
+**Performance Targets:**
+- 100 objects @ 30Hz = 3,000 updates/sec
+- Frame submission < 1ms average
+- No memory leaks over 1-hour simulation
+- Stable frame timing (no jitter)
 
 **Success Criteria:**
-- First call creates FName and caches
-- Subsequent calls use cached FName
-- Cache cleared on Shutdown
-- No performance regression
+- Meets or exceeds performance targets
+- No frame drops during sustained operation
+- Memory usage stable over extended runs
+- Performance headroom for future features
 
 ---
 
