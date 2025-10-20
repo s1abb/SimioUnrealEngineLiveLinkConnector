@@ -5,15 +5,15 @@
 #include "Math/Transform.h"
 #include "UnrealLiveLink.Types.h"
 
-// LiveLink includes (Sub-Phase 6.6)
-#include "ILiveLinkClient.h"
-#include "Features/IModularFeatures.h"
+// LiveLink includes (Sub-Phase 6.6.1 - Message Bus Provider API)
+// Disable C4099 warning: UE has inconsistent class/struct forward declarations
+#pragma warning(push)
+#pragma warning(disable: 4099)
+#include "LiveLinkProvider.h"              // 🆕 Message Bus Provider API (no ILiveLinkClient needed!)
 #include "LiveLinkTypes.h"
 #include "Roles/LiveLinkTransformRole.h"
 #include "Roles/LiveLinkTransformTypes.h"
-
-// Forward declare to avoid include dependency
-class ILiveLinkSource;
+#pragma warning(pop)
 
 //=============================================================================
 // Sub-Phase 6.6: LiveLinkBridge with Transform Subject Registration
@@ -181,10 +181,15 @@ private:
 	bool bInitialized = false;
 	FString ProviderName;
 	
-	// LiveLink integration state (Sub-Phase 6.5-6.6)
-	bool bLiveLinkReady = false;           // Framework is ready (6.5)
-	FGuid LiveLinkSourceGuid;              // Source identifier (6.6)
-	bool bLiveLinkSourceCreated = false;   // Track if source created (6.6)
+	// LiveLink integration state (Sub-Phase 6.5-6.6.1)
+	bool bLiveLinkReady = false;                        // Framework is ready (6.5)
+	TSharedPtr<ILiveLinkProvider> LiveLinkProvider;     // 🆕 Message Bus Provider (6.6.1)
+	bool bLiveLinkSourceCreated = false;                // Track if source created (6.6)
+	
+	// GEngineLoop initialization tracking (Sub-Phase 6.6.2)
+	// CRITICAL: GEngineLoop.PreInit() can only be called ONCE per process!
+	// This static flag prevents crashes when simulation is restarted in Simio
+	static bool bGEngineLoopInitialized;
 	
 	// Subject tracking with property metadata
 	TMap<FName, FSubjectInfo> TransformSubjects;

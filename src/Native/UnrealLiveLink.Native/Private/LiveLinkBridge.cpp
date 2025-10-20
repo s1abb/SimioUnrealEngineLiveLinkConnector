@@ -4,46 +4,30 @@
 #include "Misc/ScopeLock.h"
 #include "Misc/CString.h"
 
-// LiveLink includes (Sub-Phase 6.6)
-#include "ILiveLinkClient.h"
-#include "ILiveLinkSource.h"
-#include "Features/IModularFeatures.h"
+// UE Program initialization (Sub-Phase 6.6.2 - GEngineLoop)
+// Note: Don't include RequiredProgramMainCPPInclude.h here - it's in UnrealLiveLinkNativeMain.cpp only!
+#include "LaunchEngineLoop.h"              // For GEngineLoop access
+#include "Modules/ModuleManager.h"
+#include "Interfaces/IPluginManager.h"
+#include "Misc/CommandLine.h"
+
+// LiveLink includes (Sub-Phase 6.6.1 - Message Bus Provider API)
+// Disable C4099 warning: UE has inconsistent class/struct forward declarations
+#pragma warning(push)
+#pragma warning(disable: 4099)
+#include "LiveLinkProvider.h"              // 🆕 Message Bus Provider API (no ILiveLinkClient needed!)
 #include "LiveLinkTypes.h"
 #include "Roles/LiveLinkTransformRole.h"
 #include "Roles/LiveLinkTransformTypes.h"
+#pragma warning(pop)
 
 //=============================================================================
-// Minimal LiveLink Source Implementation (Sub-Phase 6.6)
+// Sub-Phase 6.6.1: LiveLink Message Bus Integration
 //=============================================================================
-// Temporary minimal source until we can access LiveLinkMessageBusSource
-// This allows us to test the LiveLink integration without plugin dependencies
+// Using ILiveLinkProvider API which handles Message Bus communication automatically.
+// This enables cross-process streaming: Simio → Message Bus → Unreal Engine
+// Protocol: UDP multicast (230.0.0.1:6666 default)
 //=============================================================================
-class FSimioLiveLinkSource : public ILiveLinkSource
-{
-public:
-	FSimioLiveLinkSource(const FText& InSourceType, const FText& InSourceMachineName)
-		: SourceType(InSourceType), SourceMachineName(InSourceMachineName)
-	{
-	}
-
-	virtual void ReceiveClient(ILiveLinkClient* InClient, FGuid InSourceGuid) override
-	{
-		Client = InClient;
-		SourceGuid = InSourceGuid;
-	}
-
-	virtual bool IsSourceStillValid() const override { return true; }
-	virtual bool RequestSourceShutdown() override { return true; }
-	virtual FText GetSourceType() const override { return SourceType; }
-	virtual FText GetSourceMachineName() const override { return SourceMachineName; }
-	virtual FText GetSourceStatus() const override { return FText::FromString(TEXT("Active")); }
-
-private:
-	FText SourceType;
-	FText SourceMachineName;
-	ILiveLinkClient* Client = nullptr;
-	FGuid SourceGuid;
-};
 
 //=============================================================================
 // Sub-Phase 6.6: LiveLinkBridge Implementation with Transform Subject Registration
@@ -51,6 +35,10 @@ private:
 // This implementation creates actual LiveLink Message Bus source and streams
 // transform data to Unreal Engine's LiveLink subsystem.
 //=============================================================================
+
+// Static member initialization (Sub-Phase 6.6.2)
+// CRITICAL: GEngineLoop.PreInit() can only be called ONCE per process
+bool FLiveLinkBridge::bGEngineLoopInitialized = false;
 
 FLiveLinkBridge& FLiveLinkBridge::Get()
 {
@@ -76,13 +64,67 @@ bool FLiveLinkBridge::Initialize(const FString& InProviderName)
 		return true;
 	}
 	
-	// Sub-Phase 6.5: Store provider name and mark as initialized
-	// LiveLink Message Bus framework dependencies are now available in Build.cs
-	// Actual LiveLink source creation will occur on-demand in Sub-Phase 6.6
-	// when first subject is registered (requires UE runtime environment)
+	// Sub-Phase 6.6.2: Initialize Unreal Engine runtime environment
+	// Based on reference: UnrealLiveLinkCInterface (github.com/jakedowns/UnrealLiveLinkCInterface)
+	// CRITICAL: GEngineLoop.PreInit() can only be called ONCE per process!
+	// Check static flag to prevent crash on simulation restart
+	
+	if (!bGEngineLoopInitialized)
+	{
+		UE_LOG(LogUnrealLiveLinkNative, Log, 
+		       TEXT("Initialize: Initializing Unreal Engine runtime for Message Bus support"));
+		
+		// Initialize GEngineLoop with Messaging support
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: Calling GEngineLoop.PreInit..."));
+		int32 PreInitResult = GEngineLoop.PreInit(TEXT("UnrealLiveLinkNative -Messaging"));
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: GEngineLoop.PreInit returned %d"), PreInitResult);
+		
+		if (PreInitResult != 0)
+		{
+			UE_LOG(LogUnrealLiveLinkNative, Error, 
+			       TEXT("Initialize: ❌ GEngineLoop.PreInit FAILED with code %d"), PreInitResult);
+			return false;
+		}
+		
+		// Ensure target platform manager is referenced early (must be on main thread)
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: Getting target platform manager..."));
+		GetTargetPlatformManager();
+		
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: Processing newly loaded UObjects..."));
+		ProcessNewlyLoadedUObjects();
+		
+		// Tell module manager it may now process newly-loaded UObjects
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: Starting module manager..."));
+		FModuleManager::Get().StartProcessingNewlyLoadedObjects();
+		
+		// Load UdpMessaging module (required for Message Bus communication)
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: Loading UdpMessaging module..."));
+		FModuleManager::Get().LoadModule(TEXT("UdpMessaging"));
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: ✅ UdpMessaging module loaded"));
+		
+		// Load plugins if available
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: Loading plugins..."));
+		IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PreDefault);
+		IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::Default);
+		IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PostDefault);
+		UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Initialize: ✅ Plugins loaded"));
+		
+		UE_LOG(LogUnrealLiveLinkNative, Log, 
+		       TEXT("Initialize: ✅ Unreal Engine runtime initialized successfully"));
+		
+		// Mark as initialized (process-wide, never reset)
+		bGEngineLoopInitialized = true;
+	}
+	else
+	{
+		UE_LOG(LogUnrealLiveLinkNative, Log, 
+		       TEXT("Initialize: ✅ GEngineLoop already initialized (reusing existing runtime)"));
+	}
+	
+	// Store provider name and mark as initialized
 	ProviderName = InProviderName;
 	bInitialized = true;
-	bLiveLinkReady = true;  // Framework is ready for integration
+	bLiveLinkReady = true;
 	
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
 	       TEXT("Initialize: Ready for LiveLink integration with provider '%s'"), 
@@ -108,30 +150,19 @@ void FLiveLinkBridge::Shutdown()
 	       DataSubjects.Num(), 
 	       NameCache.Num());
 	
-	// Remove LiveLink source if created (Sub-Phase 6.6)
-	if (bLiveLinkSourceCreated && LiveLinkSourceGuid.IsValid())
+	// Remove LiveLink provider if created (Sub-Phase 6.6.1)
+	if (bLiveLinkSourceCreated && LiveLinkProvider.IsValid())
 	{
 		UE_LOG(LogUnrealLiveLinkNative, Log, 
-		       TEXT("Shutdown: Removing LiveLink source (GUID: %s)"), 
-		       *LiveLinkSourceGuid.ToString());
+		       TEXT("Shutdown: Removing LiveLink Message Bus Provider '%s'"), 
+		       *ProviderName);
 		
-		ILiveLinkClient* Client = &IModularFeatures::Get()
-			.GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-		
-		if (Client)
-		{
-			Client->RemoveSource(LiveLinkSourceGuid);
-			UE_LOG(LogUnrealLiveLinkNative, Log, 
-			       TEXT("Shutdown: ✅ LiveLink source removed successfully"));
-		}
-		else
-		{
-			UE_LOG(LogUnrealLiveLinkNative, Warning, 
-			       TEXT("Shutdown: ILiveLinkClient not available, cannot remove source"));
-		}
-		
-		LiveLinkSourceGuid.Invalidate();
+		// Reset shared pointer (will trigger cleanup)
+		LiveLinkProvider.Reset();
 		bLiveLinkSourceCreated = false;
+		
+		UE_LOG(LogUnrealLiveLinkNative, Log, 
+		       TEXT("Shutdown: ✅ LiveLink provider removed successfully"));
 	}
 	
 	// Clear all state
@@ -142,7 +173,18 @@ void FLiveLinkBridge::Shutdown()
 	bInitialized = false;
 	bLiveLinkReady = false;
 	
-	UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Complete"));
+	// Sub-Phase 6.6.2: DO NOT shutdown GEngineLoop in DLL!
+	// WARNING: RequestEngineExit() and AppExit() terminate the HOST PROCESS (Simio.exe)!
+	// This is only safe in standalone programs, not DLLs loaded by other applications.
+	UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Skipping GEngineLoop shutdown (DLL loaded in host process)"));
+	
+	// DON'T CALL THESE IN A DLL:
+	// RequestEngineExit(TEXT("UnrealLiveLinkNative shutting down"));  // ← Terminates Simio!
+	// FEngineLoop::AppPreExit();  // ← Unsafe in DLL
+	// FModuleManager::Get().UnloadModulesAtShutdown();  // ← May crash host
+	// FEngineLoop::AppExit();  // ← Terminates host process!
+	
+	UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Complete (resources released, modules remain loaded)"));
 }
 
 int FLiveLinkBridge::GetConnectionStatus() const
@@ -154,8 +196,8 @@ int FLiveLinkBridge::GetConnectionStatus() const
 		return ULL_NOT_INITIALIZED;
 	}
 	
-	// Sub-Phase 6.6: Check if LiveLink source is created
-	if (bLiveLinkSourceCreated && LiveLinkSourceGuid.IsValid())
+	// Sub-Phase 6.6.1: Check if LiveLink provider is created
+	if (bLiveLinkSourceCreated && LiveLinkProvider.IsValid())
 	{
 		return ULL_OK;
 	}
@@ -179,68 +221,44 @@ void FLiveLinkBridge::EnsureLiveLinkSource()
 	
 	if (bLiveLinkSourceCreated)
 	{
-		ULL_VERBOSE_LOG(TEXT("EnsureLiveLinkSource: Source already exists, skipping"));
+		ULL_VERBOSE_LOG(TEXT("EnsureLiveLinkSource: Provider already exists, skipping"));
 		return;
 	}
 	
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("EnsureLiveLinkSource: Attempting to create LiveLink source for provider '%s'"), 
+	       TEXT("EnsureLiveLinkSource: Creating LiveLink Message Bus Provider '%s'"), 
 	       *ProviderName);
-	
-	// Get LiveLink client from modular features
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("EnsureLiveLinkSource: Getting ILiveLinkClient from modular features..."));
+	       TEXT("EnsureLiveLinkSource: Using UDP Message Bus for cross-process communication"));
 	
-	ILiveLinkClient* Client = &IModularFeatures::Get()
-		.GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
+	// Create LiveLink Message Bus Provider (Sub-Phase 6.6.1)
+	// This enables communication between Simio process → UE process via UDP multicast
+	// Default protocol: UDP 230.0.0.1:6666
+	UE_LOG(LogUnrealLiveLinkNative, Log, 
+	       TEXT("EnsureLiveLinkSource: Calling ILiveLinkProvider::CreateLiveLinkProvider..."));
 	
-	if (!Client)
+	LiveLinkProvider = ILiveLinkProvider::CreateLiveLinkProvider(ProviderName);
+	
+	UE_LOG(LogUnrealLiveLinkNative, Log, 
+	       TEXT("EnsureLiveLinkSource: CreateLiveLinkProvider returned, checking validity..."));
+	
+	if (!LiveLinkProvider.IsValid())
 	{
 		UE_LOG(LogUnrealLiveLinkNative, Error, 
-		       TEXT("EnsureLiveLinkSource: ❌ Failed to get ILiveLinkClient - LiveLink subsystem not available"));
+		       TEXT("EnsureLiveLinkSource: ❌ Failed to create ILiveLinkProvider"));
 		UE_LOG(LogUnrealLiveLinkNative, Error, 
-		       TEXT("EnsureLiveLinkSource: Is Unreal Engine running? Is LiveLink plugin enabled?"));
-		return;
-	}
-	
-	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("EnsureLiveLinkSource: ✅ ILiveLinkClient obtained successfully"));
-	
-	// Create custom LiveLink source (Sub-Phase 6.6)
-	// Note: Using FSimioLiveLinkSource instead of FLiveLinkMessageBusSource
-	// to avoid plugin dependency issues with Program targets
-	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("EnsureLiveLinkSource: Creating FSimioLiveLinkSource..."));
-	
-	TSharedPtr<ILiveLinkSource> Source = MakeShared<FSimioLiveLinkSource>(
-		FText::FromString(TEXT("Simio Connector")),
-		FText::FromString(ProviderName));
-	
-	if (!Source.IsValid())
-	{
+		       TEXT("EnsureLiveLinkSource: Check that UdpMessaging module is available"));
 		UE_LOG(LogUnrealLiveLinkNative, Error, 
-		       TEXT("EnsureLiveLinkSource: ❌ Failed to create FSimioLiveLinkSource"));
-		return;
-	}
-	
-	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("EnsureLiveLinkSource: ✅ Source created, adding to LiveLink client..."));
-	
-	// Add source to LiveLink client
-	LiveLinkSourceGuid = Client->AddSource(Source);
-	
-	if (!LiveLinkSourceGuid.IsValid())
-	{
-		UE_LOG(LogUnrealLiveLinkNative, Error, 
-		       TEXT("EnsureLiveLinkSource: ❌ Failed to add source to LiveLink client (invalid GUID returned)"));
+		       TEXT("EnsureLiveLinkSource: Check that GEngineLoop.PreInit() succeeded"));
 		return;
 	}
 	
 	bLiveLinkSourceCreated = true;
 	
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("EnsureLiveLinkSource: ✅ SUCCESS! Source added with GUID: %s"), 
-	       *LiveLinkSourceGuid.ToString());
+	       TEXT("EnsureLiveLinkSource: ✅ SUCCESS! LiveLink Message Bus Provider created"));
+	UE_LOG(LogUnrealLiveLinkNative, Log, 
+	       TEXT("EnsureLiveLinkSource: Broadcasting to UDP Message Bus (230.0.0.1:6666)"));
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
 	       TEXT("EnsureLiveLinkSource: Check Unreal Editor → Window → LiveLink for source '%s'"), 
 	       *ProviderName);
@@ -302,23 +320,12 @@ void FLiveLinkBridge::RegisterTransformSubject(const FName& SubjectName)
 	// No properties for basic transform subject
 	TransformStaticData->PropertyNames.Empty();
 	
-	// Get LiveLink client
-	ILiveLinkClient* Client = &IModularFeatures::Get()
-		.GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-	
-	if (!Client)
-	{
-		UE_LOG(LogUnrealLiveLinkNative, Error, 
-		       TEXT("RegisterTransformSubject: ILiveLinkClient not available"));
-		return;
-	}
-	
-	// Push static data to LiveLink
+	// Push static data to LiveLink via Message Bus Provider (Sub-Phase 6.6.1)
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("RegisterTransformSubject: Pushing static data to LiveLink..."));
+	       TEXT("RegisterTransformSubject: Broadcasting static data via Message Bus..."));
 	
-	Client->PushSubjectStaticData_AnyThread(
-		FLiveLinkSubjectKey(LiveLinkSourceGuid, SubjectName),
+	LiveLinkProvider->UpdateSubjectStaticData(
+		SubjectName,
 		ULiveLinkTransformRole::StaticClass(),
 		MoveTemp(StaticData));
 	
@@ -326,7 +333,7 @@ void FLiveLinkBridge::RegisterTransformSubject(const FName& SubjectName)
 	TransformSubjects.Add(SubjectName, FSubjectInfo());
 	
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("RegisterTransformSubject: ✅ Successfully registered '%s'"), 
+	       TEXT("RegisterTransformSubject: ✅ Successfully registered '%s' via Message Bus"), 
 	       *SubjectName.ToString());
 }
 
@@ -394,23 +401,12 @@ void FLiveLinkBridge::RegisterTransformSubjectWithProperties(
 	// Set property names
 	TransformStaticData->PropertyNames = PropertyNames;
 	
-	// Get LiveLink client
-	ILiveLinkClient* Client = &IModularFeatures::Get()
-		.GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-	
-	if (!Client)
-	{
-		UE_LOG(LogUnrealLiveLinkNative, Error, 
-		       TEXT("RegisterTransformSubjectWithProperties: ILiveLinkClient not available"));
-		return;
-	}
-	
-	// Push static data to LiveLink
+	// Push static data to LiveLink via Message Bus Provider (Sub-Phase 6.6.1)
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("RegisterTransformSubjectWithProperties: Pushing static data with properties to LiveLink..."));
+	       TEXT("RegisterTransformSubjectWithProperties: Broadcasting static data with properties via Message Bus..."));
 	
-	Client->PushSubjectStaticData_AnyThread(
-		FLiveLinkSubjectKey(LiveLinkSourceGuid, SubjectName),
+	LiveLinkProvider->UpdateSubjectStaticData(
+		SubjectName,
 		ULiveLinkTransformRole::StaticClass(),
 		MoveTemp(StaticData));
 	
@@ -418,7 +414,7 @@ void FLiveLinkBridge::RegisterTransformSubjectWithProperties(
 	TransformSubjects.Add(SubjectName, FSubjectInfo(PropertyNames));
 	
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
-	       TEXT("RegisterTransformSubjectWithProperties: ✅ Successfully registered '%s' with %d properties"), 
+	       TEXT("RegisterTransformSubjectWithProperties: ✅ Successfully registered '%s' with %d properties via Message Bus"), 
 	       *SubjectName.ToString(), 
 	       PropertyNames.Num());
 }
@@ -482,25 +478,9 @@ void FLiveLinkBridge::UpdateTransformSubject(
 	TransformFrameData->Transform = Transform;
 	TransformFrameData->WorldTime = FLiveLinkWorldTime(FPlatformTime::Seconds());
 	
-	// Get LiveLink client
-	ILiveLinkClient* Client = &IModularFeatures::Get()
-		.GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-	
-	if (!Client)
-	{
-		static int32 NoClientCount = 0;
-		if (++NoClientCount % 60 == 1)
-		{
-			UE_LOG(LogUnrealLiveLinkNative, Error, 
-			       TEXT("UpdateTransformSubject: ILiveLinkClient not available (count: %d)"), 
-			       NoClientCount);
-		}
-		return;
-	}
-	
-	// Push frame data to LiveLink
-	Client->PushSubjectFrameData_AnyThread(
-		FLiveLinkSubjectKey(LiveLinkSourceGuid, SubjectName),
+	// Push frame data to LiveLink via Message Bus Provider (Sub-Phase 6.6.1)
+	LiveLinkProvider->UpdateSubjectFrameData(
+		SubjectName,
 		MoveTemp(FrameData));
 	
 	// Throttle success logging for high-frequency updates
@@ -509,7 +489,7 @@ void FLiveLinkBridge::UpdateTransformSubject(
 	{
 		FVector Location = Transform.GetLocation();
 		UE_LOG(LogUnrealLiveLinkNative, Log, 
-		       TEXT("UpdateTransformSubject: '%s' (count: %d) - Location: (%.2f, %.2f, %.2f)"), 
+		       TEXT("UpdateTransformSubject: '%s' (count: %d) - Location: (%.2f, %.2f, %.2f) [Message Bus]"), 
 		       *SubjectName.ToString(), 
 		       UpdateCount, 
 		       Location.X, Location.Y, Location.Z);
@@ -585,25 +565,9 @@ void FLiveLinkBridge::UpdateTransformSubjectWithProperties(
 	TransformFrameData->WorldTime = FLiveLinkWorldTime(FPlatformTime::Seconds());
 	TransformFrameData->PropertyValues = PropertyValues;
 	
-	// Get LiveLink client
-	ILiveLinkClient* Client = &IModularFeatures::Get()
-		.GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-	
-	if (!Client)
-	{
-		static int32 NoClientCount = 0;
-		if (++NoClientCount % 60 == 1)
-		{
-			UE_LOG(LogUnrealLiveLinkNative, Error, 
-			       TEXT("UpdateTransformSubjectWithProperties: ILiveLinkClient not available (count: %d)"), 
-			       NoClientCount);
-		}
-		return;
-	}
-	
-	// Push frame data to LiveLink
-	Client->PushSubjectFrameData_AnyThread(
-		FLiveLinkSubjectKey(LiveLinkSourceGuid, SubjectName),
+	// Push frame data to LiveLink via Message Bus Provider (Sub-Phase 6.6.1)
+	LiveLinkProvider->UpdateSubjectFrameData(
+		SubjectName,
 		MoveTemp(FrameData));
 	
 	// Throttle success logging
@@ -611,7 +575,7 @@ void FLiveLinkBridge::UpdateTransformSubjectWithProperties(
 	if (++UpdateCount % 60 == 1)
 	{
 		UE_LOG(LogUnrealLiveLinkNative, Log, 
-		       TEXT("UpdateTransformSubjectWithProperties: '%s' (count: %d) with %d properties"), 
+		       TEXT("UpdateTransformSubjectWithProperties: '%s' (count: %d) with %d properties [Message Bus]"), 
 		       *SubjectName.ToString(), 
 		       UpdateCount, 
 		       PropertyValues.Num());
@@ -636,24 +600,13 @@ void FLiveLinkBridge::RemoveTransformSubject(const FName& SubjectName)
 		       TEXT("RemoveTransformSubject: Removed '%s' from local tracking"), 
 		       *SubjectName.ToString());
 		
-		// Remove from LiveLink if source exists
-		if (bLiveLinkSourceCreated && LiveLinkSourceGuid.IsValid())
+		// Remove from LiveLink if provider exists (Sub-Phase 6.6.1)
+		if (bLiveLinkSourceCreated && LiveLinkProvider.IsValid())
 		{
-			ILiveLinkClient* Client = &IModularFeatures::Get()
-				.GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-			
-			if (Client)
-			{
-				Client->RemoveSubject_AnyThread(FLiveLinkSubjectKey(LiveLinkSourceGuid, SubjectName));
-				UE_LOG(LogUnrealLiveLinkNative, Log, 
-				       TEXT("RemoveTransformSubject: ✅ Removed '%s' from LiveLink"), 
-				       *SubjectName.ToString());
-			}
-			else
-			{
-				UE_LOG(LogUnrealLiveLinkNative, Warning, 
-				       TEXT("RemoveTransformSubject: ILiveLinkClient not available, cannot remove from LiveLink"));
-			}
+			LiveLinkProvider->RemoveSubject(SubjectName);
+			UE_LOG(LogUnrealLiveLinkNative, Log, 
+			       TEXT("RemoveTransformSubject: ✅ Removed '%s' from LiveLink via Message Bus"), 
+			       *SubjectName.ToString());
 		}
 	}
 	else

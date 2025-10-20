@@ -1,0 +1,838 @@
+0.000000	2025/10/20 16:44:43.747	0	DebugView++.exe	File Identification Header, DebugView++ Format Version 1
+0.000000	2025/10/20 16:41:16.341	20196	EpicGamesLauncher.exe	[2025.10.20-08.41.16:341][303]LogSelfUpdateService: ExecuteEpicGamesUpdater: Executing: "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win64/EpicGamesUpdater.exe" queryinstallation
+0.020663	2025/10/20 16:41:16.361	20196	EpicGamesLauncher.exe	[2025.10.20-08.41.16:361][303]LogSelfUpdateService: Error: ExecuteEpicGamesUpdater: "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win64/EpicGamesUpdater.exe" queryinstallation - failed with exit code: 4
+3.047907	2025/10/20 16:41:19.389	37016	UnrealEditor.exe	[2025.10.20-08.41.19:388][934]LogSlate: Window 'Live Link' being destroyed
+3.059635	2025/10/20 16:41:19.400	37016	UnrealEditor.exe	[2025.10.20-08.41.19:400][934]LogSlate: Window 'Live Link' being destroyed
+7.052253	2025/10/20 16:41:23.393	37016	UnrealEditor.exe	[2025.10.20-08.41.23:393][141]LogEOSSDK: Warning: LogHttp: Retry 4 on https://api.epicgames.dev/auth/v1/oauth/token
+7.758241	2025/10/20 16:41:24.099	37016	UnrealEditor.exe	[2025.10.20-08.41.24:099][176]LogEOSSDK: Warning: LogHttp: 00000166A7E10000: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.65s
+7.758751	2025/10/20 16:41:24.100	37016	UnrealEditor.exe	[2025.10.20-08.41.24:099][177]LogEOSSDK: Warning: LogHttp: 00000166A7E10000 Response Header Date: Mon, 20 Oct 2025 08:41:23 GMT
+7.759008	2025/10/20 16:41:24.100	37016	UnrealEditor.exe	[2025.10.20-08.41.24:100][177]LogEOSSDK: Warning: LogHttp: 00000166A7E10000 Response Header Content-Type: text/plain
+7.759187	2025/10/20 16:41:24.100	37016	UnrealEditor.exe	[2025.10.20-08.41.24:100][177]LogEOSSDK: Warning: LogHttp: 00000166A7E10000 Response Header Content-Length: 91
+7.759248	2025/10/20 16:41:24.100	37016	UnrealEditor.exe	[2025.10.20-08.41.24:100][177]LogEOSSDK: Warning: LogHttp: 00000166A7E10000 Response Header Connection: keep-alive
+7.759299	2025/10/20 16:41:24.100	37016	UnrealEditor.exe	[2025.10.20-08.41.24:100][177]LogEOSSDK: Warning: LogHttp: 00000166A7E10000 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-85eiO65HOEKLMd1en4h8aQ
+7.759607	2025/10/20 16:41:24.101	37016	UnrealEditor.exe	[2025.10.20-08.41.24:100][177]LogEOSSDK: Warning: LogHttp: 00000166A7E10000 Response Header Server: eos-gateway
+7.759790	2025/10/20 16:41:24.101	37016	UnrealEditor.exe	[2025.10.20-08.41.24:101][177]LogEOSSDK: Warning: LogHttp: Success on https://api.epicgames.dev/auth/v1/oauth/token
+7.760321	2025/10/20 16:41:24.101	37016	UnrealEditor.exe	[2025.10.20-08.41.24:101][177]LogEOSSDK: Warning: LogEOS: Error response received from backend. Response is not JSON. ServiceName=[EOSAuth], OperationName=[TokenGrant], Url=[<Redacted>], HttpStatus=[503], CorrId=[EOS-z8PqE4IjY0ebxoKuqXremA-85eiO65HOEKLMd1en4h8aQ]
+7.781141	2025/10/20 16:41:24.123	37016	UnrealEditor.exe	[2025.10.20-08.41.24:122][178]LogEOSSDK: Warning: LogEOSAnalytics: Unable to get the client auth token. Last result: EOS_UnrecognizedResponse.
+7.781195	2025/10/20 16:41:24.123	37016	UnrealEditor.exe	[2025.10.20-08.41.24:123][179]LogEOSSDK: Warning: LogEOS: SDK Config Product Update Request Failed, Result Code: EOS_UnrecognizedResponse, Retrying after 58.239388 seconds
+34.459166	2025/10/20 16:41:50.800	6548	SnippingTool.exe	The ruler is out of bounds.  Stopping movement
+52.064469	2025/10/20 16:42:08.405	37016	UnrealEditor.exe	[2025.10.20-08.42.08:405][828]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.28s
+52.064560	2025/10/20 16:42:08.406	37016	UnrealEditor.exe	[2025.10.20-08.42.08:405][829]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Date: Mon, 20 Oct 2025 08:42:08 GMT
+52.064621	2025/10/20 16:42:08.406	37016	UnrealEditor.exe	[2025.10.20-08.42.08:406][829]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Type: text/plain
+52.064691	2025/10/20 16:42:08.406	37016	UnrealEditor.exe	[2025.10.20-08.42.08:406][829]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Length: 91
+52.064749	2025/10/20 16:42:08.406	37016	UnrealEditor.exe	[2025.10.20-08.42.08:406][829]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Connection: keep-alive
+52.064809	2025/10/20 16:42:08.406	37016	UnrealEditor.exe	[2025.10.20-08.42.08:406][829]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-X_1tLQzN-EuBRXm3sbOMoQ
+52.064867	2025/10/20 16:42:08.406	37016	UnrealEditor.exe	[2025.10.20-08.42.08:406][829]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Server: eos-gateway
+52.064955	2025/10/20 16:42:08.406	37016	UnrealEditor.exe	[2025.10.20-08.42.08:406][829]LogEOSSDK: Warning: LogHttp: Lockout of 2.338572s on https://api.epicgames.dev/auth/v1/oauth/token
+54.414554	2025/10/20 16:42:10.755	37016	UnrealEditor.exe	[2025.10.20-08.42.10:755][970]LogEOSSDK: Warning: LogHttp: Retry 1 on https://api.epicgames.dev/auth/v1/oauth/token
+54.698125	2025/10/20 16:42:11.038	37016	UnrealEditor.exe	[2025.10.20-08.42.11:038][987]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.26s
+54.698215	2025/10/20 16:42:11.040	37016	UnrealEditor.exe	[2025.10.20-08.42.11:038][987]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Date: Mon, 20 Oct 2025 08:42:10 GMT
+54.698275	2025/10/20 16:42:11.040	37016	UnrealEditor.exe	[2025.10.20-08.42.11:040][987]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Type: text/plain
+54.698299	2025/10/20 16:42:11.040	37016	UnrealEditor.exe	[2025.10.20-08.42.11:040][987]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Length: 91
+54.698346	2025/10/20 16:42:11.040	37016	UnrealEditor.exe	[2025.10.20-08.42.11:040][987]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Connection: keep-alive
+54.698474	2025/10/20 16:42:11.040	37016	UnrealEditor.exe	[2025.10.20-08.42.11:040][987]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-X_1tLQzN-EuBRXm3sbOMoQ
+54.698541	2025/10/20 16:42:11.040	37016	UnrealEditor.exe	[2025.10.20-08.42.11:040][987]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Server: eos-gateway
+54.698700	2025/10/20 16:42:11.040	37016	UnrealEditor.exe	[2025.10.20-08.42.11:040][987]LogEOSSDK: Warning: LogHttp: Lockout of 5.082552s on https://api.epicgames.dev/auth/v1/oauth/token
+59.781672	2025/10/20 16:42:16.123	37016	UnrealEditor.exe	[2025.10.20-08.42.16:122][291]LogEOSSDK: Warning: LogHttp: Retry 2 on https://api.epicgames.dev/auth/v1/oauth/token
+60.464923	2025/10/20 16:42:16.806	37016	UnrealEditor.exe	[2025.10.20-08.42.16:806][332]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.68s
+60.465007	2025/10/20 16:42:16.806	37016	UnrealEditor.exe	[2025.10.20-08.42.16:806][333]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Date: Mon, 20 Oct 2025 08:42:16 GMT
+60.465076	2025/10/20 16:42:16.806	37016	UnrealEditor.exe	[2025.10.20-08.42.16:806][333]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Type: text/plain
+60.465133	2025/10/20 16:42:16.806	37016	UnrealEditor.exe	[2025.10.20-08.42.16:806][333]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Length: 91
+60.465188	2025/10/20 16:42:16.806	37016	UnrealEditor.exe	[2025.10.20-08.42.16:806][333]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Connection: keep-alive
+60.465265	2025/10/20 16:42:16.807	37016	UnrealEditor.exe	[2025.10.20-08.42.16:806][333]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-X_1tLQzN-EuBRXm3sbOMoQ
+60.465324	2025/10/20 16:42:16.807	37016	UnrealEditor.exe	[2025.10.20-08.42.16:807][333]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Server: eos-gateway
+60.465378	2025/10/20 16:42:16.807	37016	UnrealEditor.exe	[2025.10.20-08.42.16:807][333]LogEOSSDK: Warning: LogHttp: Lockout of 8.764671s on https://api.epicgames.dev/auth/v1/oauth/token
+66.021876	2025/10/20 16:42:22.363	37016	UnrealEditor.exe	[2025.10.20-08.42.22:363][665]LogEOSSDK: LogEOS: Updating Product SDK Config, Time: 2475.096680
+69.239073	2025/10/20 16:42:25.580	37016	UnrealEditor.exe	[2025.10.20-08.42.25:580][858]LogEOSSDK: Warning: LogHttp: Retry 3 on https://api.epicgames.dev/auth/v1/oauth/token
+69.555606	2025/10/20 16:42:25.896	37016	UnrealEditor.exe	[2025.10.20-08.42.25:896][877]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.28s
+69.555665	2025/10/20 16:42:25.896	37016	UnrealEditor.exe	[2025.10.20-08.42.25:896][877]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Date: Mon, 20 Oct 2025 08:42:25 GMT
+69.555763	2025/10/20 16:42:25.896	37016	UnrealEditor.exe	[2025.10.20-08.42.25:896][878]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Type: text/plain
+69.555824	2025/10/20 16:42:25.896	37016	UnrealEditor.exe	[2025.10.20-08.42.25:896][878]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Length: 91
+69.555936	2025/10/20 16:42:25.897	37016	UnrealEditor.exe	[2025.10.20-08.42.25:896][878]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Connection: keep-alive
+69.555975	2025/10/20 16:42:25.897	37016	UnrealEditor.exe	[2025.10.20-08.42.25:897][878]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-X_1tLQzN-EuBRXm3sbOMoQ
+69.556176	2025/10/20 16:42:25.897	37016	UnrealEditor.exe	[2025.10.20-08.42.25:897][878]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Server: eos-gateway
+69.556216	2025/10/20 16:42:25.897	37016	UnrealEditor.exe	[2025.10.20-08.42.25:897][878]LogEOSSDK: Warning: LogHttp: Lockout of 29.739677s on https://api.epicgames.dev/auth/v1/oauth/token
+73.934485	2025/10/20 16:42:30.276	34504	Simio.exe	QLM reports False: False,False,False
+99.302266	2025/10/20 16:42:55.643	37016	UnrealEditor.exe	[2025.10.20-08.42.55:643][650]LogEOSSDK: Warning: LogHttp: Retry 4 on https://api.epicgames.dev/auth/v1/oauth/token
+99.832645	2025/10/20 16:42:56.173	37016	UnrealEditor.exe	[2025.10.20-08.42.56:173][682]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.51s
+99.832738	2025/10/20 16:42:56.173	37016	UnrealEditor.exe	[2025.10.20-08.42.56:173][683]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Date: Mon, 20 Oct 2025 08:42:56 GMT
+99.832801	2025/10/20 16:42:56.173	37016	UnrealEditor.exe	[2025.10.20-08.42.56:173][683]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Type: text/plain
+99.832863	2025/10/20 16:42:56.173	37016	UnrealEditor.exe	[2025.10.20-08.42.56:173][683]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Content-Length: 91
+99.832921	2025/10/20 16:42:56.173	37016	UnrealEditor.exe	[2025.10.20-08.42.56:173][683]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Connection: keep-alive
+99.832978	2025/10/20 16:42:56.173	37016	UnrealEditor.exe	[2025.10.20-08.42.56:173][683]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-X_1tLQzN-EuBRXm3sbOMoQ
+99.833060	2025/10/20 16:42:56.174	37016	UnrealEditor.exe	[2025.10.20-08.42.56:173][683]LogEOSSDK: Warning: LogHttp: 00000166CDE3E400 Response Header Server: eos-gateway
+99.833130	2025/10/20 16:42:56.174	37016	UnrealEditor.exe	[2025.10.20-08.42.56:173][683]LogEOSSDK: Warning: LogHttp: Success on https://api.epicgames.dev/auth/v1/oauth/token
+99.833200	2025/10/20 16:42:56.174	37016	UnrealEditor.exe	[2025.10.20-08.42.56:174][683]LogEOSSDK: Warning: LogEOS: Error response received from backend. Response is not JSON. ServiceName=[EOSAuth], OperationName=[TokenGrant], Url=[<Redacted>], HttpStatus=[503], CorrId=[EOS-z8PqE4IjY0ebxoKuqXremA-X_1tLQzN-EuBRXm3sbOMoQ]
+99.866175	2025/10/20 16:42:56.207	37016	UnrealEditor.exe	[2025.10.20-08.42.56:207][684]LogEOSSDK: Warning: LogEOSAnalytics: Unable to get the client auth token. Last result: EOS_UnrecognizedResponse.
+99.866278	2025/10/20 16:42:56.207	37016	UnrealEditor.exe	[2025.10.20-08.42.56:207][684]LogEOSSDK: Warning: LogEOS: SDK Config Product Update Request Failed, Result Code: EOS_UnrecognizedResponse, Retrying after 46.843472 seconds
+107.842783	2025/10/20 16:43:04.184	34504	Simio.exe	Version 998 for 'Crane' does not equal loaded version 997, setting version to 997
+107.842833	2025/10/20 16:43:04.184	34504	Simio.exe	Version 444 for 'LiftTruck' does not equal loaded version 443, setting version to 443
+107.842910	2025/10/20 16:43:04.184	34504	Simio.exe	Version 1608 for 'Bridge' does not equal loaded version 1607, setting version to 1607
+107.842952	2025/10/20 16:43:04.184	34504	Simio.exe	Version 1196 for 'Cab' does not equal loaded version 1195, setting version to 1195
+107.842977	2025/10/20 16:43:04.184	34504	Simio.exe	Version 1228 for 'Lift' does not equal loaded version 1227, setting version to 1227
+107.843002	2025/10/20 16:43:04.184	34504	Simio.exe	Version 55 for 'Zone' does not equal loaded version 54, setting version to 54
+107.843030	2025/10/20 16:43:04.184	34504	Simio.exe	Version 327 for 'RobotHand' does not equal loaded version 326, setting version to 326
+107.843055	2025/10/20 16:43:04.184	34504	Simio.exe	Version 185 for 'Shelf' does not equal loaded version 184, setting version to 184
+107.843085	2025/10/20 16:43:04.184	34504	Simio.exe	Version 515 for 'ElevatorNode' does not equal loaded version 514, setting version to 514
+107.863325	2025/10/20 16:43:04.204	34504	Simio.exe	Version 998 for 'Crane' does not equal loaded version 997, setting version to 997
+107.863366	2025/10/20 16:43:04.204	34504	Simio.exe	Version 444 for 'LiftTruck' does not equal loaded version 443, setting version to 443
+107.863443	2025/10/20 16:43:04.204	34504	Simio.exe	Version 1608 for 'Bridge' does not equal loaded version 1607, setting version to 1607
+107.863479	2025/10/20 16:43:04.204	34504	Simio.exe	Version 1196 for 'Cab' does not equal loaded version 1195, setting version to 1195
+107.863503	2025/10/20 16:43:04.204	34504	Simio.exe	Version 1228 for 'Lift' does not equal loaded version 1227, setting version to 1227
+107.863573	2025/10/20 16:43:04.204	34504	Simio.exe	Version 55 for 'Zone' does not equal loaded version 54, setting version to 54
+107.863613	2025/10/20 16:43:04.204	34504	Simio.exe	Version 327 for 'RobotHand' does not equal loaded version 326, setting version to 326
+107.863639	2025/10/20 16:43:04.204	34504	Simio.exe	Version 185 for 'Shelf' does not equal loaded version 184, setting version to 184
+107.863668	2025/10/20 16:43:04.204	34504	Simio.exe	Version 515 for 'ElevatorNode' does not equal loaded version 514, setting version to 514
+108.760185	2025/10/20 16:43:05.101	34504	Simio.exe	Version 72 for 'Sink' does not equal loaded version 71, setting version to 71
+108.760229	2025/10/20 16:43:05.101	34504	Simio.exe	Version 276 for 'Server' does not equal loaded version 275, setting version to 275
+108.760288	2025/10/20 16:43:05.101	34504	Simio.exe	Version 209 for 'Workstation' does not equal loaded version 208, setting version to 208
+108.760371	2025/10/20 16:43:05.102	34504	Simio.exe	Version 264 for 'Combiner' does not equal loaded version 263, setting version to 263
+108.760426	2025/10/20 16:43:05.102	34504	Simio.exe	Version 270 for 'Separator' does not equal loaded version 269, setting version to 269
+131.035880	2025/10/20 16:43:27.377	37016	UnrealEditor.exe	[2025.10.20-08.43.27:376][539]LogEOSSDK: Warning: LogHttp: 0000016613C69600: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.38s
+131.035956	2025/10/20 16:43:27.377	37016	UnrealEditor.exe	[2025.10.20-08.43.27:376][540]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Date: Mon, 20 Oct 2025 08:43:27 GMT
+131.036071	2025/10/20 16:43:27.377	37016	UnrealEditor.exe	[2025.10.20-08.43.27:377][540]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Type: text/plain
+131.036124	2025/10/20 16:43:27.377	37016	UnrealEditor.exe	[2025.10.20-08.43.27:377][540]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Length: 91
+131.036146	2025/10/20 16:43:27.377	37016	UnrealEditor.exe	[2025.10.20-08.43.27:377][540]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Connection: keep-alive
+131.036292	2025/10/20 16:43:27.377	37016	UnrealEditor.exe	[2025.10.20-08.43.27:377][540]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-Wcn1Ez23ZUWMnemegzwTjA
+131.036330	2025/10/20 16:43:27.377	37016	UnrealEditor.exe	[2025.10.20-08.43.27:377][540]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Server: eos-gateway
+131.036347	2025/10/20 16:43:27.377	37016	UnrealEditor.exe	[2025.10.20-08.43.27:377][540]LogEOSSDK: Warning: LogHttp: Lockout of 3.949400s on https://api.epicgames.dev/auth/v1/oauth/token
+134.076593	2025/10/20 16:43:30.417	34504	Simio.exe	Initialization table import run time: 00:00:00.0024997
+134.289190	2025/10/20 16:43:30.630	34504	Simio.exe	LogGenericPlatformMisc: Warning: Failed to determine engine directory: Defaulting to
+134.289299	2025/10/20 16:43:30.630	34504	Simio.exe	LogWindows: Failed to load 'aqProf.dll' (GetLastError=126)
+134.289394	2025/10/20 16:43:30.630	34504	Simio.exe	LogWindows: File 'aqProf.dll' does not exist
+134.289671	2025/10/20 16:43:30.631	34504	Simio.exe	LogProfilingDebugging: Loading WinPixEventRuntime.dll for PIX profiling (from ../../../Engine/Binaries/ThirdParty/Windows/WinPixEventRuntime/x64).
+134.289760	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: Failed to load '../../../Engine/Binaries/ThirdParty/Windows/WinPixEventRuntime/x64/WinPixEventRuntime.dll' (GetLastError=126)
+134.289831	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: File '../../../Engine/Binaries/ThirdParty/Windows/WinPixEventRuntime/x64/WinPixEventRuntime.dll' does not exist
+134.289889	2025/10/20 16:43:30.631	34504	Simio.exe	LogProfilingDebugging: Error: Failed to get WinPixEventRuntime.dll handle: The system cannot find the path specified. (3)
+134.289954	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: Failed to load 'VtuneApi.dll' (GetLastError=126)
+134.290005	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: File 'VtuneApi.dll' does not exist
+134.290048	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: Failed to load 'VtuneApi32e.dll' (GetLastError=126)
+134.290100	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: File 'VtuneApi32e.dll' does not exist
+134.290146	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: Enabling Tpause support
+134.290190	2025/10/20 16:43:30.631	34504	Simio.exe	LogUnrealLiveLinkNative: ULL_GetVersion called, returning 1
+134.290252	2025/10/20 16:43:30.631	34504	Simio.exe	LogUnrealLiveLinkNative: ULL_GetVersion called, returning 1
+134.290297	2025/10/20 16:43:30.631	34504	Simio.exe	LogUnrealLiveLinkNative: ULL_GetVersion called, returning 1
+134.290321	2025/10/20 16:43:30.631	34504	Simio.exe	LogUnrealLiveLinkNative: Initialize: Initializing Unreal Engine runtime for Message Bus support
+134.290344	2025/10/20 16:43:30.631	34504	Simio.exe	LogUnrealLiveLinkNative: Initialize: Calling GEngineLoop.PreInit...
+134.290367	2025/10/20 16:43:30.631	34504	Simio.exe	LogInit: Session CrashGUID >====================================================
+134.290367	2025/10/20 16:43:30.631	34504	Simio.exe	         Session CrashGUID >   UECC-Windows-F2FD99FC4FA272F31A82B4B8441699B4
+134.290367	2025/10/20 16:43:30.631	34504	Simio.exe	         Session CrashGUID >====================================================
+134.290390	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: Failed to load '../../../Engine/Binaries/ThirdParty/DbgHelp/dbghelp.dll' (GetLastError=126)
+134.290413	2025/10/20 16:43:30.631	34504	Simio.exe	LogWindows: File '../../../Engine/Binaries/ThirdParty/DbgHelp/dbghelp.dll' does not exist
+134.290441	2025/10/20 16:43:30.631	34504	Simio.exe	LogConfig: No local boot hotfix file found at: [../../../Engine/Programs/UnrealLiveLinkNative/Saved/PersistentDownloadDir/HotfixForNextBoot.txt]
+134.290779	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: ExecutableName: Simio.exe
+134.290872	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Build: UE5-CL-0
+134.290956	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Platform=WindowsEditor
+134.291007	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: MachineId=7d30804c44017ca109838abe653d7339
+134.291049	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: DeviceId=
+134.291089	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Engine Version: 5.6.1-0+UE5
+134.291143	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Compatible Engine Version: 5.6.0-0+UE5
+134.291186	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Net CL: 0
+134.291250	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: OS: Windows 8 (), CPU: Intel(R) Core(TM) Ultra 9 285H, GPU: Intel(R) Arc(TM) Pro 140T GPU (32GB)
+134.291305	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Compiled (64-bit): Oct 20 2025 13:30:28
+134.291347	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Architecture: x64
+134.291389	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Compiled with Visual C++: 19.44.35217.00
+134.291431	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Build Configuration: Development
+134.291473	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Branch Name: UE5
+134.291514	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Command Line: -Messaging
+134.291556	2025/10/20 16:43:30.632	34504	Simio.exe	LogInit: Base Directory: C:/Program Files/Simio LLC/Simio/UserExtensions/SimioUnrealEngineLiveLinkConnector/
+134.291598	2025/10/20 16:43:30.633	34504	Simio.exe	LogInit: Allocator: Mimalloc
+134.291677	2025/10/20 16:43:30.633	34504	Simio.exe	LogInit: Installed Engine Build: 0
+134.292288	2025/10/20 16:43:30.633	34504	Simio.exe	LogInit: This binary is optimized with LTO: no, PGO: no, instrumented for PGO data collection: no
+134.292467	2025/10/20 16:43:30.633	34504	Simio.exe	LogDevObjectVersion: Number of dev versions registered: 35
+134.292510	2025/10/20 16:43:30.633	34504	Simio.exe	LogDevObjectVersion:   Dev-Blueprints (B0D832E4-1F89-4F0D-ACCF-7EB736FD4AA2): 10
+134.292552	2025/10/20 16:43:30.633	34504	Simio.exe	LogDevObjectVersion:   Dev-Build (E1C64328-A22C-4D53-A36C-8E866417BD8C): 0
+134.292682	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Core (375EC13C-06E4-48FB-B500-84F0262A717E): 4
+134.292738	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Editor (E4B068ED-F494-42E9-A231-DA0B2E46BB41): 40
+134.292854	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Framework (CFFC743F-43B0-4480-9391-14DF171D2073): 37
+134.292898	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Mobile (B02B49B5-BB20-44E9-A304-32B752E40360): 3
+134.292990	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Networking (A4E4105C-59A1-49B5-A7C5-40C4547EDFEE): 0
+134.293021	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Online (39C831C9-5AE6-47DC-9A44-9C173E1C8E7C): 0
+134.293086	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Physics (78F01B33-EBEA-4F98-B9B4-84EACCB95AA2): 20
+134.293151	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Platform (6631380F-2D4D-43E0-8009-CF276956A95A): 0
+134.293196	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Rendering (12F88B9F-8875-4AFC-A67C-D90C383ABD29): 49
+134.293242	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Sequencer (7B5AE74C-D270-4C10-A958-57980B212A5A): 13
+134.293287	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-VR (D7296918-1DD6-4BDD-9DE2-64A83CC13884): 3
+134.293330	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-LoadTimes (C2A15278-BFE7-4AFE-6C17-90FF531DF755): 1
+134.293374	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Private-Geometry (6EACA3D4-40EC-4CC1-B786-8BED09428FC5): 3
+134.293417	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-AnimPhys (29E575DD-E0A3-4627-9D10-D276232CDCEA): 17
+134.293462	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Anim (AF43A65D-7FD3-4947-9873-3E8ED9C1BB05): 15
+134.293505	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-ReflectionCapture (6B266CEC-1EC7-4B8F-A30B-E4D90942FC07): 1
+134.293549	2025/10/20 16:43:30.634	34504	Simio.exe	LogDevObjectVersion:   Dev-Automation (0DF73D61-A23F-47EA-B727-89E90C41499A): 1
+134.293592	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   FortniteMain (601D1886-AC64-4F84-AA16-D3DE0DEAC7D6): 207
+134.293649	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   FortniteValkyrie (8DBC2C5B-54A7-43E0-A768-FCBB7DA29060): 8
+134.293692	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   FortniteSeason (5B4C06B7-2463-4AF8-805B-BF70CDF5D0DD): 13
+134.293735	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   FortniteRelease (E7086368-6B23-4C58-8439-1B7016265E91): 17
+134.293795	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-Enterprise (9DFFBCD6-494F-0158-E221-12823C92A888): 11
+134.293850	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-Niagara (F2AED0AC-9AFE-416F-8664-AA7FFA26D6FC): 1
+134.293892	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-Destruction (174F1F0B-B4C6-45A5-B13F-2EE8D0FB917D): 10
+134.293931	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-Physics-Ext (35F94A83-E258-406C-A318-09F59610247C): 41
+134.293985	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-PhysicsMaterial-Chaos (B68FC16E-8B1B-42E2-B453-215C058844FE): 1
+134.294039	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-CineCamera (B2E18506-4273-CFC2-A54E-F4BB758BBA07): 1
+134.294099	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-VirtualProduction (64F58936-FD1B-42BA-BA96-7289D5D0FA4E): 1
+134.294156	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   UE5-Main (697DD581-E64F-41AB-AA4A-51ECBEB7B628): 121
+134.294212	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   UE5-Release (D89B5E42-24BD-4D46-8412-ACA8DF641779): 56
+134.294270	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   UE5-SpecialProject (59DA5D52-1232-4948-B878-597870B8E98B): 9
+134.294314	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-MediaFramework (6F0ED827-A609-4895-9C91-998D90180EA4): 2
+134.294359	2025/10/20 16:43:30.635	34504	Simio.exe	LogDevObjectVersion:   Dev-NaniteResearch (30D58BE3-95EA-4282-A6E3-B159D8EBB06A): 1
+134.296510	2025/10/20 16:43:30.637	34504	Simio.exe	LogInit: Presizing for max 100000 objects, including 0 objects not considered by GC.
+134.299663	2025/10/20 16:43:30.640	34504	Simio.exe	LogInit: Object subsystem initialized
+134.303687	2025/10/20 16:43:30.644	34504	Simio.exe	LogConfig: Applying CVar settings from Section [Startup] File [../../../Engine/Config/ConsoleVariables.ini]
+134.303740	2025/10/20 16:43:30.644	34504	Simio.exe	LogConfig: Applying CVar settings from Section [Startup_Windows] File [../../../Engine/Config/ConsoleVariables.ini]
+134.303783	2025/10/20 16:43:30.644	34504	Simio.exe	[2025.10.20-08.43.30:644][  0]LogConfig: Applying CVar settings from Section [ConsoleVariables] File [Engine]
+134.303843	2025/10/20 16:43:30.644	34504	Simio.exe	[2025.10.20-08.43.30:644][  0]LogInit: Computer: GHD-FKELRE6DM6Z
+134.303899	2025/10/20 16:43:30.644	34504	Simio.exe	[2025.10.20-08.43.30:644][  0]LogInit: User: jslabber
+134.303955	2025/10/20 16:43:30.644	34504	Simio.exe	[2025.10.20-08.43.30:644][  0]LogInit: CPU Page size=4096, Cores=16
+134.304057	2025/10/20 16:43:30.644	34504	Simio.exe	[2025.10.20-08.43.30:644][  0]LogInit: High frequency timer resolution =10.000000 MHz
+134.304102	2025/10/20 16:43:30.645	34504	Simio.exe	[2025.10.20-08.43.30:644][  0]LogMemory: Process is running as part of a Windows Job with separate resource limits
+134.304147	2025/10/20 16:43:30.645	34504	Simio.exe	[2025.10.20-08.43.30:644][  0]LogMemory: Memory total: Physical=63.5GB (64GB approx) Virtual=73.0GB
+134.304192	2025/10/20 16:43:30.645	34504	Simio.exe	[2025.10.20-08.43.30:645][  0]LogMemory: Platform Memory Stats for WindowsEditor
+134.304237	2025/10/20 16:43:30.645	34504	Simio.exe	[2025.10.20-08.43.30:645][  0]LogMemory: Process Physical Memory: 859.33 MB used, 859.33 MB peak
+134.304280	2025/10/20 16:43:30.645	34504	Simio.exe	[2025.10.20-08.43.30:645][  0]LogMemory: Process Virtual Memory: 651.20 MB used, 651.20 MB peak
+134.304324	2025/10/20 16:43:30.645	34504	Simio.exe	[2025.10.20-08.43.30:645][  0]LogMemory: Physical Memory: 29843.22 MB used,  35137.48 MB free, 64980.70 MB total
+134.304367	2025/10/20 16:43:30.645	34504	Simio.exe	[2025.10.20-08.43.30:645][  0]LogMemory: Virtual Memory: 37876.12 MB used,  36832.58 MB free, 74708.70 MB total
+134.309324	2025/10/20 16:43:30.650	34504	Simio.exe	[2025.10.20-08.43.30:650][  0]LogUObjectArray: 500 objects as part of root set at end of initial load.
+134.309381	2025/10/20 16:43:30.650	34504	Simio.exe	[2025.10.20-08.43.30:650][  0]LogUObjectArray: CloseDisregardForGC: 0/0 objects in disregard for GC pool
+134.309539	2025/10/20 16:43:30.650	34504	Simio.exe	[2025.10.20-08.43.30:650][  0]LogPaths: Warning: No paths for game localization data were specifed in the game configuration.
+134.309650	2025/10/20 16:43:30.651	34504	Simio.exe	[2025.10.20-08.43.30:650][  0]LogInit: Using OS detected language ().
+134.309709	2025/10/20 16:43:30.651	34504	Simio.exe	[2025.10.20-08.43.30:651][  0]LogInit: Using OS detected locale ().
+134.309769	2025/10/20 16:43:30.651	34504	Simio.exe	[2025.10.20-08.43.30:651][  0]LogInit: Warning: No paths for engine localization data were specifed in the engine configuration.
+134.309828	2025/10/20 16:43:30.651	34504	Simio.exe	[2025.10.20-08.43.30:651][  0]LogTextLocalizationManager: No localization for '' exists, so 'en' will be used for the language.
+134.309872	2025/10/20 16:43:30.651	34504	Simio.exe	[2025.10.20-08.43.30:651][  0]LogTextLocalizationManager: No localization for '' exists, so 'en' will be used for the locale.
+134.310888	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogInit: Using OS detected language ().
+134.310946	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogInit: Using OS detected locale ().
+134.310989	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogTextLocalizationManager: No localization for '' exists, so 'en' will be used for the language.
+134.311033	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogTextLocalizationManager: No localization for '' exists, so 'en' will be used for the locale.
+134.311076	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogUnrealLiveLinkNative: Initialize: GEngineLoop.PreInit returned 0
+134.311120	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogUnrealLiveLinkNative: Initialize: Getting target platform manager...
+134.311164	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogUnrealLiveLinkNative: Initialize: Processing newly loaded UObjects...
+134.311207	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogUnrealLiveLinkNative: Initialize: Starting module manager...
+134.311251	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogUnrealLiveLinkNative: Initialize: Loading UdpMessaging module...
+134.311294	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogInit: WinSock: version 1.1 (2.2), MaxSocks=32767, MaxUdp=65467
+134.311338	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogUdpMessaging: Display: Work queue size set to 1024.
+134.311396	2025/10/20 16:43:30.652	34504	Simio.exe	[2025.10.20-08.43.30:652][  0]LogUdpMessaging: Initializing bridge on interface 0.0.0.0:0 to multicast group 230.0.0.1:6666.
+134.312312	2025/10/20 16:43:30.653	34504	Simio.exe	[2025.10.20-08.43.30:653][  0]LogUdpMessaging: Display: Unicast socket bound to '0.0.0.0:63019'.
+134.315323	2025/10/20 16:43:30.656	34504	Simio.exe	[2025.10.20-08.43.30:656][  0]LogUdpMessaging: Display: Added local interface '10.49.21.79' to multicast group '230.0.0.1:6666'
+134.316568	2025/10/20 16:43:30.657	34504	Simio.exe	[2025.10.20-08.43.30:657][  0]LogUdpMessaging: Display: Using asynchronous task graph for message deserialization.
+134.317868	2025/10/20 16:43:30.658	34504	Simio.exe	[2025.10.20-08.43.30:658][  0]LogUnrealLiveLinkNative: Initialize: ? UdpMessaging module loaded
+134.317895	2025/10/20 16:43:30.658	34504	Simio.exe	[2025.10.20-08.43.30:658][  0]LogUnrealLiveLinkNative: Initialize: Loading plugins...
+134.318539	2025/10/20 16:43:30.659	34504	Simio.exe	[2025.10.20-08.43.30:659][  0]LogUnrealLiveLinkNative: Initialize: ? Plugins loaded
+134.318606	2025/10/20 16:43:30.659	34504	Simio.exe	[2025.10.20-08.43.30:659][  0]LogUnrealLiveLinkNative: Initialize: ? Unreal Engine runtime initialized successfully
+134.318661	2025/10/20 16:43:30.659	34504	Simio.exe	[2025.10.20-08.43.30:659][  0]LogUnrealLiveLinkNative: Initialize: Ready for LiveLink integration with provider 'SimioSimulation'
+134.318704	2025/10/20 16:43:30.659	34504	Simio.exe	[2025.10.20-08.43.30:659][  0]LogUnrealLiveLinkNative: ULL_Initialize: Success
+134.341566	2025/10/20 16:43:30.682	34504	Simio.exe	Initialization process logic run time: 00:00:00.2475845
+134.384582	2025/10/20 16:43:30.725	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000015
+134.384635	2025/10/20 16:43:30.725	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000048
+134.990069	2025/10/20 16:43:31.331	37016	UnrealEditor.exe	[2025.10.20-08.43.31:331][773]LogEOSSDK: Warning: LogHttp: Retry 1 on https://api.epicgames.dev/auth/v1/oauth/token
+135.340509	2025/10/20 16:43:31.681	37016	UnrealEditor.exe	[2025.10.20-08.43.31:681][794]LogEOSSDK: Warning: LogHttp: 0000016613C69600: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.33s
+135.341026	2025/10/20 16:43:31.682	37016	UnrealEditor.exe	[2025.10.20-08.43.31:681][795]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Date: Mon, 20 Oct 2025 08:43:31 GMT
+135.341091	2025/10/20 16:43:31.682	37016	UnrealEditor.exe	[2025.10.20-08.43.31:681][795]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Type: text/plain
+135.341155	2025/10/20 16:43:31.682	37016	UnrealEditor.exe	[2025.10.20-08.43.31:682][795]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Length: 91
+135.341213	2025/10/20 16:43:31.682	37016	UnrealEditor.exe	[2025.10.20-08.43.31:682][795]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Connection: keep-alive
+135.341273	2025/10/20 16:43:31.682	37016	UnrealEditor.exe	[2025.10.20-08.43.31:682][795]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-Wcn1Ez23ZUWMnemegzwTjA
+135.341305	2025/10/20 16:43:31.682	37016	UnrealEditor.exe	[2025.10.20-08.43.31:682][795]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Server: eos-gateway
+135.341349	2025/10/20 16:43:31.682	37016	UnrealEditor.exe	[2025.10.20-08.43.31:682][795]LogEOSSDK: Warning: LogHttp: Lockout of 7.600085s on https://api.epicgames.dev/auth/v1/oauth/token
+140.185942	2025/10/20 16:43:36.526	34504	Simio.exe	[2025.10.20-08.43.36:526][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+140.188756	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.6'
+140.188784	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Creating LiveLink Message Bus Provider 'SimioSimulation'
+140.188827	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Using UDP Message Bus for cross-process communication
+140.188882	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Calling ILiveLinkProvider::CreateLiveLinkProvider...
+140.188925	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: CreateLiveLinkProvider returned, checking validity...
+140.188959	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: ? SUCCESS! LiveLink Message Bus Provider created
+140.189011	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Broadcasting to UDP Message Bus (230.0.0.1:6666)
+140.189084	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Check Unreal Editor ? Window ? LiveLink for source 'SimioSimulation'
+140.189175	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.6' (no properties)
+140.189221	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+140.189250	2025/10/20 16:43:36.530	34504	Simio.exe	[2025.10.20-08.43.36:530][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.6' via Message Bus
+140.190026	2025/10/20 16:43:36.531	34504	Simio.exe	[2025.10.20-08.43.36:531][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.6' (count: 1) - Location: (-575.00, 0.00, 0.00) [Message Bus]
+140.235721	2025/10/20 16:43:36.577	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000036
+140.235793	2025/10/20 16:43:36.577	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000034
+141.202948	2025/10/20 16:43:37.544	34504	Simio.exe	[2025.10.20-08.43.37:543][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+141.217779	2025/10/20 16:43:37.559	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000022
+141.223403	2025/10/20 16:43:37.564	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000067
+142.947367	2025/10/20 16:43:39.289	37016	UnrealEditor.exe	[2025.10.20-08.43.39:288][239]LogEOSSDK: Warning: LogHttp: Retry 2 on https://api.epicgames.dev/auth/v1/oauth/token
+143.251405	2025/10/20 16:43:39.592	37016	UnrealEditor.exe	[2025.10.20-08.43.39:591][254]LogEOSSDK: Warning: LogHttp: 0000016613C69600: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.27s
+143.251595	2025/10/20 16:43:39.592	37016	UnrealEditor.exe	[2025.10.20-08.43.39:592][255]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Date: Mon, 20 Oct 2025 08:43:39 GMT
+143.251631	2025/10/20 16:43:39.592	37016	UnrealEditor.exe	[2025.10.20-08.43.39:592][255]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Type: text/plain
+143.251743	2025/10/20 16:43:39.592	37016	UnrealEditor.exe	[2025.10.20-08.43.39:592][255]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Length: 91
+143.251859	2025/10/20 16:43:39.592	37016	UnrealEditor.exe	[2025.10.20-08.43.39:592][255]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Connection: keep-alive
+143.251882	2025/10/20 16:43:39.592	37016	UnrealEditor.exe	[2025.10.20-08.43.39:592][255]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-Wcn1Ez23ZUWMnemegzwTjA
+143.251946	2025/10/20 16:43:39.592	37016	UnrealEditor.exe	[2025.10.20-08.43.39:592][255]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Server: eos-gateway
+143.252015	2025/10/20 16:43:39.592	37016	UnrealEditor.exe	[2025.10.20-08.43.39:592][255]LogEOSSDK: Warning: LogHttp: Lockout of 15.527818s on https://api.epicgames.dev/auth/v1/oauth/token
+146.697683	2025/10/20 16:43:43.038	37016	UnrealEditor.exe	[2025.10.20-08.43.43:038][459]LogEOSSDK: LogEOS: Updating Product SDK Config, Time: 2555.769043
+148.523732	2025/10/20 16:43:44.865	34504	Simio.exe	[2025.10.20-08.43.44:864][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.6'
+148.523791	2025/10/20 16:43:44.865	34504	Simio.exe	[2025.10.20-08.43.44:864][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.6' from local tracking
+148.523836	2025/10/20 16:43:44.865	34504	Simio.exe	[2025.10.20-08.43.44:865][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.6' from LiveLink via Message Bus
+149.049001	2025/10/20 16:43:45.390	34504	Simio.exe	[2025.10.20-08.43.45:390][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+149.049083	2025/10/20 16:43:45.390	34504	Simio.exe	[2025.10.20-08.43.45:390][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.7'
+149.049149	2025/10/20 16:43:45.390	34504	Simio.exe	[2025.10.20-08.43.45:390][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.7' (no properties)
+149.049171	2025/10/20 16:43:45.390	34504	Simio.exe	[2025.10.20-08.43.45:390][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+149.049193	2025/10/20 16:43:45.390	34504	Simio.exe	[2025.10.20-08.43.45:390][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.7' via Message Bus
+149.225412	2025/10/20 16:43:45.566	34504	Simio.exe	[2025.10.20-08.43.45:566][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.7'
+149.225460	2025/10/20 16:43:45.566	34504	Simio.exe	[2025.10.20-08.43.45:566][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.7' from local tracking
+149.225498	2025/10/20 16:43:45.566	34504	Simio.exe	[2025.10.20-08.43.45:566][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.7' from LiveLink via Message Bus
+149.260181	2025/10/20 16:43:45.601	34504	Simio.exe	[2025.10.20-08.43.45:600][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.8'
+149.260383	2025/10/20 16:43:45.601	34504	Simio.exe	[2025.10.20-08.43.45:601][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.8' (no properties)
+149.260519	2025/10/20 16:43:45.601	34504	Simio.exe	[2025.10.20-08.43.45:601][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+149.260643	2025/10/20 16:43:45.601	34504	Simio.exe	[2025.10.20-08.43.45:601][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.8' via Message Bus
+149.373342	2025/10/20 16:43:45.714	34504	Simio.exe	[2025.10.20-08.43.45:714][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.9'
+149.373425	2025/10/20 16:43:45.714	34504	Simio.exe	[2025.10.20-08.43.45:714][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.9' (no properties)
+149.373473	2025/10/20 16:43:45.714	34504	Simio.exe	[2025.10.20-08.43.45:714][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+149.373513	2025/10/20 16:43:45.714	34504	Simio.exe	[2025.10.20-08.43.45:714][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.9' via Message Bus
+149.456485	2025/10/20 16:43:45.797	34504	Simio.exe	[2025.10.20-08.43.45:797][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.8'
+149.456539	2025/10/20 16:43:45.797	34504	Simio.exe	[2025.10.20-08.43.45:797][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.8' from local tracking
+149.456574	2025/10/20 16:43:45.797	34504	Simio.exe	[2025.10.20-08.43.45:797][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.8' from LiveLink via Message Bus
+149.567972	2025/10/20 16:43:45.908	34504	Simio.exe	[2025.10.20-08.43.45:908][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.9'
+149.568050	2025/10/20 16:43:45.908	34504	Simio.exe	[2025.10.20-08.43.45:908][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.9' from local tracking
+149.568080	2025/10/20 16:43:45.908	34504	Simio.exe	[2025.10.20-08.43.45:908][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.9' from LiveLink via Message Bus
+149.683491	2025/10/20 16:43:46.024	34504	Simio.exe	[2025.10.20-08.43.46:024][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.10'
+149.683554	2025/10/20 16:43:46.024	34504	Simio.exe	[2025.10.20-08.43.46:024][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.10' (no properties)
+149.683598	2025/10/20 16:43:46.024	34504	Simio.exe	[2025.10.20-08.43.46:024][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+149.683652	2025/10/20 16:43:46.024	34504	Simio.exe	[2025.10.20-08.43.46:024][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.10' via Message Bus
+149.855919	2025/10/20 16:43:46.197	34504	Simio.exe	[2025.10.20-08.43.46:197][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.10'
+149.855963	2025/10/20 16:43:46.197	34504	Simio.exe	[2025.10.20-08.43.46:197][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.10' from local tracking
+149.856028	2025/10/20 16:43:46.197	34504	Simio.exe	[2025.10.20-08.43.46:197][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.10' from LiveLink via Message Bus
+149.899165	2025/10/20 16:43:46.240	34504	Simio.exe	[2025.10.20-08.43.46:240][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.11'
+149.899237	2025/10/20 16:43:46.240	34504	Simio.exe	[2025.10.20-08.43.46:240][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.11' (no properties)
+149.899291	2025/10/20 16:43:46.240	34504	Simio.exe	[2025.10.20-08.43.46:240][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+149.899716	2025/10/20 16:43:46.241	34504	Simio.exe	[2025.10.20-08.43.46:240][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.11' via Message Bus
+150.056364	2025/10/20 16:43:46.397	34504	Simio.exe	[2025.10.20-08.43.46:396][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+150.067241	2025/10/20 16:43:46.409	34504	Simio.exe	[2025.10.20-08.43.46:407][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.12'
+150.067309	2025/10/20 16:43:46.409	34504	Simio.exe	[2025.10.20-08.43.46:407][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.12' (no properties)
+150.067335	2025/10/20 16:43:46.409	34504	Simio.exe	[2025.10.20-08.43.46:409][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+150.067399	2025/10/20 16:43:46.409	34504	Simio.exe	[2025.10.20-08.43.46:409][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.12' via Message Bus
+150.092155	2025/10/20 16:43:46.433	34504	Simio.exe	[2025.10.20-08.43.46:433][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.11'
+150.092270	2025/10/20 16:43:46.433	34504	Simio.exe	[2025.10.20-08.43.46:433][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.11' from local tracking
+150.092333	2025/10/20 16:43:46.433	34504	Simio.exe	[2025.10.20-08.43.46:433][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.11' from LiveLink via Message Bus
+150.240358	2025/10/20 16:43:46.582	34504	Simio.exe	[2025.10.20-08.43.46:581][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.12'
+150.240415	2025/10/20 16:43:46.582	34504	Simio.exe	[2025.10.20-08.43.46:582][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.12' from local tracking
+150.240473	2025/10/20 16:43:46.582	34504	Simio.exe	[2025.10.20-08.43.46:582][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.12' from LiveLink via Message Bus
+150.434055	2025/10/20 16:43:46.775	34504	Simio.exe	[2025.10.20-08.43.46:775][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.13'
+150.434095	2025/10/20 16:43:46.775	34504	Simio.exe	[2025.10.20-08.43.46:775][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.13' (no properties)
+150.434123	2025/10/20 16:43:46.775	34504	Simio.exe	[2025.10.20-08.43.46:775][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+150.434148	2025/10/20 16:43:46.775	34504	Simio.exe	[2025.10.20-08.43.46:775][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.13' via Message Bus
+150.526867	2025/10/20 16:43:46.868	34504	Simio.exe	[2025.10.20-08.43.46:868][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.13' (count: 61) - Location: (-30.00, -0.00, 0.00) [Message Bus]
+150.619296	2025/10/20 16:43:46.960	34504	Simio.exe	[2025.10.20-08.43.46:960][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.13'
+150.619375	2025/10/20 16:43:46.960	34504	Simio.exe	[2025.10.20-08.43.46:960][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.13' from local tracking
+150.619447	2025/10/20 16:43:46.960	34504	Simio.exe	[2025.10.20-08.43.46:960][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.13' from LiveLink via Message Bus
+150.689870	2025/10/20 16:43:47.031	34504	Simio.exe	[2025.10.20-08.43.47:031][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.14'
+150.689938	2025/10/20 16:43:47.031	34504	Simio.exe	[2025.10.20-08.43.47:031][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.14' (no properties)
+150.689995	2025/10/20 16:43:47.031	34504	Simio.exe	[2025.10.20-08.43.47:031][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+150.690038	2025/10/20 16:43:47.031	34504	Simio.exe	[2025.10.20-08.43.47:031][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.14' via Message Bus
+150.862988	2025/10/20 16:43:47.204	34504	Simio.exe	[2025.10.20-08.43.47:204][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.14'
+150.863056	2025/10/20 16:43:47.204	34504	Simio.exe	[2025.10.20-08.43.47:204][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.14' from local tracking
+150.863147	2025/10/20 16:43:47.204	34504	Simio.exe	[2025.10.20-08.43.47:204][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.14' from LiveLink via Message Bus
+151.049816	2025/10/20 16:43:47.391	34504	Simio.exe	[2025.10.20-08.43.47:391][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.15'
+151.049858	2025/10/20 16:43:47.391	34504	Simio.exe	[2025.10.20-08.43.47:391][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.15' (no properties)
+151.049911	2025/10/20 16:43:47.391	34504	Simio.exe	[2025.10.20-08.43.47:391][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+151.049947	2025/10/20 16:43:47.391	34504	Simio.exe	[2025.10.20-08.43.47:391][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.15' via Message Bus
+151.075976	2025/10/20 16:43:47.417	34504	Simio.exe	[2025.10.20-08.43.47:417][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+151.076033	2025/10/20 16:43:47.417	34504	Simio.exe	[2025.10.20-08.43.47:417][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.16'
+151.076061	2025/10/20 16:43:47.417	34504	Simio.exe	[2025.10.20-08.43.47:417][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.16' (no properties)
+151.076108	2025/10/20 16:43:47.417	34504	Simio.exe	[2025.10.20-08.43.47:417][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+151.076163	2025/10/20 16:43:47.417	34504	Simio.exe	[2025.10.20-08.43.47:417][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.16' via Message Bus
+151.226605	2025/10/20 16:43:47.568	34504	Simio.exe	[2025.10.20-08.43.47:568][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.15'
+151.226659	2025/10/20 16:43:47.568	34504	Simio.exe	[2025.10.20-08.43.47:568][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.15' from local tracking
+151.226753	2025/10/20 16:43:47.568	34504	Simio.exe	[2025.10.20-08.43.47:568][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.15' from LiveLink via Message Bus
+151.256543	2025/10/20 16:43:47.597	34504	Simio.exe	[2025.10.20-08.43.47:597][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.16'
+151.256582	2025/10/20 16:43:47.597	34504	Simio.exe	[2025.10.20-08.43.47:597][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.16' from local tracking
+151.256645	2025/10/20 16:43:47.597	34504	Simio.exe	[2025.10.20-08.43.47:597][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.16' from LiveLink via Message Bus
+151.524085	2025/10/20 16:43:47.864	34504	Simio.exe	[2025.10.20-08.43.47:864][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.17'
+151.524169	2025/10/20 16:43:47.865	34504	Simio.exe	[2025.10.20-08.43.47:864][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.17' (no properties)
+151.524198	2025/10/20 16:43:47.865	34504	Simio.exe	[2025.10.20-08.43.47:865][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+151.524220	2025/10/20 16:43:47.865	34504	Simio.exe	[2025.10.20-08.43.47:865][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.17' via Message Bus
+151.707398	2025/10/20 16:43:48.048	34504	Simio.exe	[2025.10.20-08.43.48:048][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.17'
+151.707488	2025/10/20 16:43:48.048	34504	Simio.exe	[2025.10.20-08.43.48:048][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.17' from local tracking
+151.707527	2025/10/20 16:43:48.048	34504	Simio.exe	[2025.10.20-08.43.48:048][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.17' from LiveLink via Message Bus
+152.556128	2025/10/20 16:43:48.897	34504	Simio.exe	[2025.10.20-08.43.48:897][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+152.556207	2025/10/20 16:43:48.897	34504	Simio.exe	[2025.10.20-08.43.48:897][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.18'
+152.556338	2025/10/20 16:43:48.898	34504	Simio.exe	[2025.10.20-08.43.48:897][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.18' (no properties)
+152.556430	2025/10/20 16:43:48.898	34504	Simio.exe	[2025.10.20-08.43.48:897][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+152.556491	2025/10/20 16:43:48.898	34504	Simio.exe	[2025.10.20-08.43.48:898][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.18' via Message Bus
+152.631183	2025/10/20 16:43:48.972	34504	Simio.exe	[2025.10.20-08.43.48:972][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.19'
+152.631276	2025/10/20 16:43:48.972	34504	Simio.exe	[2025.10.20-08.43.48:972][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.19' (no properties)
+152.631313	2025/10/20 16:43:48.972	34504	Simio.exe	[2025.10.20-08.43.48:972][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+152.631358	2025/10/20 16:43:48.972	34504	Simio.exe	[2025.10.20-08.43.48:972][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.19' via Message Bus
+152.743090	2025/10/20 16:43:49.084	34504	Simio.exe	[2025.10.20-08.43.49:084][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.18'
+152.743133	2025/10/20 16:43:49.084	34504	Simio.exe	[2025.10.20-08.43.49:084][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.18' from local tracking
+152.743162	2025/10/20 16:43:49.084	34504	Simio.exe	[2025.10.20-08.43.49:084][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.18' from LiveLink via Message Bus
+152.817378	2025/10/20 16:43:49.158	34504	Simio.exe	[2025.10.20-08.43.49:158][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.19'
+152.817411	2025/10/20 16:43:49.158	34504	Simio.exe	[2025.10.20-08.43.49:158][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.19' from local tracking
+152.817499	2025/10/20 16:43:49.158	34504	Simio.exe	[2025.10.20-08.43.49:158][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.19' from LiveLink via Message Bus
+153.003126	2025/10/20 16:43:49.344	34504	Simio.exe	[2025.10.20-08.43.49:344][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.20'
+153.003207	2025/10/20 16:43:49.344	34504	Simio.exe	[2025.10.20-08.43.49:344][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.20' (no properties)
+153.003278	2025/10/20 16:43:49.344	34504	Simio.exe	[2025.10.20-08.43.49:344][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+153.003300	2025/10/20 16:43:49.344	34504	Simio.exe	[2025.10.20-08.43.49:344][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.20' via Message Bus
+153.158973	2025/10/20 16:43:49.500	34504	Simio.exe	[2025.10.20-08.43.49:500][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.21'
+153.159016	2025/10/20 16:43:49.500	34504	Simio.exe	[2025.10.20-08.43.49:500][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.21' (no properties)
+153.159074	2025/10/20 16:43:49.500	34504	Simio.exe	[2025.10.20-08.43.49:500][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+153.159107	2025/10/20 16:43:49.500	34504	Simio.exe	[2025.10.20-08.43.49:500][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.21' via Message Bus
+153.159313	2025/10/20 16:43:49.500	34504	Simio.exe	[2025.10.20-08.43.49:500][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.21' (count: 121) - Location: (-450.00, -0.00, 0.00) [Message Bus]
+153.174438	2025/10/20 16:43:49.515	34504	Simio.exe	[2025.10.20-08.43.49:515][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.20'
+153.174507	2025/10/20 16:43:49.515	34504	Simio.exe	[2025.10.20-08.43.49:515][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.20' from local tracking
+153.174566	2025/10/20 16:43:49.515	34504	Simio.exe	[2025.10.20-08.43.49:515][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.20' from LiveLink via Message Bus
+153.325076	2025/10/20 16:43:49.666	34504	Simio.exe	[2025.10.20-08.43.49:666][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.22'
+153.325116	2025/10/20 16:43:49.666	34504	Simio.exe	[2025.10.20-08.43.49:666][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.22' (no properties)
+153.325149	2025/10/20 16:43:49.666	34504	Simio.exe	[2025.10.20-08.43.49:666][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+153.325176	2025/10/20 16:43:49.666	34504	Simio.exe	[2025.10.20-08.43.49:666][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.22' via Message Bus
+153.339476	2025/10/20 16:43:49.681	34504	Simio.exe	[2025.10.20-08.43.49:680][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.21'
+153.339526	2025/10/20 16:43:49.681	34504	Simio.exe	[2025.10.20-08.43.49:680][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.21' from local tracking
+153.339751	2025/10/20 16:43:49.681	34504	Simio.exe	[2025.10.20-08.43.49:681][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.21' from LiveLink via Message Bus
+153.468070	2025/10/20 16:43:49.809	34504	Simio.exe	[2025.10.20-08.43.49:808][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.23'
+153.468135	2025/10/20 16:43:49.809	34504	Simio.exe	[2025.10.20-08.43.49:808][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.23' (no properties)
+153.468192	2025/10/20 16:43:49.809	34504	Simio.exe	[2025.10.20-08.43.49:809][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+153.468223	2025/10/20 16:43:49.809	34504	Simio.exe	[2025.10.20-08.43.49:809][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.23' via Message Bus
+153.503119	2025/10/20 16:43:49.844	34504	Simio.exe	[2025.10.20-08.43.49:844][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.22'
+153.503189	2025/10/20 16:43:49.844	34504	Simio.exe	[2025.10.20-08.43.49:844][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.22' from local tracking
+153.503245	2025/10/20 16:43:49.844	34504	Simio.exe	[2025.10.20-08.43.49:844][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.22' from LiveLink via Message Bus
+153.558432	2025/10/20 16:43:49.899	34504	Simio.exe	[2025.10.20-08.43.49:899][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+153.640776	2025/10/20 16:43:49.982	34504	Simio.exe	[2025.10.20-08.43.49:982][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.23'
+153.640869	2025/10/20 16:43:49.982	34504	Simio.exe	[2025.10.20-08.43.49:982][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.23' from local tracking
+153.640923	2025/10/20 16:43:49.982	34504	Simio.exe	[2025.10.20-08.43.49:982][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.23' from LiveLink via Message Bus
+153.653918	2025/10/20 16:43:49.995	34504	Simio.exe	[2025.10.20-08.43.49:995][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.24'
+153.653969	2025/10/20 16:43:49.995	34504	Simio.exe	[2025.10.20-08.43.49:995][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.24' (no properties)
+153.654020	2025/10/20 16:43:49.995	34504	Simio.exe	[2025.10.20-08.43.49:995][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+153.654066	2025/10/20 16:43:49.995	34504	Simio.exe	[2025.10.20-08.43.49:995][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.24' via Message Bus
+153.824942	2025/10/20 16:43:50.166	34504	Simio.exe	[2025.10.20-08.43.50:165][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.24'
+153.824984	2025/10/20 16:43:50.166	34504	Simio.exe	[2025.10.20-08.43.50:166][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.24' from local tracking
+153.825037	2025/10/20 16:43:50.166	34504	Simio.exe	[2025.10.20-08.43.50:166][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.24' from LiveLink via Message Bus
+154.787424	2025/10/20 16:43:51.129	34504	Simio.exe	[2025.10.20-08.43.51:129][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+154.787503	2025/10/20 16:43:51.129	34504	Simio.exe	[2025.10.20-08.43.51:129][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.25'
+154.787820	2025/10/20 16:43:51.129	34504	Simio.exe	[2025.10.20-08.43.51:129][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.25' (no properties)
+154.787867	2025/10/20 16:43:51.129	34504	Simio.exe	[2025.10.20-08.43.51:129][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+154.787903	2025/10/20 16:43:51.129	34504	Simio.exe	[2025.10.20-08.43.51:129][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.25' via Message Bus
+154.959400	2025/10/20 16:43:51.300	34504	Simio.exe	[2025.10.20-08.43.51:300][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.26'
+154.959442	2025/10/20 16:43:51.300	34504	Simio.exe	[2025.10.20-08.43.51:300][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.26' (no properties)
+154.959489	2025/10/20 16:43:51.301	34504	Simio.exe	[2025.10.20-08.43.51:300][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+154.959514	2025/10/20 16:43:51.301	34504	Simio.exe	[2025.10.20-08.43.51:301][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.26' via Message Bus
+154.973579	2025/10/20 16:43:51.314	34504	Simio.exe	[2025.10.20-08.43.51:314][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.25'
+154.973650	2025/10/20 16:43:51.314	34504	Simio.exe	[2025.10.20-08.43.51:314][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.25' from local tracking
+154.973706	2025/10/20 16:43:51.314	34504	Simio.exe	[2025.10.20-08.43.51:314][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.25' from LiveLink via Message Bus
+155.136475	2025/10/20 16:43:51.477	34504	Simio.exe	[2025.10.20-08.43.51:477][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.26'
+155.136553	2025/10/20 16:43:51.477	34504	Simio.exe	[2025.10.20-08.43.51:477][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.26' from local tracking
+155.136614	2025/10/20 16:43:51.477	34504	Simio.exe	[2025.10.20-08.43.51:477][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.26' from LiveLink via Message Bus
+156.196032	2025/10/20 16:43:52.537	34504	Simio.exe	[2025.10.20-08.43.52:537][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+156.196070	2025/10/20 16:43:52.537	34504	Simio.exe	[2025.10.20-08.43.52:537][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.27'
+156.196108	2025/10/20 16:43:52.537	34504	Simio.exe	[2025.10.20-08.43.52:537][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.27' (no properties)
+156.196161	2025/10/20 16:43:52.537	34504	Simio.exe	[2025.10.20-08.43.52:537][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+156.196181	2025/10/20 16:43:52.537	34504	Simio.exe	[2025.10.20-08.43.52:537][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.27' via Message Bus
+156.320294	2025/10/20 16:43:52.661	34504	Simio.exe	[2025.10.20-08.43.52:661][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.28'
+156.320369	2025/10/20 16:43:52.661	34504	Simio.exe	[2025.10.20-08.43.52:661][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.28' (no properties)
+156.320431	2025/10/20 16:43:52.661	34504	Simio.exe	[2025.10.20-08.43.52:661][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+156.320458	2025/10/20 16:43:52.661	34504	Simio.exe	[2025.10.20-08.43.52:661][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.28' via Message Bus
+156.374182	2025/10/20 16:43:52.715	34504	Simio.exe	[2025.10.20-08.43.52:715][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.27'
+156.374237	2025/10/20 16:43:52.715	34504	Simio.exe	[2025.10.20-08.43.52:715][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.27' from local tracking
+156.374298	2025/10/20 16:43:52.715	34504	Simio.exe	[2025.10.20-08.43.52:715][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.27' from LiveLink via Message Bus
+156.415618	2025/10/20 16:43:52.756	34504	Simio.exe	[2025.10.20-08.43.52:756][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.28' (count: 181) - Location: (-30.00, -0.00, 0.00) [Message Bus]
+156.503358	2025/10/20 16:43:52.844	34504	Simio.exe	[2025.10.20-08.43.52:844][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.28'
+156.503414	2025/10/20 16:43:52.844	34504	Simio.exe	[2025.10.20-08.43.52:844][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.28' from local tracking
+156.503503	2025/10/20 16:43:52.844	34504	Simio.exe	[2025.10.20-08.43.52:844][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.28' from LiveLink via Message Bus
+157.168544	2025/10/20 16:43:53.509	34504	Simio.exe	[2025.10.20-08.43.53:509][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.29'
+157.168583	2025/10/20 16:43:53.509	34504	Simio.exe	[2025.10.20-08.43.53:509][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.29' (no properties)
+157.168617	2025/10/20 16:43:53.509	34504	Simio.exe	[2025.10.20-08.43.53:509][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+157.168674	2025/10/20 16:43:53.509	34504	Simio.exe	[2025.10.20-08.43.53:509][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.29' via Message Bus
+157.200626	2025/10/20 16:43:53.541	34504	Simio.exe	[2025.10.20-08.43.53:541][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+157.340327	2025/10/20 16:43:53.681	34504	Simio.exe	[2025.10.20-08.43.53:681][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.29'
+157.340366	2025/10/20 16:43:53.681	34504	Simio.exe	[2025.10.20-08.43.53:681][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.29' from local tracking
+157.340413	2025/10/20 16:43:53.681	34504	Simio.exe	[2025.10.20-08.43.53:681][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.29' from LiveLink via Message Bus
+157.525219	2025/10/20 16:43:53.866	34504	Simio.exe	[2025.10.20-08.43.53:866][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.30'
+157.525257	2025/10/20 16:43:53.866	34504	Simio.exe	[2025.10.20-08.43.53:866][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.30' (no properties)
+157.525291	2025/10/20 16:43:53.866	34504	Simio.exe	[2025.10.20-08.43.53:866][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+157.525323	2025/10/20 16:43:53.866	34504	Simio.exe	[2025.10.20-08.43.53:866][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.30' via Message Bus
+157.694832	2025/10/20 16:43:54.036	34504	Simio.exe	[2025.10.20-08.43.54:036][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.30'
+157.694873	2025/10/20 16:43:54.036	34504	Simio.exe	[2025.10.20-08.43.54:036][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.30' from local tracking
+157.694925	2025/10/20 16:43:54.036	34504	Simio.exe	[2025.10.20-08.43.54:036][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.30' from LiveLink via Message Bus
+157.715204	2025/10/20 16:43:54.056	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000020
+157.715240	2025/10/20 16:43:54.056	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000042
+157.737161	2025/10/20 16:43:54.078	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000013
+157.737215	2025/10/20 16:43:54.078	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000023
+158.781463	2025/10/20 16:43:55.122	37016	UnrealEditor.exe	[2025.10.20-08.43.55:121][185]LogEOSSDK: Warning: LogHttp: Retry 3 on https://api.epicgames.dev/auth/v1/oauth/token
+159.080930	2025/10/20 16:43:55.422	37016	UnrealEditor.exe	[2025.10.20-08.43.55:421][202]LogEOSSDK: Warning: LogHttp: 0000016613C69600: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.28s
+159.081018	2025/10/20 16:43:55.422	37016	UnrealEditor.exe	[2025.10.20-08.43.55:422][203]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Date: Mon, 20 Oct 2025 08:43:55 GMT
+159.081079	2025/10/20 16:43:55.422	37016	UnrealEditor.exe	[2025.10.20-08.43.55:422][203]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Type: text/plain
+159.081508	2025/10/20 16:43:55.422	37016	UnrealEditor.exe	[2025.10.20-08.43.55:422][203]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Length: 91
+159.081580	2025/10/20 16:43:55.422	37016	UnrealEditor.exe	[2025.10.20-08.43.55:422][203]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Connection: keep-alive
+159.081637	2025/10/20 16:43:55.422	37016	UnrealEditor.exe	[2025.10.20-08.43.55:422][203]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-Wcn1Ez23ZUWMnemegzwTjA
+159.081726	2025/10/20 16:43:55.422	37016	UnrealEditor.exe	[2025.10.20-08.43.55:422][203]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Server: eos-gateway
+159.081772	2025/10/20 16:43:55.422	37016	UnrealEditor.exe	[2025.10.20-08.43.55:422][203]LogEOSSDK: Warning: LogHttp: Lockout of 18.606525s on https://api.epicgames.dev/auth/v1/oauth/token
+160.999462	2025/10/20 16:43:57.340	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000018
+160.999896	2025/10/20 16:43:57.341	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000040
+161.004448	2025/10/20 16:43:57.345	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000018
+161.004498	2025/10/20 16:43:57.345	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000036
+161.006659	2025/10/20 16:43:57.347	34504	Simio.exe	[2025.10.20-08.43.57:347][  0]LogUnrealLiveLinkNative: ULL_Shutdown called
+161.006718	2025/10/20 16:43:57.347	34504	Simio.exe	[2025.10.20-08.43.57:347][  0]LogUnrealLiveLinkNative: Shutdown: Clearing 0 transform subjects, 0 data subjects, 25 cached names
+161.006762	2025/10/20 16:43:57.347	34504	Simio.exe	[2025.10.20-08.43.57:347][  0]LogUnrealLiveLinkNative: Shutdown: Removing LiveLink Message Bus Provider 'SimioSimulation'
+161.006818	2025/10/20 16:43:57.347	34504	Simio.exe	[2025.10.20-08.43.57:347][  0]LogUnrealLiveLinkNative: Shutdown: ? LiveLink provider removed successfully
+161.006875	2025/10/20 16:43:57.348	34504	Simio.exe	[2025.10.20-08.43.57:347][  0]LogUnrealLiveLinkNative: Shutdown: Skipping GEngineLoop shutdown (DLL loaded in host process)
+161.006958	2025/10/20 16:43:57.348	34504	Simio.exe	[2025.10.20-08.43.57:348][  0]LogUnrealLiveLinkNative: Shutdown: Complete (resources released, modules remain loaded)
+161.007191	2025/10/20 16:43:57.348	34504	Simio.exe	[2025.10.20-08.43.57:348][  0]LogUnrealLiveLinkNative: ULL_Shutdown: Complete
+164.853467	2025/10/20 16:44:01.194	34504	Simio.exe	Initialization table import run time: 00:00:00.0000410
+164.854832	2025/10/20 16:44:01.195	34504	Simio.exe	[2025.10.20-08.44.01:195][  0]LogUnrealLiveLinkNative: ULL_GetVersion called, returning 1
+164.854872	2025/10/20 16:44:01.195	34504	Simio.exe	[2025.10.20-08.44.01:195][  0]LogUnrealLiveLinkNative: ULL_GetVersion called, returning 1
+164.854952	2025/10/20 16:44:01.196	34504	Simio.exe	[2025.10.20-08.44.01:195][  0]LogUnrealLiveLinkNative: ULL_GetVersion called, returning 1
+164.855012	2025/10/20 16:44:01.196	34504	Simio.exe	[2025.10.20-08.44.01:195][  0]LogUnrealLiveLinkNative: Initialize: ? GEngineLoop already initialized (reusing existing runtime)
+164.855047	2025/10/20 16:44:01.196	34504	Simio.exe	[2025.10.20-08.44.01:196][  0]LogUnrealLiveLinkNative: Initialize: Ready for LiveLink integration with provider 'SimioSimulation'
+164.855093	2025/10/20 16:44:01.196	34504	Simio.exe	[2025.10.20-08.44.01:196][  0]LogUnrealLiveLinkNative: ULL_Initialize: Success
+164.858701	2025/10/20 16:44:01.200	34504	Simio.exe	Initialization process logic run time: 00:00:00.0041414
+164.865291	2025/10/20 16:44:01.206	34504	Simio.exe	[2025.10.20-08.44.01:206][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+164.865533	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:206][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.6'
+164.865600	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Creating LiveLink Message Bus Provider 'SimioSimulation'
+164.865655	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Using UDP Message Bus for cross-process communication
+164.865753	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Calling ILiveLinkProvider::CreateLiveLinkProvider...
+164.865783	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: CreateLiveLinkProvider returned, checking validity...
+164.865810	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: ? SUCCESS! LiveLink Message Bus Provider created
+164.865853	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Broadcasting to UDP Message Bus (230.0.0.1:6666)
+164.865911	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: EnsureLiveLinkSource: Check Unreal Editor ? Window ? LiveLink for source 'SimioSimulation'
+164.865982	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.6' (no properties)
+164.866039	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+164.866082	2025/10/20 16:44:01.207	34504	Simio.exe	[2025.10.20-08.44.01:207][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.6' via Message Bus
+165.070924	2025/10/20 16:44:01.411	34504	Simio.exe	[2025.10.20-08.44.01:411][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.6'
+165.071026	2025/10/20 16:44:01.411	34504	Simio.exe	[2025.10.20-08.44.01:411][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.6' from local tracking
+165.071085	2025/10/20 16:44:01.411	34504	Simio.exe	[2025.10.20-08.44.01:411][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.6' from LiveLink via Message Bus
+165.535510	2025/10/20 16:44:01.876	34504	Simio.exe	[2025.10.20-08.44.01:876][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.7'
+165.535590	2025/10/20 16:44:01.876	34504	Simio.exe	[2025.10.20-08.44.01:876][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.7' (no properties)
+165.535650	2025/10/20 16:44:01.876	34504	Simio.exe	[2025.10.20-08.44.01:876][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+165.535701	2025/10/20 16:44:01.876	34504	Simio.exe	[2025.10.20-08.44.01:876][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.7' via Message Bus
+165.788887	2025/10/20 16:44:02.130	34504	Simio.exe	[2025.10.20-08.44.02:130][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.7'
+165.788969	2025/10/20 16:44:02.130	34504	Simio.exe	[2025.10.20-08.44.02:130][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.7' from local tracking
+165.789033	2025/10/20 16:44:02.130	34504	Simio.exe	[2025.10.20-08.44.02:130][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.7' from LiveLink via Message Bus
+165.823368	2025/10/20 16:44:02.164	34504	Simio.exe	[2025.10.20-08.44.02:164][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.8'
+165.823456	2025/10/20 16:44:02.164	34504	Simio.exe	[2025.10.20-08.44.02:164][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.8' (no properties)
+165.823537	2025/10/20 16:44:02.164	34504	Simio.exe	[2025.10.20-08.44.02:164][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+165.823657	2025/10/20 16:44:02.164	34504	Simio.exe	[2025.10.20-08.44.02:164][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.8' via Message Bus
+165.890225	2025/10/20 16:44:02.231	34504	Simio.exe	[2025.10.20-08.44.02:230][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+165.952844	2025/10/20 16:44:02.293	34504	Simio.exe	[2025.10.20-08.44.02:293][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.9'
+165.952896	2025/10/20 16:44:02.293	34504	Simio.exe	[2025.10.20-08.44.02:293][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.9' (no properties)
+165.952951	2025/10/20 16:44:02.293	34504	Simio.exe	[2025.10.20-08.44.02:293][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+165.953013	2025/10/20 16:44:02.294	34504	Simio.exe	[2025.10.20-08.44.02:293][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.9' via Message Bus
+166.027716	2025/10/20 16:44:02.368	34504	Simio.exe	[2025.10.20-08.44.02:368][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.8'
+166.027767	2025/10/20 16:44:02.368	34504	Simio.exe	[2025.10.20-08.44.02:368][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.8' from local tracking
+166.027836	2025/10/20 16:44:02.368	34504	Simio.exe	[2025.10.20-08.44.02:368][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.8' from LiveLink via Message Bus
+166.137987	2025/10/20 16:44:02.478	34504	Simio.exe	[2025.10.20-08.44.02:478][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.9'
+166.138151	2025/10/20 16:44:02.478	34504	Simio.exe	[2025.10.20-08.44.02:478][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.9' from local tracking
+166.138188	2025/10/20 16:44:02.479	34504	Simio.exe	[2025.10.20-08.44.02:478][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.9' from LiveLink via Message Bus
+166.247216	2025/10/20 16:44:02.588	34504	Simio.exe	[2025.10.20-08.44.02:588][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.10'
+166.247279	2025/10/20 16:44:02.588	34504	Simio.exe	[2025.10.20-08.44.02:588][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.10' (no properties)
+166.247313	2025/10/20 16:44:02.588	34504	Simio.exe	[2025.10.20-08.44.02:588][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+166.247482	2025/10/20 16:44:02.589	34504	Simio.exe	[2025.10.20-08.44.02:588][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.10' via Message Bus
+166.419457	2025/10/20 16:44:02.761	34504	Simio.exe	[2025.10.20-08.44.02:761][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.10'
+166.419498	2025/10/20 16:44:02.761	34504	Simio.exe	[2025.10.20-08.44.02:761][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.10' from local tracking
+166.419576	2025/10/20 16:44:02.761	34504	Simio.exe	[2025.10.20-08.44.02:761][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.10' from LiveLink via Message Bus
+166.463029	2025/10/20 16:44:02.804	34504	Simio.exe	[2025.10.20-08.44.02:804][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.11'
+166.463116	2025/10/20 16:44:02.804	34504	Simio.exe	[2025.10.20-08.44.02:804][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.11' (no properties)
+166.463387	2025/10/20 16:44:02.804	34504	Simio.exe	[2025.10.20-08.44.02:804][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+166.463437	2025/10/20 16:44:02.804	34504	Simio.exe	[2025.10.20-08.44.02:804][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.11' via Message Bus
+166.463468	2025/10/20 16:44:02.804	34504	Simio.exe	[2025.10.20-08.44.02:804][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.11' (count: 241) - Location: (-575.00, 0.00, 0.00) [Message Bus]
+166.621664	2025/10/20 16:44:02.963	34504	Simio.exe	[2025.10.20-08.44.02:963][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.12'
+166.621743	2025/10/20 16:44:02.963	34504	Simio.exe	[2025.10.20-08.44.02:963][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.12' (no properties)
+166.621803	2025/10/20 16:44:02.963	34504	Simio.exe	[2025.10.20-08.44.02:963][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+166.621915	2025/10/20 16:44:02.963	34504	Simio.exe	[2025.10.20-08.44.02:963][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.12' via Message Bus
+166.648333	2025/10/20 16:44:02.989	34504	Simio.exe	[2025.10.20-08.44.02:989][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.11'
+166.648419	2025/10/20 16:44:02.989	34504	Simio.exe	[2025.10.20-08.44.02:989][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.11' from local tracking
+166.648723	2025/10/20 16:44:02.990	34504	Simio.exe	[2025.10.20-08.44.02:989][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.11' from LiveLink via Message Bus
+166.794853	2025/10/20 16:44:03.136	34504	Simio.exe	[2025.10.20-08.44.03:136][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.12'
+166.794893	2025/10/20 16:44:03.136	34504	Simio.exe	[2025.10.20-08.44.03:136][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.12' from local tracking
+166.794938	2025/10/20 16:44:03.136	34504	Simio.exe	[2025.10.20-08.44.03:136][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.12' from LiveLink via Message Bus
+167.009102	2025/10/20 16:44:03.350	34504	Simio.exe	[2025.10.20-08.44.03:350][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+167.009149	2025/10/20 16:44:03.350	34504	Simio.exe	[2025.10.20-08.44.03:350][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.13'
+167.009239	2025/10/20 16:44:03.351	34504	Simio.exe	[2025.10.20-08.44.03:350][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.13' (no properties)
+167.009284	2025/10/20 16:44:03.351	34504	Simio.exe	[2025.10.20-08.44.03:350][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+167.009333	2025/10/20 16:44:03.351	34504	Simio.exe	[2025.10.20-08.44.03:351][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.13' via Message Bus
+167.183435	2025/10/20 16:44:03.524	34504	Simio.exe	[2025.10.20-08.44.03:524][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.13'
+167.183516	2025/10/20 16:44:03.524	34504	Simio.exe	[2025.10.20-08.44.03:524][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.13' from local tracking
+167.183563	2025/10/20 16:44:03.524	34504	Simio.exe	[2025.10.20-08.44.03:524][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.13' from LiveLink via Message Bus
+167.252423	2025/10/20 16:44:03.593	34504	Simio.exe	[2025.10.20-08.44.03:593][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.14'
+167.252461	2025/10/20 16:44:03.593	34504	Simio.exe	[2025.10.20-08.44.03:593][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.14' (no properties)
+167.252634	2025/10/20 16:44:03.593	34504	Simio.exe	[2025.10.20-08.44.03:593][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+167.252664	2025/10/20 16:44:03.593	34504	Simio.exe	[2025.10.20-08.44.03:593][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.14' via Message Bus
+167.425059	2025/10/20 16:44:03.766	34504	Simio.exe	[2025.10.20-08.44.03:765][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.14'
+167.425126	2025/10/20 16:44:03.766	34504	Simio.exe	[2025.10.20-08.44.03:766][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.14' from local tracking
+167.425186	2025/10/20 16:44:03.766	34504	Simio.exe	[2025.10.20-08.44.03:766][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.14' from LiveLink via Message Bus
+167.608415	2025/10/20 16:44:03.950	34504	Simio.exe	[2025.10.20-08.44.03:949][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.15'
+167.608457	2025/10/20 16:44:03.950	34504	Simio.exe	[2025.10.20-08.44.03:949][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.15' (no properties)
+167.608485	2025/10/20 16:44:03.950	34504	Simio.exe	[2025.10.20-08.44.03:950][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+167.608528	2025/10/20 16:44:03.950	34504	Simio.exe	[2025.10.20-08.44.03:950][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.15' via Message Bus
+167.637135	2025/10/20 16:44:03.978	34504	Simio.exe	[2025.10.20-08.44.03:978][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.16'
+167.637204	2025/10/20 16:44:03.978	34504	Simio.exe	[2025.10.20-08.44.03:978][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.16' (no properties)
+167.637283	2025/10/20 16:44:03.978	34504	Simio.exe	[2025.10.20-08.44.03:978][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+167.637317	2025/10/20 16:44:03.978	34504	Simio.exe	[2025.10.20-08.44.03:978][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.16' via Message Bus
+167.792256	2025/10/20 16:44:04.133	34504	Simio.exe	[2025.10.20-08.44.04:133][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.15'
+167.792335	2025/10/20 16:44:04.134	34504	Simio.exe	[2025.10.20-08.44.04:133][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.15' from local tracking
+167.792388	2025/10/20 16:44:04.134	34504	Simio.exe	[2025.10.20-08.44.04:133][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.15' from LiveLink via Message Bus
+167.820059	2025/10/20 16:44:04.161	34504	Simio.exe	[2025.10.20-08.44.04:161][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.16'
+167.820113	2025/10/20 16:44:04.161	34504	Simio.exe	[2025.10.20-08.44.04:161][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.16' from local tracking
+167.820153	2025/10/20 16:44:04.161	34504	Simio.exe	[2025.10.20-08.44.04:161][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.16' from LiveLink via Message Bus
+168.095412	2025/10/20 16:44:04.436	34504	Simio.exe	[2025.10.20-08.44.04:436][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+168.095454	2025/10/20 16:44:04.436	34504	Simio.exe	[2025.10.20-08.44.04:436][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.17'
+168.095507	2025/10/20 16:44:04.436	34504	Simio.exe	[2025.10.20-08.44.04:436][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.17' (no properties)
+168.095544	2025/10/20 16:44:04.436	34504	Simio.exe	[2025.10.20-08.44.04:436][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+168.095607	2025/10/20 16:44:04.436	34504	Simio.exe	[2025.10.20-08.44.04:436][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.17' via Message Bus
+168.277325	2025/10/20 16:44:04.618	34504	Simio.exe	[2025.10.20-08.44.04:618][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.17'
+168.277549	2025/10/20 16:44:04.619	34504	Simio.exe	[2025.10.20-08.44.04:618][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.17' from local tracking
+168.277763	2025/10/20 16:44:04.619	34504	Simio.exe	[2025.10.20-08.44.04:618][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.17' from LiveLink via Message Bus
+169.155418	2025/10/20 16:44:05.496	34504	Simio.exe	[2025.10.20-08.44.05:494][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+169.155470	2025/10/20 16:44:05.496	34504	Simio.exe	[2025.10.20-08.44.05:495][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.18'
+169.155763	2025/10/20 16:44:05.496	34504	Simio.exe	[2025.10.20-08.44.05:496][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.18' (no properties)
+169.156747	2025/10/20 16:44:05.497	34504	Simio.exe	[2025.10.20-08.44.05:496][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+169.156844	2025/10/20 16:44:05.498	34504	Simio.exe	[2025.10.20-08.44.05:496][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.18' via Message Bus
+169.253324	2025/10/20 16:44:05.594	34504	Simio.exe	[2025.10.20-08.44.05:594][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.19'
+169.253369	2025/10/20 16:44:05.594	34504	Simio.exe	[2025.10.20-08.44.05:594][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.19' (no properties)
+169.253410	2025/10/20 16:44:05.594	34504	Simio.exe	[2025.10.20-08.44.05:594][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+169.253443	2025/10/20 16:44:05.594	34504	Simio.exe	[2025.10.20-08.44.05:594][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.19' via Message Bus
+169.253489	2025/10/20 16:44:05.595	34504	Simio.exe	[2025.10.20-08.44.05:594][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.19' (count: 301) - Location: (-575.00, 0.00, 0.00) [Message Bus]
+169.380946	2025/10/20 16:44:05.722	34504	Simio.exe	[2025.10.20-08.44.05:721][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.18'
+169.381020	2025/10/20 16:44:05.722	34504	Simio.exe	[2025.10.20-08.44.05:722][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.18' from local tracking
+169.381083	2025/10/20 16:44:05.722	34504	Simio.exe	[2025.10.20-08.44.05:722][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.18' from LiveLink via Message Bus
+169.459008	2025/10/20 16:44:05.800	34504	Simio.exe	[2025.10.20-08.44.05:799][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.19'
+169.459112	2025/10/20 16:44:05.800	34504	Simio.exe	[2025.10.20-08.44.05:799][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.19' from local tracking
+169.459189	2025/10/20 16:44:05.800	34504	Simio.exe	[2025.10.20-08.44.05:800][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.19' from LiveLink via Message Bus
+169.649936	2025/10/20 16:44:05.991	34504	Simio.exe	[2025.10.20-08.44.05:991][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.20'
+169.649998	2025/10/20 16:44:05.991	34504	Simio.exe	[2025.10.20-08.44.05:991][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.20' (no properties)
+169.650031	2025/10/20 16:44:05.991	34504	Simio.exe	[2025.10.20-08.44.05:991][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+169.650078	2025/10/20 16:44:05.991	34504	Simio.exe	[2025.10.20-08.44.05:991][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.20' via Message Bus
+169.813367	2025/10/20 16:44:06.154	34504	Simio.exe	[2025.10.20-08.44.06:154][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.21'
+169.813445	2025/10/20 16:44:06.154	34504	Simio.exe	[2025.10.20-08.44.06:154][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.21' (no properties)
+169.813507	2025/10/20 16:44:06.154	34504	Simio.exe	[2025.10.20-08.44.06:154][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+169.813575	2025/10/20 16:44:06.154	34504	Simio.exe	[2025.10.20-08.44.06:154][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.21' via Message Bus
+169.829631	2025/10/20 16:44:06.170	34504	Simio.exe	[2025.10.20-08.44.06:170][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.20'
+169.829683	2025/10/20 16:44:06.170	34504	Simio.exe	[2025.10.20-08.44.06:170][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.20' from local tracking
+169.829749	2025/10/20 16:44:06.170	34504	Simio.exe	[2025.10.20-08.44.06:170][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.20' from LiveLink via Message Bus
+169.982442	2025/10/20 16:44:06.323	34504	Simio.exe	[2025.10.20-08.44.06:323][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.22'
+169.982525	2025/10/20 16:44:06.323	34504	Simio.exe	[2025.10.20-08.44.06:323][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.22' (no properties)
+169.982573	2025/10/20 16:44:06.323	34504	Simio.exe	[2025.10.20-08.44.06:323][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+169.982596	2025/10/20 16:44:06.323	34504	Simio.exe	[2025.10.20-08.44.06:323][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.22' via Message Bus
+169.995874	2025/10/20 16:44:06.337	34504	Simio.exe	[2025.10.20-08.44.06:337][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.21'
+169.995923	2025/10/20 16:44:06.337	34504	Simio.exe	[2025.10.20-08.44.06:337][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.21' from local tracking
+169.996094	2025/10/20 16:44:06.337	34504	Simio.exe	[2025.10.20-08.44.06:337][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.21' from LiveLink via Message Bus
+170.127443	2025/10/20 16:44:06.468	34504	Simio.exe	[2025.10.20-08.44.06:468][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.23'
+170.127546	2025/10/20 16:44:06.468	34504	Simio.exe	[2025.10.20-08.44.06:468][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.23' (no properties)
+170.127683	2025/10/20 16:44:06.469	34504	Simio.exe	[2025.10.20-08.44.06:468][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+170.128042	2025/10/20 16:44:06.469	34504	Simio.exe	[2025.10.20-08.44.06:468][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.23' via Message Bus
+170.158807	2025/10/20 16:44:06.500	34504	Simio.exe	[2025.10.20-08.44.06:500][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+170.162416	2025/10/20 16:44:06.503	34504	Simio.exe	[2025.10.20-08.44.06:503][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.22'
+170.162501	2025/10/20 16:44:06.504	34504	Simio.exe	[2025.10.20-08.44.06:503][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.22' from local tracking
+170.162567	2025/10/20 16:44:06.504	34504	Simio.exe	[2025.10.20-08.44.06:503][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.22' from LiveLink via Message Bus
+170.306756	2025/10/20 16:44:06.648	34504	Simio.exe	[2025.10.20-08.44.06:648][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.23'
+170.306810	2025/10/20 16:44:06.648	34504	Simio.exe	[2025.10.20-08.44.06:648][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.23' from local tracking
+170.306919	2025/10/20 16:44:06.648	34504	Simio.exe	[2025.10.20-08.44.06:648][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.23' from LiveLink via Message Bus
+170.321250	2025/10/20 16:44:06.662	34504	Simio.exe	[2025.10.20-08.44.06:662][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.24'
+170.321500	2025/10/20 16:44:06.663	34504	Simio.exe	[2025.10.20-08.44.06:662][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.24' (no properties)
+170.321550	2025/10/20 16:44:06.663	34504	Simio.exe	[2025.10.20-08.44.06:662][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+170.321637	2025/10/20 16:44:06.663	34504	Simio.exe	[2025.10.20-08.44.06:663][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.24' via Message Bus
+170.495955	2025/10/20 16:44:06.837	34504	Simio.exe	[2025.10.20-08.44.06:836][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.24'
+170.496003	2025/10/20 16:44:06.837	34504	Simio.exe	[2025.10.20-08.44.06:837][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.24' from local tracking
+170.496040	2025/10/20 16:44:06.837	34504	Simio.exe	[2025.10.20-08.44.06:837][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.24' from LiveLink via Message Bus
+171.512142	2025/10/20 16:44:07.853	34504	Simio.exe	[2025.10.20-08.44.07:853][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+171.512223	2025/10/20 16:44:07.853	34504	Simio.exe	[2025.10.20-08.44.07:853][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.25'
+171.512295	2025/10/20 16:44:07.853	34504	Simio.exe	[2025.10.20-08.44.07:853][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.25' (no properties)
+171.512370	2025/10/20 16:44:07.853	34504	Simio.exe	[2025.10.20-08.44.07:853][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+171.512415	2025/10/20 16:44:07.853	34504	Simio.exe	[2025.10.20-08.44.07:853][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.25' via Message Bus
+171.680223	2025/10/20 16:44:08.021	34504	Simio.exe	[2025.10.20-08.44.08:021][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.26'
+171.680279	2025/10/20 16:44:08.021	34504	Simio.exe	[2025.10.20-08.44.08:021][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.26' (no properties)
+171.680327	2025/10/20 16:44:08.021	34504	Simio.exe	[2025.10.20-08.44.08:021][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+171.680352	2025/10/20 16:44:08.021	34504	Simio.exe	[2025.10.20-08.44.08:021][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.26' via Message Bus
+171.680391	2025/10/20 16:44:08.021	34504	Simio.exe	[2025.10.20-08.44.08:021][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.26' (count: 361) - Location: (-450.00, -0.00, 0.00) [Message Bus]
+171.693250	2025/10/20 16:44:08.034	34504	Simio.exe	[2025.10.20-08.44.08:033][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.25'
+171.693303	2025/10/20 16:44:08.034	34504	Simio.exe	[2025.10.20-08.44.08:034][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.25' from local tracking
+171.693347	2025/10/20 16:44:08.034	34504	Simio.exe	[2025.10.20-08.44.08:034][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.25' from LiveLink via Message Bus
+171.853696	2025/10/20 16:44:08.194	34504	Simio.exe	[2025.10.20-08.44.08:194][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.26'
+171.853739	2025/10/20 16:44:08.194	34504	Simio.exe	[2025.10.20-08.44.08:194][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.26' from local tracking
+171.853790	2025/10/20 16:44:08.194	34504	Simio.exe	[2025.10.20-08.44.08:194][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.26' from LiveLink via Message Bus
+172.943961	2025/10/20 16:44:09.285	34504	Simio.exe	[2025.10.20-08.44.09:285][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+172.944154	2025/10/20 16:44:09.285	34504	Simio.exe	[2025.10.20-08.44.09:285][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.27'
+172.944204	2025/10/20 16:44:09.285	34504	Simio.exe	[2025.10.20-08.44.09:285][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.27' (no properties)
+172.944337	2025/10/20 16:44:09.285	34504	Simio.exe	[2025.10.20-08.44.09:285][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+172.944375	2025/10/20 16:44:09.285	34504	Simio.exe	[2025.10.20-08.44.09:285][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.27' via Message Bus
+173.075215	2025/10/20 16:44:09.416	34504	Simio.exe	[2025.10.20-08.44.09:416][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.28'
+173.075401	2025/10/20 16:44:09.416	34504	Simio.exe	[2025.10.20-08.44.09:416][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.28' (no properties)
+173.075499	2025/10/20 16:44:09.416	34504	Simio.exe	[2025.10.20-08.44.09:416][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+173.075530	2025/10/20 16:44:09.416	34504	Simio.exe	[2025.10.20-08.44.09:416][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.28' via Message Bus
+173.131333	2025/10/20 16:44:09.473	34504	Simio.exe	[2025.10.20-08.44.09:472][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.27'
+173.131404	2025/10/20 16:44:09.473	34504	Simio.exe	[2025.10.20-08.44.09:472][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.27' from local tracking
+173.131464	2025/10/20 16:44:09.473	34504	Simio.exe	[2025.10.20-08.44.09:473][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.27' from LiveLink via Message Bus
+173.261083	2025/10/20 16:44:09.602	34504	Simio.exe	[2025.10.20-08.44.09:602][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.28'
+173.261141	2025/10/20 16:44:09.602	34504	Simio.exe	[2025.10.20-08.44.09:602][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.28' from local tracking
+173.261216	2025/10/20 16:44:09.602	34504	Simio.exe	[2025.10.20-08.44.09:602][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.28' from LiveLink via Message Bus
+173.940929	2025/10/20 16:44:10.281	34504	Simio.exe	[2025.10.20-08.44.10:281][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.29'
+173.940976	2025/10/20 16:44:10.282	34504	Simio.exe	[2025.10.20-08.44.10:281][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.29' (no properties)
+173.941120	2025/10/20 16:44:10.282	34504	Simio.exe	[2025.10.20-08.44.10:282][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+173.941152	2025/10/20 16:44:10.282	34504	Simio.exe	[2025.10.20-08.44.10:282][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.29' via Message Bus
+173.974833	2025/10/20 16:44:10.315	34504	Simio.exe	[2025.10.20-08.44.10:315][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+174.115613	2025/10/20 16:44:10.457	34504	Simio.exe	[2025.10.20-08.44.10:457][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.29'
+174.115692	2025/10/20 16:44:10.457	34504	Simio.exe	[2025.10.20-08.44.10:457][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.29' from local tracking
+174.115858	2025/10/20 16:44:10.457	34504	Simio.exe	[2025.10.20-08.44.10:457][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.29' from LiveLink via Message Bus
+174.309520	2025/10/20 16:44:10.651	34504	Simio.exe	[2025.10.20-08.44.10:650][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.30'
+174.309566	2025/10/20 16:44:10.651	34504	Simio.exe	[2025.10.20-08.44.10:650][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.30' (no properties)
+174.309614	2025/10/20 16:44:10.651	34504	Simio.exe	[2025.10.20-08.44.10:651][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+174.309648	2025/10/20 16:44:10.651	34504	Simio.exe	[2025.10.20-08.44.10:651][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.30' via Message Bus
+174.483306	2025/10/20 16:44:10.824	34504	Simio.exe	[2025.10.20-08.44.10:824][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.30'
+174.483386	2025/10/20 16:44:10.824	34504	Simio.exe	[2025.10.20-08.44.10:824][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.30' from local tracking
+174.483474	2025/10/20 16:44:10.824	34504	Simio.exe	[2025.10.20-08.44.10:824][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.30' from LiveLink via Message Bus
+175.051057	2025/10/20 16:44:11.392	34504	Simio.exe	[2025.10.20-08.44.11:392][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+175.051138	2025/10/20 16:44:11.392	34504	Simio.exe	[2025.10.20-08.44.11:392][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.31'
+175.051183	2025/10/20 16:44:11.392	34504	Simio.exe	[2025.10.20-08.44.11:392][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.31' (no properties)
+175.051244	2025/10/20 16:44:11.392	34504	Simio.exe	[2025.10.20-08.44.11:392][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+175.051311	2025/10/20 16:44:11.393	34504	Simio.exe	[2025.10.20-08.44.11:392][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.31' via Message Bus
+175.135875	2025/10/20 16:44:11.477	34504	Simio.exe	[2025.10.20-08.44.11:477][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.32'
+175.135937	2025/10/20 16:44:11.477	34504	Simio.exe	[2025.10.20-08.44.11:477][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.32' (no properties)
+175.136037	2025/10/20 16:44:11.477	34504	Simio.exe	[2025.10.20-08.44.11:477][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+175.136074	2025/10/20 16:44:11.477	34504	Simio.exe	[2025.10.20-08.44.11:477][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.32' via Message Bus
+175.210163	2025/10/20 16:44:11.551	34504	Simio.exe	[2025.10.20-08.44.11:550][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.33'
+175.210206	2025/10/20 16:44:11.551	34504	Simio.exe	[2025.10.20-08.44.11:551][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.33' (no properties)
+175.210262	2025/10/20 16:44:11.551	34504	Simio.exe	[2025.10.20-08.44.11:551][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+175.210289	2025/10/20 16:44:11.551	34504	Simio.exe	[2025.10.20-08.44.11:551][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.33' via Message Bus
+175.244684	2025/10/20 16:44:11.585	34504	Simio.exe	[2025.10.20-08.44.11:585][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.31'
+175.244752	2025/10/20 16:44:11.585	34504	Simio.exe	[2025.10.20-08.44.11:585][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.31' from local tracking
+175.244861	2025/10/20 16:44:11.585	34504	Simio.exe	[2025.10.20-08.44.11:585][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.31' from LiveLink via Message Bus
+175.327535	2025/10/20 16:44:11.669	34504	Simio.exe	[2025.10.20-08.44.11:669][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.32' (count: 421) - Location: (390.00, -0.00, 0.00) [Message Bus]
+175.331320	2025/10/20 16:44:11.672	34504	Simio.exe	[2025.10.20-08.44.11:672][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.32'
+175.331391	2025/10/20 16:44:11.672	34504	Simio.exe	[2025.10.20-08.44.11:672][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.32' from local tracking
+175.331452	2025/10/20 16:44:11.672	34504	Simio.exe	[2025.10.20-08.44.11:672][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.32' from LiveLink via Message Bus
+175.352683	2025/10/20 16:44:11.693	34504	Simio.exe	[2025.10.20-08.44.11:693][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.34'
+175.352719	2025/10/20 16:44:11.693	34504	Simio.exe	[2025.10.20-08.44.11:693][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.34' (no properties)
+175.352779	2025/10/20 16:44:11.693	34504	Simio.exe	[2025.10.20-08.44.11:693][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+175.352828	2025/10/20 16:44:11.693	34504	Simio.exe	[2025.10.20-08.44.11:693][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.34' via Message Bus
+175.403034	2025/10/20 16:44:11.744	34504	Simio.exe	[2025.10.20-08.44.11:744][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.33'
+175.403088	2025/10/20 16:44:11.744	34504	Simio.exe	[2025.10.20-08.44.11:744][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.33' from local tracking
+175.403134	2025/10/20 16:44:11.744	34504	Simio.exe	[2025.10.20-08.44.11:744][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.33' from LiveLink via Message Bus
+175.535283	2025/10/20 16:44:11.876	34504	Simio.exe	[2025.10.20-08.44.11:876][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.34'
+175.535335	2025/10/20 16:44:11.876	34504	Simio.exe	[2025.10.20-08.44.11:876][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.34' from local tracking
+175.535404	2025/10/20 16:44:11.876	34504	Simio.exe	[2025.10.20-08.44.11:876][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.34' from LiveLink via Message Bus
+176.469278	2025/10/20 16:44:12.810	34504	Simio.exe	[2025.10.20-08.44.12:810][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+176.469317	2025/10/20 16:44:12.810	34504	Simio.exe	[2025.10.20-08.44.12:810][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.35'
+176.469370	2025/10/20 16:44:12.810	34504	Simio.exe	[2025.10.20-08.44.12:810][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.35' (no properties)
+176.469393	2025/10/20 16:44:12.810	34504	Simio.exe	[2025.10.20-08.44.12:810][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+176.469415	2025/10/20 16:44:12.810	34504	Simio.exe	[2025.10.20-08.44.12:810][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.35' via Message Bus
+176.646871	2025/10/20 16:44:12.987	34504	Simio.exe	[2025.10.20-08.44.12:987][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.35'
+176.646946	2025/10/20 16:44:12.988	34504	Simio.exe	[2025.10.20-08.44.12:987][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.35' from local tracking
+176.646991	2025/10/20 16:44:12.988	34504	Simio.exe	[2025.10.20-08.44.12:987][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.35' from LiveLink via Message Bus
+177.691853	2025/10/20 16:44:14.033	37016	UnrealEditor.exe	[2025.10.20-08.44.14:033][318]LogEOSSDK: Warning: LogHttp: Retry 4 on https://api.epicgames.dev/auth/v1/oauth/token
+178.346851	2025/10/20 16:44:14.687	34504	Simio.exe	[2025.10.20-08.44.14:687][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+178.346914	2025/10/20 16:44:14.688	34504	Simio.exe	[2025.10.20-08.44.14:687][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.36'
+178.346949	2025/10/20 16:44:14.688	34504	Simio.exe	[2025.10.20-08.44.14:688][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.36' (no properties)
+178.347005	2025/10/20 16:44:14.688	34504	Simio.exe	[2025.10.20-08.44.14:688][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+178.347066	2025/10/20 16:44:14.688	34504	Simio.exe	[2025.10.20-08.44.14:688][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.36' via Message Bus
+178.375582	2025/10/20 16:44:14.716	37016	UnrealEditor.exe	[2025.10.20-08.44.14:716][359]LogEOSSDK: Warning: LogHttp: 0000016613C69600: request has been successfully processed. URL: https://api.epicgames.dev/auth/v1/oauth/token, HTTP code: 503, content length: 91, actual payload size: 91, elapsed: 0.68s
+178.375637	2025/10/20 16:44:14.716	37016	UnrealEditor.exe	[2025.10.20-08.44.14:716][359]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Date: Mon, 20 Oct 2025 08:44:14 GMT
+178.375708	2025/10/20 16:44:14.716	37016	UnrealEditor.exe	[2025.10.20-08.44.14:716][360]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Type: text/plain
+178.375768	2025/10/20 16:44:14.716	37016	UnrealEditor.exe	[2025.10.20-08.44.14:716][360]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Content-Length: 91
+178.375826	2025/10/20 16:44:14.716	37016	UnrealEditor.exe	[2025.10.20-08.44.14:716][360]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Connection: keep-alive
+178.375866	2025/10/20 16:44:14.716	37016	UnrealEditor.exe	[2025.10.20-08.44.14:716][360]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header X-Epic-Correlation-Id: EOS-z8PqE4IjY0ebxoKuqXremA-Wcn1Ez23ZUWMnemegzwTjA
+178.376190	2025/10/20 16:44:14.717	37016	UnrealEditor.exe	[2025.10.20-08.44.14:716][360]LogEOSSDK: Warning: LogHttp: 0000016613C69600 Response Header Server: eos-gateway
+178.376424	2025/10/20 16:44:14.717	37016	UnrealEditor.exe	[2025.10.20-08.44.14:716][360]LogEOSSDK: Warning: LogHttp: Success on https://api.epicgames.dev/auth/v1/oauth/token
+178.376475	2025/10/20 16:44:14.717	37016	UnrealEditor.exe	[2025.10.20-08.44.14:717][360]LogEOSSDK: Warning: LogEOS: Error response received from backend. Response is not JSON. ServiceName=[EOSAuth], OperationName=[TokenGrant], Url=[<Redacted>], HttpStatus=[503], CorrId=[EOS-z8PqE4IjY0ebxoKuqXremA-Wcn1Ez23ZUWMnemegzwTjA]
+178.408675	2025/10/20 16:44:14.750	37016	UnrealEditor.exe	[2025.10.20-08.44.14:750][361]LogEOSSDK: Warning: LogEOSAnalytics: Unable to get the client auth token. Last result: EOS_UnrecognizedResponse.
+178.408724	2025/10/20 16:44:14.750	37016	UnrealEditor.exe	[2025.10.20-08.44.14:750][362]LogEOSSDK: Warning: LogEOS: SDK Config Product Update Request Failed, Result Code: EOS_UnrecognizedResponse, Retrying after 36.436356 seconds
+178.527897	2025/10/20 16:44:14.868	34504	Simio.exe	[2025.10.20-08.44.14:868][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.37'
+178.528079	2025/10/20 16:44:14.868	34504	Simio.exe	[2025.10.20-08.44.14:868][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.37' (no properties)
+178.528143	2025/10/20 16:44:14.868	34504	Simio.exe	[2025.10.20-08.44.14:868][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+178.528191	2025/10/20 16:44:14.868	34504	Simio.exe	[2025.10.20-08.44.14:868][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.37' via Message Bus
+178.548058	2025/10/20 16:44:14.889	34504	Simio.exe	[2025.10.20-08.44.14:889][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.36'
+178.548141	2025/10/20 16:44:14.889	34504	Simio.exe	[2025.10.20-08.44.14:889][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.36' from local tracking
+178.548278	2025/10/20 16:44:14.889	34504	Simio.exe	[2025.10.20-08.44.14:889][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.36' from LiveLink via Message Bus
+178.705068	2025/10/20 16:44:15.046	34504	Simio.exe	[2025.10.20-08.44.15:046][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.37'
+178.705111	2025/10/20 16:44:15.046	34504	Simio.exe	[2025.10.20-08.44.15:046][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.37' from local tracking
+178.705162	2025/10/20 16:44:15.046	34504	Simio.exe	[2025.10.20-08.44.15:046][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.37' from LiveLink via Message Bus
+180.489403	2025/10/20 16:44:16.830	34504	Simio.exe	[2025.10.20-08.44.16:830][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+180.489446	2025/10/20 16:44:16.830	34504	Simio.exe	[2025.10.20-08.44.16:830][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.38'
+180.489485	2025/10/20 16:44:16.830	34504	Simio.exe	[2025.10.20-08.44.16:830][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.38' (no properties)
+180.489533	2025/10/20 16:44:16.830	34504	Simio.exe	[2025.10.20-08.44.16:830][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+180.489656	2025/10/20 16:44:16.830	34504	Simio.exe	[2025.10.20-08.44.16:830][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.38' via Message Bus
+180.503935	2025/10/20 16:44:16.845	34504	Simio.exe	[2025.10.20-08.44.16:845][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.39'
+180.503985	2025/10/20 16:44:16.845	34504	Simio.exe	[2025.10.20-08.44.16:845][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.39' (no properties)
+180.504020	2025/10/20 16:44:16.845	34504	Simio.exe	[2025.10.20-08.44.16:845][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+180.504048	2025/10/20 16:44:16.845	34504	Simio.exe	[2025.10.20-08.44.16:845][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.39' via Message Bus
+180.674068	2025/10/20 16:44:17.014	34504	Simio.exe	[2025.10.20-08.44.17:014][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.38'
+180.674250	2025/10/20 16:44:17.015	34504	Simio.exe	[2025.10.20-08.44.17:014][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.38' from local tracking
+180.674328	2025/10/20 16:44:17.015	34504	Simio.exe	[2025.10.20-08.44.17:014][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.38' from LiveLink via Message Bus
+180.683019	2025/10/20 16:44:17.024	34504	Simio.exe	[2025.10.20-08.44.17:024][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.40'
+180.683073	2025/10/20 16:44:17.024	34504	Simio.exe	[2025.10.20-08.44.17:024][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.40' (no properties)
+180.683187	2025/10/20 16:44:17.024	34504	Simio.exe	[2025.10.20-08.44.17:024][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+180.683256	2025/10/20 16:44:17.024	34504	Simio.exe	[2025.10.20-08.44.17:024][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.40' via Message Bus
+180.695448	2025/10/20 16:44:17.036	34504	Simio.exe	[2025.10.20-08.44.17:036][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.39'
+180.695488	2025/10/20 16:44:17.036	34504	Simio.exe	[2025.10.20-08.44.17:036][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.39' from local tracking
+180.695604	2025/10/20 16:44:17.036	34504	Simio.exe	[2025.10.20-08.44.17:036][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.39' from LiveLink via Message Bus
+180.864274	2025/10/20 16:44:17.204	34504	Simio.exe	[2025.10.20-08.44.17:204][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.40'
+180.864332	2025/10/20 16:44:17.204	34504	Simio.exe	[2025.10.20-08.44.17:204][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.40' from local tracking
+180.864387	2025/10/20 16:44:17.204	34504	Simio.exe	[2025.10.20-08.44.17:204][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.40' from LiveLink via Message Bus
+181.695410	2025/10/20 16:44:18.036	34504	Simio.exe	[2025.10.20-08.44.18:036][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+181.695452	2025/10/20 16:44:18.036	34504	Simio.exe	[2025.10.20-08.44.18:036][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.41'
+181.695498	2025/10/20 16:44:18.036	34504	Simio.exe	[2025.10.20-08.44.18:036][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.41' (no properties)
+181.695528	2025/10/20 16:44:18.036	34504	Simio.exe	[2025.10.20-08.44.18:036][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+181.695557	2025/10/20 16:44:18.036	34504	Simio.exe	[2025.10.20-08.44.18:036][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.41' via Message Bus
+181.695585	2025/10/20 16:44:18.037	34504	Simio.exe	[2025.10.20-08.44.18:036][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.41' (count: 481) - Location: (-575.00, 0.00, 0.00) [Message Bus]
+181.877662	2025/10/20 16:44:18.218	34504	Simio.exe	[2025.10.20-08.44.18:218][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.41'
+181.877708	2025/10/20 16:44:18.218	34504	Simio.exe	[2025.10.20-08.44.18:218][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.41' from local tracking
+181.877767	2025/10/20 16:44:18.218	34504	Simio.exe	[2025.10.20-08.44.18:218][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.41' from LiveLink via Message Bus
+181.971508	2025/10/20 16:44:18.312	34504	Simio.exe	[2025.10.20-08.44.18:312][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.42'
+181.971545	2025/10/20 16:44:18.312	34504	Simio.exe	[2025.10.20-08.44.18:312][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.42' (no properties)
+181.971577	2025/10/20 16:44:18.312	34504	Simio.exe	[2025.10.20-08.44.18:312][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+181.971608	2025/10/20 16:44:18.312	34504	Simio.exe	[2025.10.20-08.44.18:312][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.42' via Message Bus
+182.152831	2025/10/20 16:44:18.494	34504	Simio.exe	[2025.10.20-08.44.18:494][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.42'
+182.152918	2025/10/20 16:44:18.494	34504	Simio.exe	[2025.10.20-08.44.18:494][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.42' from local tracking
+182.152998	2025/10/20 16:44:18.494	34504	Simio.exe	[2025.10.20-08.44.18:494][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.42' from LiveLink via Message Bus
+182.661841	2025/10/20 16:44:19.002	34504	Simio.exe	[2025.10.20-08.44.19:002][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.43'
+182.661913	2025/10/20 16:44:19.003	34504	Simio.exe	[2025.10.20-08.44.19:002][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.43' (no properties)
+182.662194	2025/10/20 16:44:19.003	34504	Simio.exe	[2025.10.20-08.44.19:003][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+182.662253	2025/10/20 16:44:19.003	34504	Simio.exe	[2025.10.20-08.44.19:003][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.43' via Message Bus
+182.724187	2025/10/20 16:44:19.065	34504	Simio.exe	[2025.10.20-08.44.19:064][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+182.844593	2025/10/20 16:44:19.186	34504	Simio.exe	[2025.10.20-08.44.19:186][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.43'
+182.844649	2025/10/20 16:44:19.186	34504	Simio.exe	[2025.10.20-08.44.19:186][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.43' from local tracking
+182.844702	2025/10/20 16:44:19.186	34504	Simio.exe	[2025.10.20-08.44.19:186][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.43' from LiveLink via Message Bus
+183.121286	2025/10/20 16:44:19.462	34504	Simio.exe	[2025.10.20-08.44.19:462][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.44'
+183.121365	2025/10/20 16:44:19.462	34504	Simio.exe	[2025.10.20-08.44.19:462][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.44' (no properties)
+183.121618	2025/10/20 16:44:19.462	34504	Simio.exe	[2025.10.20-08.44.19:462][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+183.121693	2025/10/20 16:44:19.462	34504	Simio.exe	[2025.10.20-08.44.19:462][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.44' via Message Bus
+183.305707	2025/10/20 16:44:19.646	34504	Simio.exe	[2025.10.20-08.44.19:646][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.44'
+183.305794	2025/10/20 16:44:19.646	34504	Simio.exe	[2025.10.20-08.44.19:646][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.44' from local tracking
+183.305855	2025/10/20 16:44:19.646	34504	Simio.exe	[2025.10.20-08.44.19:646][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.44' from LiveLink via Message Bus
+184.188870	2025/10/20 16:44:20.530	34504	Simio.exe	[2025.10.20-08.44.20:529][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+184.188949	2025/10/20 16:44:20.530	34504	Simio.exe	[2025.10.20-08.44.20:529][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.45'
+184.189030	2025/10/20 16:44:20.530	34504	Simio.exe	[2025.10.20-08.44.20:530][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.45' (no properties)
+184.189080	2025/10/20 16:44:20.530	34504	Simio.exe	[2025.10.20-08.44.20:530][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+184.189109	2025/10/20 16:44:20.530	34504	Simio.exe	[2025.10.20-08.44.20:530][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.45' via Message Bus
+184.371760	2025/10/20 16:44:20.712	34504	Simio.exe	[2025.10.20-08.44.20:712][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.45'
+184.371835	2025/10/20 16:44:20.712	34504	Simio.exe	[2025.10.20-08.44.20:712][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.45' from local tracking
+184.371901	2025/10/20 16:44:20.712	34504	Simio.exe	[2025.10.20-08.44.20:712][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.45' from LiveLink via Message Bus
+184.936443	2025/10/20 16:44:21.277	34504	Simio.exe	[2025.10.20-08.44.21:277][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.46'
+184.936509	2025/10/20 16:44:21.277	34504	Simio.exe	[2025.10.20-08.44.21:277][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.46' (no properties)
+184.936548	2025/10/20 16:44:21.277	34504	Simio.exe	[2025.10.20-08.44.21:277][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+184.936604	2025/10/20 16:44:21.277	34504	Simio.exe	[2025.10.20-08.44.21:277][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.46' via Message Bus
+185.059167	2025/10/20 16:44:21.400	34504	Simio.exe	[2025.10.20-08.44.21:400][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.47'
+185.059221	2025/10/20 16:44:21.400	34504	Simio.exe	[2025.10.20-08.44.21:400][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.47' (no properties)
+185.059335	2025/10/20 16:44:21.400	34504	Simio.exe	[2025.10.20-08.44.21:400][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+185.059387	2025/10/20 16:44:21.400	34504	Simio.exe	[2025.10.20-08.44.21:400][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.47' via Message Bus
+185.142661	2025/10/20 16:44:21.484	34504	Simio.exe	[2025.10.20-08.44.21:483][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.46'
+185.142709	2025/10/20 16:44:21.484	34504	Simio.exe	[2025.10.20-08.44.21:483][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.46' from local tracking
+185.142759	2025/10/20 16:44:21.484	34504	Simio.exe	[2025.10.20-08.44.21:484][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.46' from LiveLink via Message Bus
+185.196854	2025/10/20 16:44:21.537	34504	Simio.exe	[2025.10.20-08.44.21:537][  0]LogUnrealLiveLinkNative: ULL_IsConnected: Status = 0
+185.330166	2025/10/20 16:44:21.670	34504	Simio.exe	[2025.10.20-08.44.21:670][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.47'
+185.330245	2025/10/20 16:44:21.671	34504	Simio.exe	[2025.10.20-08.44.21:670][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.47' from local tracking
+185.330298	2025/10/20 16:44:21.671	34504	Simio.exe	[2025.10.20-08.44.21:670][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.47' from LiveLink via Message Bus
+185.867025	2025/10/20 16:44:22.208	34504	Simio.exe	[2025.10.20-08.44.22:208][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.48'
+185.867071	2025/10/20 16:44:22.208	34504	Simio.exe	[2025.10.20-08.44.22:208][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.48' (no properties)
+185.867133	2025/10/20 16:44:22.208	34504	Simio.exe	[2025.10.20-08.44.22:208][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+185.867169	2025/10/20 16:44:22.208	34504	Simio.exe	[2025.10.20-08.44.22:208][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.48' via Message Bus
+185.902199	2025/10/20 16:44:22.243	34504	Simio.exe	[2025.10.20-08.44.22:243][  0]LogUnrealLiveLinkNative: ULL_RegisterObject: 'ModelEntity1.49'
+185.902256	2025/10/20 16:44:22.243	34504	Simio.exe	[2025.10.20-08.44.22:243][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Registering 'ModelEntity1.49' (no properties)
+185.902313	2025/10/20 16:44:22.243	34504	Simio.exe	[2025.10.20-08.44.22:243][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: Broadcasting static data via Message Bus...
+185.902372	2025/10/20 16:44:22.244	34504	Simio.exe	[2025.10.20-08.44.22:243][  0]LogUnrealLiveLinkNative: RegisterTransformSubject: ? Successfully registered 'ModelEntity1.49' via Message Bus
+185.917332	2025/10/20 16:44:22.258	34504	Simio.exe	[2025.10.20-08.44.22:258][  0]LogUnrealLiveLinkNative: UpdateTransformSubject: 'ModelEntity1.48' (count: 541) - Location: (-310.00, -0.00, 0.00) [Message Bus]
+186.114173	2025/10/20 16:44:22.454	34504	Simio.exe	[2025.10.20-08.44.22:454][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.48'
+186.114310	2025/10/20 16:44:22.456	34504	Simio.exe	[2025.10.20-08.44.22:454][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.48' from local tracking
+186.114338	2025/10/20 16:44:22.456	34504	Simio.exe	[2025.10.20-08.44.22:454][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.48' from LiveLink via Message Bus
+186.145677	2025/10/20 16:44:22.486	34504	Simio.exe	[2025.10.20-08.44.22:486][  0]LogUnrealLiveLinkNative: ULL_RemoveObject: 'ModelEntity1.49'
+186.145715	2025/10/20 16:44:22.486	34504	Simio.exe	[2025.10.20-08.44.22:486][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: Removed 'ModelEntity1.49' from local tracking
+186.145893	2025/10/20 16:44:22.487	34504	Simio.exe	[2025.10.20-08.44.22:486][  0]LogUnrealLiveLinkNative: RemoveTransformSubject: ? Removed 'ModelEntity1.49' from LiveLink via Message Bus
+186.178908	2025/10/20 16:44:22.519	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000017
+186.178980	2025/10/20 16:44:22.519	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000038
+186.180876	2025/10/20 16:44:22.521	34504	Simio.exe	Harvested all table states for Model in 00:00:00.0000007
+186.180944	2025/10/20 16:44:22.521	34504	Simio.exe	Harvested all table targets for Model in 00:00:00.0000012
+186.182171	2025/10/20 16:44:22.522	34504	Simio.exe	[2025.10.20-08.44.22:522][  0]LogUnrealLiveLinkNative: ULL_Shutdown called
+186.182219	2025/10/20 16:44:22.523	34504	Simio.exe	[2025.10.20-08.44.22:522][  0]LogUnrealLiveLinkNative: Shutdown: Clearing 0 transform subjects, 0 data subjects, 44 cached names
+186.182282	2025/10/20 16:44:22.523	34504	Simio.exe	[2025.10.20-08.44.22:522][  0]LogUnrealLiveLinkNative: Shutdown: Removing LiveLink Message Bus Provider 'SimioSimulation'
+186.182339	2025/10/20 16:44:22.523	34504	Simio.exe	[2025.10.20-08.44.22:523][  0]LogUnrealLiveLinkNative: Shutdown: ? LiveLink provider removed successfully
+186.182397	2025/10/20 16:44:22.523	34504	Simio.exe	[2025.10.20-08.44.22:523][  0]LogUnrealLiveLinkNative: Shutdown: Skipping GEngineLoop shutdown (DLL loaded in host process)
+186.183452	2025/10/20 16:44:22.524	34504	Simio.exe	[2025.10.20-08.44.22:523][  0]LogUnrealLiveLinkNative: Shutdown: Complete (resources released, modules remain loaded)
+186.183619	2025/10/20 16:44:22.524	34504	Simio.exe	[2025.10.20-08.44.22:523][  0]LogUnrealLiveLinkNative: ULL_Shutdown: Complete
+198.344019	2025/10/20 16:44:34.684	34504	Simio.exe	<process started at 16:42:28.393 has terminated with exit code 0>
