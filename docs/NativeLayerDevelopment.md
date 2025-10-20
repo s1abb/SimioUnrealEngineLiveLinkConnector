@@ -703,14 +703,14 @@ extern "C" {
 bool FLiveLinkBridge::Initialize(const FString& InProviderName) {
     FScopeLock Lock(&CriticalSection);
     
-    if (bInitialized) return true;
+    if (bInitialized) return true;  // Idempotent
     
     // Get LiveLink client
     ILiveLinkClient* Client = &IModularFeatures::Get()
         .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
     
     if (!Client) {
-        UE_LOG(LogTemp, Error, TEXT("Failed to get LiveLink client"));
+        UE_LOG(LogUnrealLiveLinkNative, Error, TEXT("Failed to get LiveLink client"));
         return false;
     }
     
@@ -721,15 +721,80 @@ bool FLiveLinkBridge::Initialize(const FString& InProviderName) {
     LiveLinkSource = Client->AddSource(Source);
     
     if (!LiveLinkSource.IsValid()) {
-        UE_LOG(LogTemp, Error, TEXT("Failed to create LiveLink source"));
+        UE_LOG(LogUnrealLiveLinkNative, Error, TEXT("Failed to create LiveLink source"));
         return false;
     }
     
     ProviderName = InProviderName;
     bInitialized = true;
     
-    UE_LOG(LogTemp, Log, TEXT("LiveLink initialized: %s"), *InProviderName);
+    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("LiveLink initialized: %s"), *InProviderName);
     return true;
+}
+```
+
+**Required Includes:**
+```cpp
+#include "ILiveLinkClient.h"
+#include "LiveLinkSourceHandle.h"
+#include "LiveLinkMessageBusSource.h"
+#include "Features/IModularFeatures.h"
+```
+
+**Member Variable:**
+```cpp
+FLiveLinkSourceHandle LiveLinkSource;  // Add to LiveLinkBridge class
+```
+
+**GetConnectionStatus Update (Sub-Phase 6.5):**
+```cpp
+int FLiveLinkBridge::GetConnectionStatus() const {
+    FScopeLock Lock(&CriticalSection);
+    
+    if (!bInitialized) {
+        return ULL_NOT_INITIALIZED;  // -3
+    }
+    
+    // NEW in 6.5: Check if LiveLink source is valid
+    if (LiveLinkSource.IsValid()) {
+        return ULL_OK;  // 0 - Connected!
+    }
+    
+    return ULL_NOT_CONNECTED;  // -2
+}
+```
+
+**Shutdown Update (Sub-Phase 6.5):**
+```cpp
+void FLiveLinkBridge::Shutdown() {
+    FScopeLock Lock(&CriticalSection);
+    
+    if (!bInitialized) {
+        UE_LOG(LogUnrealLiveLinkNative, Warning, TEXT("Shutdown: Not initialized"));
+        return;
+    }
+    
+    // NEW in 6.5: Remove LiveLink source
+    if (LiveLinkSource.IsValid()) {
+        ILiveLinkClient* Client = &IModularFeatures::Get()
+            .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
+        
+        if (Client) {
+            Client->RemoveSource(LiveLinkSource);
+        }
+        
+        LiveLinkSource.Invalidate();
+        UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Removed LiveLink source"));
+    }
+    
+    // Clear all state (existing 6.4 code)
+    TransformSubjects.Empty();
+    DataSubjects.Empty();
+    NameCache.Empty();
+    ProviderName.Empty();
+    bInitialized = false;
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Complete"));
 }
 ```
 
@@ -768,9 +833,15 @@ void FLiveLinkBridge::RegisterTransformSubject(const FName& SubjectName) {
     
     TransformSubjects.Add(SubjectName, TArray<FName>());
     
-    UE_LOG(LogTemp, Log, TEXT("Registered transform subject: %s"), *SubjectName.ToString());
+    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Registered transform subject: %s"), *SubjectName.ToString());
 }
 ```
+
+**Important Notes:**
+- `FLiveLinkStaticDataStruct` - Container for static data (sent once per subject)
+- `FLiveLinkTransformStaticData` - Static data for transform subjects
+- `ULiveLinkTransformRole::StaticClass()` - Identifies this as a transform subject
+- Use `_AnyThread` variants for thread safety
 
 ---
 
@@ -857,7 +928,7 @@ void FLiveLinkBridge::UpdateTransformSubjectWithProperties(
     if (TransformSubjects.Contains(SubjectName)) {
         const TArray<FName>& RegisteredProps = TransformSubjects[SubjectName];
         if (RegisteredProps.Num() != PropertyValues.Num()) {
-            UE_LOG(LogTemp, Error, TEXT("Property count mismatch for %s: expected %d, got %d"), 
+            UE_LOG(LogUnrealLiveLinkNative, Error, TEXT("Property count mismatch for %s: expected %d, got %d"), 
                 *SubjectName.ToString(), RegisteredProps.Num(), PropertyValues.Num());
             return;
         }

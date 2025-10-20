@@ -338,21 +338,36 @@ bool FLiveLinkBridge::Initialize(const FString& ProviderName) {
 Add to UnrealLiveLinkNative.Build.cs:
 ```csharp
 PublicDependencyModuleNames.AddRange(new string[] {
-    "Core",
-    "CoreUObject",
-    "LiveLink",
-    "LiveLinkInterface",
-    "Messaging",
-    "UdpMessaging"
+    "Core",              // Already have (Sub-Phase 6.1)
+    "CoreUObject",       // Already have (Sub-Phase 6.1)
+    "LiveLink",          // NEW: Core LiveLink API
+    "LiveLinkInterface", // NEW: LiveLink type definitions
+    "Messaging",         // NEW: Message Bus communication
+    "UdpMessaging"       // NEW: Network transport for Message Bus
 });
 ```
 
+**Note:** All four new modules are required:
+- `LiveLink` + `LiveLinkInterface` provide the LiveLink client API
+- `Messaging` + `UdpMessaging` enable Message Bus networking
+- `FLiveLinkMessageBusSource` needs UDP transport to function
+
 **Success Criteria:**
-- Compiles with LiveLink headers
-- Initialize creates source handle successfully
-- Launch Unreal Editor → LiveLink window shows source
-- Source shows "Connected" status (green)
-- No subjects yet (registered in 6.6)
+- ✅ Compiles with LiveLink headers
+- ✅ Initialize creates source handle successfully
+- ✅ Launch Unreal Editor → Window → LiveLink → Source shows "IntegrationTest" (or provider name)
+- ✅ Source shows "Connected" status (green indicator)
+- ✅ GetConnectionStatus / ULL_IsConnected returns ULL_OK (0) instead of ULL_NOT_CONNECTED
+- ✅ No subjects yet (registered in Sub-Phase 6.6)
+- ✅ Shutdown removes source cleanly
+
+**Validation Steps:**
+1. Build native DLL with new dependencies
+2. Run integration tests - Initialize should succeed
+3. Launch Unreal Editor (any project)
+4. Open Window → Virtual Production → Live Link
+5. After calling Initialize from C#, source should appear in list
+6. Verify green "Connected" status
 
 ---
 
