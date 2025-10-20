@@ -9,24 +9,6 @@
 
 ---
 
-## Current Implementation Status
-
-**✅ COMPLETE:**
-- Phase 6.1: UBT Project Setup
-  - UE 5.6 source installed at C:\UE\UE_5.6_Source (20.7GB)
-  - Project structure in src/Native/UnrealLiveLink.Native/
-  - UnrealLiveLinkNative.Target.cs and Build.cs configured
-  - BuildNative.ps1 automation script working
-  - Successful compilation: UnrealLiveLinkNative.exe (25MB)
-
-**🔄 IN PROGRESS:**
-- Phase 6.2: Type Definitions (C API Structs)
-
-**📋 PLANNED:**
-- Phases 6.3-6.11: See DevelopmentPlan.md
-
----
-
 ## Architecture Foundation
 
 ### Validated Reference: UnrealLiveLinkCInterface
@@ -36,10 +18,10 @@ Our architecture is based on a **proven production system**:
 > "Provides a C Interface to the Unreal Live Link Message Bus API. This allows for third party packages to stream to Unreal Live Link without requiring to compile with the Unreal Build Tool (UBT). This is done by exposing the Live Link API via a C interface in a shared object compiled using UBT."
 
 **Key Validation Points:**
-- ✅ Build approach works: UBT-compiled standalone program
-- ✅ Third-party integration works: P/Invoke → DLL → LiveLink Message Bus
-- ✅ Performance proven: "thousands of float values @ 60Hz"
-- ✅ Deployment complexity known: Additional DLLs required (tbbmalloc.dll, etc.)
+- Build approach works: UBT-compiled standalone program
+- Third-party integration works: P/Invoke → DLL → LiveLink Message Bus
+- Performance proven: "thousands of float values @ 60Hz"
+- Deployment complexity known: Additional DLLs required (tbbmalloc.dll, etc.)
 
 **Our Architecture:**
 ```
@@ -110,7 +92,7 @@ static_assert(sizeof(ULL_Transform) == 80, "Size must match C# marshaling");
 **C# Verification:**
 ```csharp
 // Verified in Types.cs
-Marshal.SizeOf<ULL_Transform>() == 80  // ✅ Matches
+Marshal.SizeOf<ULL_Transform>() == 80  // Must match
 ```
 
 ---
@@ -198,14 +180,14 @@ public static extern int ULL_Initialize(string providerName);
 
 ---
 
-## Build System (Completed Phase 6.1)
+## Build System
 
-### Current Build Environment ✅
+### Build Environment Requirements
 
 **Unreal Engine:**
-- Version: 5.6 source build
-- Location: `C:\UE\UE_5.6_Source`
-- Size: 20.7GB installed
+- Version: 5.6 source build required
+- Recommended location: `C:\UE\UE_5.6_Source`
+- Size: ~20GB installed
 - Type: Source installation (required for UBT)
 
 **Build Tools:**
@@ -213,23 +195,23 @@ public static extern int ULL_Initialize(string providerName);
 - Windows 10/11 SDK
 - .NET SDK (for UBT itself)
 
-**Project Files (Completed):**
+**Project Structure:**
 ```
 src/Native/UnrealLiveLink.Native/
 ├── Source/
 │   └── UnrealLiveLinkNative/
 │       ├── Public/
-│       │   └── (headers - in progress)
+│       │   └── (headers)
 │       ├── Private/
 │       │   └── UnrealLiveLinkNative.cpp (WinMain entry point)
-│       ├── UnrealLiveLinkNative.Build.cs ✅ COMPLETE
+│       ├── UnrealLiveLinkNative.Build.cs
 │       └── UnrealLiveLinkNative.h
-└── UnrealLiveLinkNative.Target.cs ✅ COMPLETE
+└── UnrealLiveLinkNative.Target.cs
 ```
 
 ---
 
-### Build Process (Working)
+### Build Process
 
 **Automated Build:**
 ```powershell
@@ -247,8 +229,8 @@ cd C:\repos\SimioUnrealEngineLiveLinkConnector
    ```
 5. Copies output to `lib\native\win-x64\`
 
-**Current Output:**
-- `UnrealLiveLinkNative.exe` (25MB)
+**Expected Output:**
+- `UnrealLiveLinkNative.dll` (target for DLL configuration)
 - `UnrealLiveLinkNative.pdb` (debug symbols)
 
 **Build Times:**
@@ -285,9 +267,9 @@ cd C:\UE\UE_5.6_Source
 
 ---
 
-### Build Configuration Files (Completed)
+### Build Configuration Files
 
-#### UnrealLiveLinkNative.Target.cs ✅
+#### UnrealLiveLinkNative.Target.cs
 
 **Location:** `src/Native/UnrealLiveLink.Native/UnrealLiveLinkNative.Target.cs`
 
@@ -301,21 +283,22 @@ public class UnrealLiveLinkNativeTarget : TargetRules
     public UnrealLiveLinkNativeTarget(TargetInfo Target) : base(Target)
     {
         Type = TargetType.Program;              // Standalone program
-        LinkType = TargetLinkType.Monolithic;   // Single executable
+        LinkType = TargetLinkType.Monolithic;   // Single executable/DLL
         LaunchModuleName = "UnrealLiveLinkNative";
         
         bCompileAgainstEngine = false;          // Minimal dependencies
         bCompileAgainstCoreUObject = true;      // Need Core + CoreUObject
         bUseLoggingInShipping = true;           // Enable UE_LOG in release
+        
+        // For DLL output (configure as needed)
+        bShouldCompileAsDLL = true;
     }
 }
 ```
 
-**Status:** ✅ File exists and compiles successfully
-
 ---
 
-#### UnrealLiveLinkNative.Build.cs ✅
+#### UnrealLiveLinkNative.Build.cs
 
 **Location:** `src/Native/UnrealLiveLink.Native/Source/UnrealLiveLinkNative/UnrealLiveLinkNative.Build.cs`
 
@@ -332,10 +315,10 @@ public class UnrealLiveLinkNative : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] {
             "Core",                    // Unreal fundamentals
             "CoreUObject",             // UObject system
-            "LiveLink",                // LiveLink core (PENDING implementation)
-            "LiveLinkInterface",       // LiveLink API (PENDING implementation)
-            "Messaging",               // Message Bus (PENDING implementation)
-            "UdpMessaging"             // Network transport (PENDING implementation)
+            "LiveLink",                // LiveLink core
+            "LiveLinkInterface",       // LiveLink API
+            "Messaging",               // Message Bus
+            "UdpMessaging"             // Network transport
         });
         
         bEnableExceptions = false;     // Unreal doesn't use exceptions
@@ -344,9 +327,7 @@ public class UnrealLiveLinkNative : ModuleRules
 }
 ```
 
-**Status:** ✅ File exists and compiles successfully
-
-**Note:** LiveLink modules listed but not yet used in code (Phase 6.5+)
+**Note:** LiveLink modules should be added incrementally as implementation progresses.
 
 ---
 
@@ -355,8 +336,6 @@ public class UnrealLiveLinkNative : ModuleRules
 ### Purpose & Status
 
 **Location:** `src/Native/Mock/MockLiveLink.cpp` (437 lines)
-
-**Status:** ✅ Complete and fully functional
 
 **Purpose:**
 - Validates P/Invoke marshaling without Unreal dependency
@@ -443,7 +422,7 @@ private:
 
 ---
 
-## Implementation Patterns (For Future Phases)
+## Implementation Patterns
 
 ### Singleton Pattern (LiveLinkBridge)
 
@@ -566,9 +545,9 @@ extern "C" {
 
 ---
 
-## LiveLink Integration (Phases 6.5-6.9)
+## LiveLink Integration
 
-### ILiveLinkProvider Creation (Phase 6.5)
+### ILiveLinkProvider Creation
 
 **Purpose:** Register as LiveLink source with Message Bus
 
@@ -614,7 +593,7 @@ bool FLiveLinkBridge::Initialize(const FString& InProviderName) {
 
 ---
 
-### Transform Subject Registration (Phase 6.6)
+### Transform Subject Registration
 
 **Purpose:** Create subject with ULiveLinkTransformRole
 
@@ -648,7 +627,7 @@ void FLiveLinkBridge::RegisterTransformSubject(const FName& SubjectName) {
 
 ---
 
-### Frame Data Submission (Phase 6.6)
+### Frame Data Submission
 
 **Purpose:** Update subject with current transform (called 30-60 times per second)
 
@@ -686,7 +665,77 @@ void FLiveLinkBridge::UpdateTransformSubject(const FName& SubjectName, const FTr
 
 ---
 
-### Data Subjects (Phase 6.9)
+### Transform Subjects with Properties
+
+**Purpose:** Stream both transforms and custom properties (e.g., velocity, status)
+
+**Registration with Properties:**
+```cpp
+void FLiveLinkBridge::RegisterTransformSubjectWithProperties(
+    const FName& SubjectName, 
+    const TArray<FName>& PropertyNames) 
+{
+    FScopeLock Lock(&CriticalSection);
+    
+    if (!bInitialized || !LiveLinkSource.IsValid()) return;
+    
+    // Create static data with properties
+    FLiveLinkStaticDataStruct StaticData(FLiveLinkTransformStaticData::StaticStruct());
+    FLiveLinkTransformStaticData* TransformStaticData = StaticData.Cast<FLiveLinkTransformStaticData>();
+    TransformStaticData->PropertyNames = PropertyNames;
+    
+    ILiveLinkClient* Client = &IModularFeatures::Get()
+        .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
+    
+    Client->PushSubjectStaticData_AnyThread(
+        LiveLinkSource,
+        FLiveLinkSubjectKey(LiveLinkSource.GetSourceGuid(), SubjectName),
+        ULiveLinkTransformRole::StaticClass(),
+        MoveTemp(StaticData));
+    
+    TransformSubjects.Add(SubjectName, PropertyNames);
+}
+```
+
+**Update with Properties:**
+```cpp
+void FLiveLinkBridge::UpdateTransformSubjectWithProperties(
+    const FName& SubjectName, 
+    const FTransform& Transform, 
+    const TArray<float>& PropertyValues)
+{
+    FScopeLock Lock(&CriticalSection);
+    
+    // Validate property count matches registration
+    if (TransformSubjects.Contains(SubjectName)) {
+        const TArray<FName>& RegisteredProps = TransformSubjects[SubjectName];
+        if (RegisteredProps.Num() != PropertyValues.Num()) {
+            UE_LOG(LogTemp, Error, TEXT("Property count mismatch for %s: expected %d, got %d"), 
+                *SubjectName.ToString(), RegisteredProps.Num(), PropertyValues.Num());
+            return;
+        }
+    }
+    
+    // Create frame with properties
+    FLiveLinkFrameDataStruct FrameData(FLiveLinkTransformFrameData::StaticStruct());
+    FLiveLinkTransformFrameData* TransformFrameData = FrameData.Cast<FLiveLinkTransformFrameData>();
+    TransformFrameData->Transform = Transform;
+    TransformFrameData->PropertyValues = PropertyValues;
+    TransformFrameData->WorldTime = FLiveLinkWorldTime(FPlatformTime::Seconds());
+    
+    ILiveLinkClient* Client = &IModularFeatures::Get()
+        .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
+    
+    Client->PushSubjectFrameData_AnyThread(
+        LiveLinkSource,
+        FLiveLinkSubjectKey(LiveLinkSource.GetSourceGuid(), SubjectName),
+        MoveTemp(FrameData));
+}
+```
+
+---
+
+### Data Subjects
 
 **Purpose:** Stream metrics/KPIs without 3D transforms
 
@@ -750,7 +799,7 @@ public static double[] SimioPositionToUnreal(double x, double y, double z) {
 
 ### Native Layer Conversion (Direct Pass-Through Expected)
 
-**Implementation (Phase 6.7 validation):**
+**Implementation (validation needed):**
 ```cpp
 FTransform ConvertULLTransformToUnreal(const ULL_Transform* transform) {
     if (!transform) return FTransform::Identity;
@@ -799,7 +848,7 @@ FTransform ConvertULLTransformToUnreal(const ULL_Transform* transform) {
 
 **Purpose:** Analyze DLL to identify runtime dependencies
 
-**Usage (Phase 6.11):**
+**Usage:**
 ```powershell
 # After building UnrealLiveLinkNative.dll
 Dependencies.exe C:\UE\UE_5.6_Source\Engine\Binaries\Win64\UnrealLiveLinkNative.dll
@@ -1057,6 +1106,7 @@ RegisterObject succeeds but subject doesn't appear in LiveLink window
 
 **Project Management:**
 - [DevelopmentPlan.md](DevelopmentPlan.md) - Current phase status, milestones, completion tracking
+- [Phase6DevelopmentPlan.md](Phase6DevelopmentPlan.md) - Detailed Phase 6 sub-phase breakdown
 
 **System Design:**
 - [Architecture.md](Architecture.md) - Overall system architecture and design rationale
