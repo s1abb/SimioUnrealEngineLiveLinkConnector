@@ -81,8 +81,8 @@
 **Status:** COMPLETE
 
 **Deliverables:**
-- `UnrealLiveLinkAPI.h` - All 12 function declarations
-- `UnrealLiveLinkAPI.cpp` - Stub implementations with logging
+- `UnrealLiveLink.API.h` - All 12 function declarations
+- `UnrealLiveLink.API.cpp` - Stub implementations with logging
 - DLL output configuration (bShouldCompileAsDLL = true)
 - Complete parameter validation
 - Comprehensive UE_LOG integration
@@ -146,7 +146,7 @@ private:
 ```
 
 **Changes Required:**
-- Modify UnrealLiveLinkAPI.cpp to call FLiveLinkBridge::Get() methods
+- Modify UnrealLiveLink.API.cpp to call FLiveLinkBridge::Get() methods
 - Remove global namespace StubState
 - Add thread-safe operations with FScopeLock
 

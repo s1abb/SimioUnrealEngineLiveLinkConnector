@@ -127,7 +127,7 @@ public const int ULL_NOT_INITIALIZED = -3;
 
 **C API Pattern:**
 ```cpp
-// All functions in UnrealLiveLinkAPI.cpp
+// All functions in UnrealLiveLink.API.cpp
 extern "C" {
     __declspec(dllexport) int ULL_Initialize(const char* providerName) {
         // Implementation
@@ -198,16 +198,22 @@ public static extern int ULL_Initialize(string providerName);
 **Project Structure:**
 ```
 src/Native/UnrealLiveLink.Native/
-├── Source/
-│   └── UnrealLiveLinkNative/
-│       ├── Public/
-│       │   └── (headers)
-│       ├── Private/
-│       │   └── UnrealLiveLinkNative.cpp (WinMain entry point)
-│       ├── UnrealLiveLinkNative.Build.cs
-│       └── UnrealLiveLinkNative.h
+├── Public/
+│   ├── UnrealLiveLink.Native.h
+│   ├── UnrealLiveLink.Types.h
+│   └── UnrealLiveLink.API.h
+├── Private/
+│   ├── UnrealLiveLink.Native.cpp (WinMain entry point)
+│   ├── UnrealLiveLink.API.cpp (C API implementation)
+│   ├── LiveLinkBridge.h
+│   ├── LiveLinkBridge.cpp
+│   ├── CoordinateHelpers.h
+│   └── TypesValidation.cpp
+├── UnrealLiveLinkNative.Build.cs
 └── UnrealLiveLinkNative.Target.cs
 ```
+
+**Note:** When BuildNative.ps1 runs, it copies this entire structure to `[UE_ROOT]\Engine\Source\Programs\UnrealLiveLinkNative\` where UBT builds it. No `Source/` subfolder is used - this matches standard UE Program structure (see BlankProgram, etc.).
 
 ---
 
