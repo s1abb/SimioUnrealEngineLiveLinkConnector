@@ -11,20 +11,21 @@ public class UnrealLiveLinkNativeTarget : TargetRules
         LinkType = TargetLinkType.Monolithic;
         LaunchModuleName = "UnrealLiveLinkNative";
         
-        // Minimal program configuration - enable engine for LiveLink
+        // Minimal program configuration based on UnrealLiveLinkCInterface reference
         bBuildDeveloperTools = false;
-        bCompileAgainstEngine = true;        // CHANGED: Need Engine for LiveLink modules
+        bBuildWithEditorOnlyData = true;     // CHANGED: Reference project uses true
+        bCompileAgainstEngine = false;       // Keep minimal (reference uses false)
         bCompileAgainstCoreUObject = true;
-        bCompileWithPluginSupport = true;     // CHANGED: LiveLink is in a plugin
-        bIncludePluginsForTargetPlatforms = true;  // CHANGED: Need to load LiveLink plugin
-        bBuildWithEditorOnlyData = false;
+        bCompileWithPluginSupport = false;   // CHANGED: Don't need plugins
+        bIncludePluginsForTargetPlatforms = false;  // CHANGED: Minimal dependencies
+        bCompileICU = false;                 // NEW: Disable ICU (reference uses this)
         
         // Enable logging for diagnostics
         bUseLoggingInShipping = true;
         
         GlobalDefinitions.Add("UE_TRACE_ENABLED=1");
         
-        // Explicitly enable the LiveLink plugin
-        ExtraModuleNames.AddRange(new string[] { "LiveLink", "LiveLinkInterface", "LiveLinkMessageBusFramework" });
+        // Use Latest include order (from reference)
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
     }
 }

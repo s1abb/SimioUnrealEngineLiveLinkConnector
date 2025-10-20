@@ -9,19 +9,16 @@ public class UnrealLiveLinkNative : ModuleRules
         // Disable unity builds for cleaner compilation
         bUseUnity = false;
         
-        // Basic dependencies (Sub-Phase 6.1)
-        PublicDependencyModuleNames.AddRange(new string[] 
+        // Use PRIVATE dependencies (not exposed in public API)
+        // Based on UnrealLiveLinkCInterface reference implementation
+        PrivateDependencyModuleNames.AddRange(new string[] 
         {
             "Core",
-            "CoreUObject"
-        });
-        
-        // LiveLink dependencies (Sub-Phase 6.6)
-        PublicDependencyModuleNames.AddRange(new string[] 
-        {
+            "CoreUObject",
+            "ApplicationCore",              // Required for minimal runtime
             "LiveLinkInterface",            // LiveLink type definitions
-            "LiveLinkMessageBusFramework",  // Message Bus source
-            "Messaging",                    // Message Bus communication
+            "LiveLinkMessageBusFramework",  // Message Bus framework
+            "UdpMessaging",                 // Network transport
         });
         
         // Export symbols for DLL
