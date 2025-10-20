@@ -6,11 +6,20 @@ public class UnrealLiveLinkNative : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         
-        // Basic dependencies for minimal program
+        // Basic dependencies (Sub-Phase 6.1)
         PublicDependencyModuleNames.AddRange(new string[] 
         {
             "Core",
             "CoreUObject"
+        });
+        
+        // LiveLink dependencies (Sub-Phase 6.5)
+        PublicDependencyModuleNames.AddRange(new string[] 
+        {
+            "LiveLinkInterface",            // LiveLink type definitions
+            "LiveLinkMessageBusFramework",  // ILiveLinkProvider API
+            "Messaging",                    // Message Bus communication
+            "UdpMessaging"                  // Network transport for Message Bus
         });
         
         // Export symbols for DLL

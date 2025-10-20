@@ -133,7 +133,7 @@ if ($Process.ExitCode -ne 0) {
     }
     
     Write-Host ""
-    Write-Host "This might be expected for Sub-Phase 6.1 with binary UE build." -ForegroundColor Yellow
+    Write-Host "This might be expected with binary UE build." -ForegroundColor Yellow
     Write-Host "The project structure is now in place for manual building or source UE installation." -ForegroundColor Yellow
     exit 1
 }
@@ -143,7 +143,7 @@ Write-Host "✅ UBT build completed" -ForegroundColor Green
 # Step 4: Verify output and copy to repository
 Write-Host "Verifying build output..." -ForegroundColor Yellow
 
-# Check for DLL first (Sub-Phase 6.3+), then fallback to EXE (Sub-Phase 6.1)
+# Check for DLL first, then fallback to EXE
 $OutputFile = $null
 $OutputType = $null
 $TargetRepoName = $null
@@ -152,12 +152,12 @@ if (Test-Path $OutputDll) {
     $OutputFile = $OutputDll
     $OutputType = "DLL"
     $TargetRepoName = "UnrealLiveLink.Native.dll"
-    Write-Host "Found DLL output (Sub-Phase 6.3+): $OutputDll" -ForegroundColor Green
+    Write-Host "Found DLL output: $OutputDll" -ForegroundColor Green
 } elseif (Test-Path $OutputExe) {
     $OutputFile = $OutputExe
     $OutputType = "EXE"
     $TargetRepoName = "UnrealLiveLinkNative.exe"
-    Write-Host "Found EXE output (Sub-Phase 6.1): $OutputExe" -ForegroundColor Yellow
+    Write-Host "Found EXE output: $OutputExe" -ForegroundColor Yellow
 } else {
     Write-Error "No build output found. Expected DLL or EXE at:"
     Write-Host "  DLL: $OutputDll" -ForegroundColor Yellow

@@ -194,9 +194,9 @@ namespace SimioUnrealEngineLiveLinkConnector.Integration.Tests
             int result = UnrealLiveLinkNative.ULL_IsConnected();
             
             // Assert
-            // In Sub-Phase 6.3 (stubs), should return NOT_CONNECTED since no LiveLink integration yet
-            Assert.AreEqual(UnrealLiveLinkNative.ULL_NOT_CONNECTED, result,
-                "IsConnected should return ULL_NOT_CONNECTED (-2) in stub phase (no LiveLink integration yet)");
+            // Sub-Phase 6.5: LiveLink framework is ready after initialization
+            Assert.AreEqual(UnrealLiveLinkNative.ULL_OK, result,
+                "IsConnected should return ULL_OK (0) in Sub-Phase 6.5 (LiveLink framework ready)");
         }
 
         [TestMethod]

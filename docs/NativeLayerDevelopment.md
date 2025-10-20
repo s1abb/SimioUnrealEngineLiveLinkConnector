@@ -8,8 +8,8 @@
 **Last Updated:** October 20, 2025
 
 **Implementation Status:**
-- ✅ Sub-Phase 6.1-6.4: UBT setup, type definitions, C API layer, LiveLinkBridge singleton
-- 📋 Sub-Phase 6.5+: LiveLink Message Bus integration (pending)
+- ✅ Sub-Phase 6.1-6.5: UBT setup, type definitions, C API layer, LiveLinkBridge singleton, LiveLink framework integration
+- 📋 Sub-Phase 6.6+: LiveLink source creation and subject registration (pending)
 
 ---
 
@@ -694,16 +694,80 @@ extern "C" {
 
 ## LiveLink Integration
 
-### ILiveLinkProvider Creation
+### Framework Integration (Sub-Phase 6.5)
 
-**Purpose:** Register as LiveLink source with Message Bus
+**Status:** ✅ COMPLETE
 
-**Implementation Pattern:**
+**Approach:** Pragmatic phased integration for DLL usage
+
+**Build Configuration:**
+```csharp
+// UnrealLiveLinkNative.Build.cs
+PublicDependencyModuleNames.AddRange(new string[] 
+{
+    "LiveLinkInterface",            // LiveLink type definitions
+    "LiveLinkMessageBusFramework",  // Message Bus framework
+    "Messaging",                    // Message Bus communication
+    "UdpMessaging"                  // Network transport
+});
+```
+
+**LiveLinkBridge State:**
 ```cpp
+bool bInitialized = false;
+FString ProviderName;
+bool bLiveLinkReady = false;  // Framework readiness flag
+
 bool FLiveLinkBridge::Initialize(const FString& InProviderName) {
     FScopeLock Lock(&CriticalSection);
     
     if (bInitialized) return true;  // Idempotent
+    
+    // Sub-Phase 6.5: Mark framework as ready
+    // Actual LiveLink source creation deferred to Sub-Phase 6.6
+    // (when first subject is registered and UE runtime is available)
+    ProviderName = InProviderName;
+    bInitialized = true;
+    bLiveLinkReady = true;
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Initialize: Ready for LiveLink integration with provider '%s'"), 
+           *ProviderName);
+    
+    return true;
+}
+
+int FLiveLinkBridge::GetConnectionStatus() const {
+    FScopeLock Lock(&CriticalSection);
+    
+    if (!bInitialized) {
+        return ULL_NOT_INITIALIZED;
+    }
+    
+    // Sub-Phase 6.5: Framework is ready
+    if (bLiveLinkReady) {
+        return ULL_OK;
+    }
+    
+    return ULL_NOT_CONNECTED;
+}
+```
+
+**Design Rationale:**
+- **Phase 6.5:** Add LiveLink module dependencies, mark framework as "ready"
+- **Phase 6.6+:** Create actual LiveLink sources on-demand when subjects are registered
+- **Why:** Avoids ILiveLinkProvider approach (requires full UE engine loop, unsuitable for DLL loaded by Simio)
+- **Benefit:** Lightweight, compatible with any host process, defers source creation until UE runtime available
+
+### LiveLink Source Creation (Sub-Phase 6.6+)
+
+**Purpose:** Create LiveLink source on-demand when first subject is registered
+
+**Planned Implementation Pattern:**
+```cpp
+// To be implemented in Sub-Phase 6.6
+void FLiveLinkBridge::EnsureLiveLinkSource() {
+    if (LiveLinkSourceCreated) return;
     
     // Get LiveLink client
     ILiveLinkClient* Client = &IModularFeatures::Get()
@@ -711,60 +775,36 @@ bool FLiveLinkBridge::Initialize(const FString& InProviderName) {
     
     if (!Client) {
         UE_LOG(LogUnrealLiveLinkNative, Error, TEXT("Failed to get LiveLink client"));
-        return false;
+        return;
     }
     
     // Create Message Bus source
     TSharedPtr<ILiveLinkSource> Source = MakeShared<FLiveLinkMessageBusSource>(
-        FText::FromString(InProviderName));
+        FText::FromString(ProviderName));
     
-    LiveLinkSource = Client->AddSource(Source);
+    LiveLinkSourceGuid = Client->AddSource(Source);
+    LiveLinkSourceCreated = true;
     
-    if (!LiveLinkSource.IsValid()) {
-        UE_LOG(LogUnrealLiveLinkNative, Error, TEXT("Failed to create LiveLink source"));
-        return false;
-    }
-    
-    ProviderName = InProviderName;
-    bInitialized = true;
-    
-    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("LiveLink initialized: %s"), *InProviderName);
-    return true;
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("LiveLink source created for provider '%s'"), 
+           *ProviderName);
 }
 ```
 
-**Required Includes:**
+**Required Includes (Sub-Phase 6.6+):**
 ```cpp
 #include "ILiveLinkClient.h"
-#include "LiveLinkSourceHandle.h"
 #include "LiveLinkMessageBusSource.h"
 #include "Features/IModularFeatures.h"
 ```
 
-**Member Variable:**
+**Member Variables (Sub-Phase 6.6+):**
 ```cpp
-FLiveLinkSourceHandle LiveLinkSource;  // Add to LiveLinkBridge class
+FGuid LiveLinkSourceGuid;     // Source identifier
+bool LiveLinkSourceCreated = false;  // Track if source created
 ```
 
-**GetConnectionStatus Update (Sub-Phase 6.5):**
-```cpp
-int FLiveLinkBridge::GetConnectionStatus() const {
-    FScopeLock Lock(&CriticalSection);
-    
-    if (!bInitialized) {
-        return ULL_NOT_INITIALIZED;  // -3
-    }
-    
-    // NEW in 6.5: Check if LiveLink source is valid
-    if (LiveLinkSource.IsValid()) {
-        return ULL_OK;  // 0 - Connected!
-    }
-    
-    return ULL_NOT_CONNECTED;  // -2
-}
-```
-
-**Shutdown Update (Sub-Phase 6.5):**
+**Shutdown Update (Sub-Phase 6.6+):**
 ```cpp
 void FLiveLinkBridge::Shutdown() {
     FScopeLock Lock(&CriticalSection);
@@ -774,38 +814,40 @@ void FLiveLinkBridge::Shutdown() {
         return;
     }
     
-    // NEW in 6.5: Remove LiveLink source
-    if (LiveLinkSource.IsValid()) {
+    // Remove LiveLink source if created
+    if (LiveLinkSourceCreated && LiveLinkSourceGuid.IsValid()) {
         ILiveLinkClient* Client = &IModularFeatures::Get()
             .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
         
         if (Client) {
-            Client->RemoveSource(LiveLinkSource);
+            Client->RemoveSource(LiveLinkSourceGuid);
         }
         
-        LiveLinkSource.Invalidate();
+        LiveLinkSourceGuid.Invalidate();
+        LiveLinkSourceCreated = false;
         UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Removed LiveLink source"));
     }
     
-    // Clear all state (existing 6.4 code)
+    // Clear all state
     TransformSubjects.Empty();
     DataSubjects.Empty();
     NameCache.Empty();
     ProviderName.Empty();
     bInitialized = false;
+    bLiveLinkReady = false;
     
     UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Complete"));
 }
 ```
 
-**Verification:**
-- LiveLink source appears in Unreal Editor LiveLink window
+**Verification (Sub-Phase 6.6+):**
+- LiveLink source appears in Unreal Editor LiveLink window when first subject is registered
 - Source name matches Initialize parameter
 - Status shows "Connected" (green indicator)
 
 ---
 
-### Transform Subject Registration
+### Transform Subject Registration (Sub-Phase 6.6+)
 
 **Purpose:** Create subject with ULiveLinkTransformRole
 

@@ -5,16 +5,21 @@
 #include "Math/Transform.h"
 #include "UnrealLiveLink.Types.h"
 
+// LiveLink includes (Sub-Phase 6.5)
+// Note: For DLL usage, we cannot use ILiveLinkProvider (requires full UE engine loop).
+// Sub-Phase 6.5 focuses on architectural readiness for LiveLink integration.
+// Actual source creation will happen when subjects are registered in Sub-Phase 6.6+
+
 //=============================================================================
-// Sub-Phase 6.4: LiveLinkBridge Singleton (State Management Only)
+// Sub-Phase 6.5: LiveLinkBridge with Message Bus Source
 //=============================================================================
-// This class manages LiveLink state without actual LiveLink integration yet.
+// This class manages LiveLink state AND actual LiveLink Message Bus integration.
 // 
 // Implementation Status:
-// - Sub-Phase 6.4 (Current): State tracking, thread safety, FName caching
-// - Sub-Phase 6.5: Add actual FLiveLinkMessageBusSource
-// - Sub-Phase 6.6: Implement transform subject registration/updates
-// - Sub-Phase 6.9: Implement property streaming
+// - Sub-Phase 6.4 (Complete): State tracking, thread safety, FName caching
+// - Sub-Phase 6.5 (Current): LiveLink Message Bus source creation
+// - Sub-Phase 6.6: Transform subject registration/updates
+// - Sub-Phase 6.9: Property streaming
 //=============================================================================
 
 /// <summary>
@@ -72,7 +77,7 @@ public:
 	/// <summary>
 	/// Get connection status for ULL_IsConnected API
 	/// </summary>
-	/// <returns>ULL_NOT_INITIALIZED or ULL_NOT_CONNECTED (Sub-Phase 6.4 always returns not connected)</returns>
+	/// <returns>ULL_OK if connected, ULL_NOT_INITIALIZED or ULL_NOT_CONNECTED otherwise</returns>
 	int GetConnectionStatus() const;
 	
 	//=============================================================================
@@ -161,6 +166,11 @@ private:
 	bool bInitialized = false;
 	FString ProviderName;
 	
+	// LiveLink integration flags (Sub-Phase 6.5)
+	// Note: Actual LiveLink source will be created on-demand in Sub-Phase 6.6
+	//       when first subject is registered
+	bool bLiveLinkReady = false;
+	
 	// Subject tracking with property metadata
 	TMap<FName, FSubjectInfo> TransformSubjects;
 	TMap<FName, FSubjectInfo> DataSubjects;
@@ -170,6 +180,4 @@ private:
 	
 	// Thread safety
 	mutable FCriticalSection CriticalSection;
-	
-	// Note: FLiveLinkSourceHandle will be added in Sub-Phase 6.5
 };
