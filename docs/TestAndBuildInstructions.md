@@ -118,7 +118,7 @@ dotnet build src/Managed/SimioUnrealEngineLiveLinkConnector.csproj --configurati
 - **Modules:** 71 UE modules compiled
 - **Incremental builds:** < 5 seconds when no changes
 
-**Critical Build Configuration:** (See `docs/Sub-Phase6.6-Breakthrough.md` for full details)
+**Critical Build Configuration:**
 - **ApplicationCore module:** Must be in PrivateDependencyModuleNames (critical for FMemory symbols)
 - **bBuildWithEditorOnlyData = true:** Required in Target.cs despite building a program
 - **bCompileAgainstEngine = false:** Keep minimal to avoid 551-module builds

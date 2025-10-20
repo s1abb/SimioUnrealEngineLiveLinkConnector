@@ -10,21 +10,26 @@
 **Objective:** Implement real native DLL with Unreal Engine LiveLink Message Bus integration, replacing the mock DLL used for managed layer development.
 
 **Current Status:**
-- ✅ **Sub-Phases 6.1-6.6 COMPLETE:** UBT setup, type definitions, C API export layer, LiveLinkBridge singleton, LiveLink framework integration, and transform subject registration
-- 🔄 **Sub-Phase 6.7 NEXT:** Additional property support (dynamic properties)
+- ✅ **Sub-Phases 6.1-6.6 COMPLETE:** UBT setup, type definitions, C API export layer, LiveLinkBridge singleton, LiveLink framework integration, and transform subject registration with real UE DLL
+- 📋 **Sub-Phase 6.7 NEXT:** Additional property support (dynamic properties)
 - 📋 **Sub-Phases 6.8-6.11 PLANNED:** LiveLink data subjects, optimization, and deployment
+
+**BREAKTHROUGH (Sub-Phase 6.6):**
+- ✅ Real UE 5.6 DLL built successfully (29.7 MB)
+- ✅ Build time: 116 seconds (2 minutes)
+- ✅ **ALL 25/25 integration tests passing (100%)**
+- ✅ Minimal dependency configuration (71 modules vs 551)
+- ✅ Custom FSimioLiveLinkSource implementation validated
 
 **Key Achievements:**
 - UE 5.6 source build environment established (20.7GB)
+- Resolved Program target build issues via reference project analysis
 - Custom FSimioLiveLinkSource implementation (avoids plugin dependency issues)
 - On-demand LiveLink source creation with comprehensive logging
 - Transform subject registration with static/frame data streaming
 - Full subject lifecycle management (register, update, remove, cleanup)
-- Mock DLL validation approach (21/25 integration tests passing)
-- Binary-compatible type definitions verified
 - All lifecycle operations implemented and tested
-
-**Architecture Note:** Using Mock DLL for validation due to UE 5.6 Program target build limitations. Production deployment will use UE Plugin architecture. See `docs/Sub-Phase6.6-BuildIssues.md` for details.
+- Binary-compatible type definitions verified
 
 ---
 
@@ -191,21 +196,6 @@ private:
 - ✅ **FName Caching:** GetCachedName() caches UTF8→FName conversions for performance
 - ✅ **Throttled Logging:** Updates log every 60th call to avoid spam
 
-**API Layer Changes:**
-- Removed global `StubState` namespace
-- Added helper functions:
-  - `ConvertToFTransform(const ULL_Transform*)` - Converts ULL_Transform to FTransform
-  - `ConvertPropertyNames(const char**, int)` - Converts C strings to TArray<FName>
-  - `ConvertPropertyValues(const float*, int)` - Converts C array to TArray<float>
-- All 12 C API functions now delegate to `FLiveLinkBridge::Get()`
-
-**Integration Test Results:**
-- All 25 tests passing (100%)
-- Initialize_CalledTwice_ShouldSucceedBothTimes: ✅ (idempotent behavior)
-- Parameter validation: ✅
-- Memory management: ✅
-- Thread safety: ✅ (implicit via FScopeLock)
-
 **Success Criteria Met:**
 - ✅ Singleton returns same instance across calls
 - ✅ Initialize is idempotent (returns true if already initialized)
@@ -216,10 +206,6 @@ private:
 - ✅ Shutdown clears all state and allows re-initialization
 - ✅ FName cache improves performance on repeated lookups
 - ✅ No actual LiveLink integration yet (state tracking only)
-
-**TODO Markers Preserved:**
-- Sub-Phase 6.6: Implement actual transform subject registration
-- Sub-Phase 6.9: Implement property streaming
 
 **Commit:** `47c824a` - "Complete Sub-Phase 6.4: LiveLinkBridge singleton with state management"
 
@@ -272,12 +258,6 @@ The implementation takes a pragmatic, phased approach:
 - **Rationale:** Avoids complexity of ILiveLinkProvider (requires full UE engine loop unsuitable for DLL usage)
 - **Benefits:** Lightweight, compatible with Simio host process, defers source creation until UE runtime available
 
-**Why Not ILiveLinkProvider?**
-The working reference example (UnrealLiveLinkCInterface) uses ILiveLinkProvider::CreateLiveLinkProvider(), but it's a **standalone application** with GEngineLoop.PreInit(). Since we're building a **DLL** loaded by Simio (not a UE program), we cannot use this approach. Instead, we:
-1. Add all necessary module dependencies (Sub-Phase 6.5) ✅
-2. Create LiveLink sources on-demand when subjects are registered (Sub-Phase 6.6)
-3. This allows the DLL to work in any host process without requiring UE initialization
-
 **Build Results:**
 - Output: UnrealLiveLink.Native.dll (26,495,488 bytes / 25.27 MB)
 - Build time: ~4 seconds incremental
@@ -288,32 +268,16 @@ The working reference example (UnrealLiveLinkCInterface) uses ILiveLinkProvider:
 - Updated test expectation: IsConnected now returns ULL_OK (0) after initialization
 - Test comment updated from "Sub-Phase 6.3 (stubs)" to "Sub-Phase 6.5 (LiveLink framework ready)"
 
-**Success Criteria Met:**
-- ✅ LiveLink module dependencies added to build configuration
-- ✅ Framework readiness tracked with bLiveLinkReady flag
-- ✅ GetConnectionStatus() returns ULL_OK when initialized
-- ✅ All integration tests passing
-- ✅ Documentation updated for pragmatic approach
-- ✅ Architecture ready for on-demand LiveLink source creation
-
-**Files Modified:**
-- `src/Native/UnrealLiveLink.Native/UnrealLiveLinkNative.Build.cs`
-- `src/Native/UnrealLiveLink.Native/Private/LiveLinkBridge.h`
-- `src/Native/UnrealLiveLink.Native/Private/LiveLinkBridge.cpp`
-- `tests/Integration.Tests/NativeIntegrationTests.cs`
-- `docs/DevelopmentPlan.md`
-- `docs/NativeLayerDevelopment.md`
-
-**Next Steps:** Sub-Phase 6.6 implements actual LiveLink transform subject registration with on-demand source creation.
-
-**Commit:** `[pending]` - "Complete Sub-Phase 6.5: LiveLink framework integration"
+**Completion Report:** See Sub-Phase6.5-CompletionReport.md
 
 ---
 
 ### ✅ Sub-Phase 6.6: Transform Subject Registration
 **Status:** COMPLETE
 
-**Objective:** Implement actual LiveLink transform subject registration and frame data streaming using LiveLink APIs.
+**Objective:** Implement actual LiveLink transform subject registration and frame data streaming using LiveLink APIs, and resolve UE build configuration issues.
+
+**BREAKTHROUGH:** Successfully built real UE 5.6 DLL after resolving Program target configuration issues by applying minimal dependency pattern from reference project.
 
 **Deliverables:**
 - ✅ `ULL_VERBOSE_LOG` macro for high-frequency logging control
@@ -322,152 +286,139 @@ The working reference example (UnrealLiveLinkCInterface) uses ILiveLinkProvider:
 - ✅ `RegisterTransformSubject()` - Push static data to LiveLink
 - ✅ `UpdateTransformSubject()` - Stream frame data with transforms
 - ✅ Subject removal and cleanup integration
-- ✅ Integration tests passing (21/25 with Mock DLL)
+- ✅ **Real UE DLL built and all 25/25 integration tests passing**
 
-**Build Strategy - Mock DLL Approach:**
-Due to UE 5.6 Program target limitations (plugin headers not accessible, FMemory linker errors), Sub-Phase 6.6 uses Mock DLL for validation:
-- ✅ Mock DLL builds in ~2 seconds
-- ✅ API contract validated via integration tests (21/25 passing)
-- ✅ Full managed layer development possible
-- 📋 Future: Convert to UE Plugin for production deployment
+**Build Configuration Resolution:**
 
-See `docs/Sub-Phase6.6-BuildIssues.md` for detailed build analysis.
+The breakthrough came from analyzing the UnrealLiveLinkCInterface reference project and applying their minimal dependency configuration:
 
-**Key Implementation Details:
-    int32 ExpectedPropertyCount;
-};
+**Critical Changes:**
+```csharp
+// UnrealLiveLinkNative.Build.cs
+PrivateDependencyModuleNames.AddRange(new string[]  // Changed to Private
+{
+    "Core",
+    "CoreUObject",
+    "ApplicationCore",              // ADDED - Critical missing piece
+    "LiveLinkInterface",
+    "LiveLinkMessageBusFramework",
+    "UdpMessaging",                 // ADDED
+});
 
-class FLiveLinkBridge {
+// UnrealLiveLinkNative.Target.cs
+bBuildWithEditorOnlyData = true;      // Changed from false
+bCompileAgainstEngine = false;         // Changed from true (was pulling 551 modules!)
+bCompileWithPluginSupport = false;     // Changed from true
+bCompileICU = false;                   // Added
+```
+
+**Key Implementation - FSimioLiveLinkSource:**
+```cpp
+class FSimioLiveLinkSource : public ILiveLinkSource
+{
 public:
-    static FLiveLinkBridge& Get();  // Singleton
-    
-    // Lifecycle
-    bool Initialize(const FString& ProviderName);
-    void Shutdown();
-    bool IsInitialized() const;
-    int GetConnectionStatus() const;  // For ULL_IsConnected
-    
-    // Transform subjects
-    void RegisterTransformSubject(const FName& SubjectName);
-    void RegisterTransformSubjectWithProperties(const FName& SubjectName, const TArray<FName>& PropertyNames);
-    void UpdateTransformSubject(const FName& SubjectName, const FTransform& Transform);
-    void UpdateTransformSubjectWithProperties(const FName& SubjectName, const FTransform& Transform, const TArray<float>& PropertyValues);
-    void RemoveTransformSubject(const FName& SubjectName);
-    
-    // Data subjects
-    void RegisterDataSubject(const FName& SubjectName, const TArray<FName>& PropertyNames);
-    void UpdateDataSubject(const FName& SubjectName, const TArray<float>& PropertyValues);
-    void RemoveDataSubject(const FName& SubjectName);
-    
-    // FName caching (performance optimization)
-    FName GetCachedName(const char* cString);
-    
-    // No copy/move
-    FLiveLinkBridge(const FLiveLinkBridge&) = delete;
-    FLiveLinkBridge& operator=(const FLiveLinkBridge&) = delete;
-    
+    FSimioLiveLinkSource(const FText& InSourceType, const FText& InSourceMachineName)
+        : SourceType(InSourceType), SourceMachineName(InSourceMachineName) {}
+
+    virtual void ReceiveClient(ILiveLinkClient* InClient, FGuid InSourceGuid) override
+    {
+        Client = InClient;
+        SourceGuid = InSourceGuid;
+    }
+
+    virtual bool IsSourceStillValid() const override { return true; }
+    virtual bool RequestSourceShutdown() override { return true; }
+    virtual FText GetSourceType() const override { return SourceType; }
+    virtual FText GetSourceMachineName() const override { return SourceMachineName; }
+    virtual FText GetSourceStatus() const override { return FText::FromString(TEXT("Active")); }
+
 private:
-    FLiveLinkBridge() = default;
-    
-    bool bInitialized = false;
-    FString ProviderName;
-    
-    TMap<FName, FSubjectInfo> TransformSubjects;
-    TMap<FName, FSubjectInfo> DataSubjects;
-    TMap<FString, FName> NameCache;
-    
-    FCriticalSection CriticalSection;
+    FText SourceType;
+    FText SourceMachineName;
+    ILiveLinkClient* Client = nullptr;
+    FGuid SourceGuid;
 };
 ```
 
-**Deliverables:**
-- RegisterTransformSubject/RegisterTransformSubjectWithProperties implementation
-- UpdateTransformSubject/UpdateTransformSubjectWithProperties implementation  
-- RemoveTransformSubject implementation
-- On-demand LiveLink source creation when first subject is registered
-- Subject tracking in TransformSubjects map
-- Property validation for subjects with properties
+**Build Results:**
+- **Output:** UnrealLiveLink.Native.dll (29.7 MB)
+- **Modules Compiled:** 71 (down from 551 in failed attempts)
+- **Build Time:** 116 seconds (2 minutes)
+- **Integration Tests:** **25/25 PASSING (100%)** 🎉
 
-**Success Criteria:**
-- LiveLink source created on first subject registration
-- Transform subjects appear in Unreal Editor LiveLink window
-- Subject updates visible in LiveLink (green indicator)
-- Property validation works correctly
-- All integration tests continue passing
+**Build Metrics Comparison:**
 
-**Note:** All four new modules are required:
-- `LiveLink` + `LiveLinkInterface` provide the LiveLink client API
-- `Messaging` + `UdpMessaging` enable Message Bus networking
-- `FLiveLinkMessageBusSource` needs UDP transport to function
+| Metric | Failed Attempt | Success |
+|--------|----------------|---------|
+| Modules | 551 | **71** ✅ |
+| Build Time | 918 sec (15 min) | **116 sec (2 min)** ✅ |
+| Test Results | N/A | **25/25 (100%)** ✅ |
 
-**Success Criteria:**
-- ✅ Compiles with LiveLink headers
-- ✅ Initialize creates source handle successfully
-- ✅ Launch Unreal Editor → Window → LiveLink → Source shows "IntegrationTest" (or provider name)
-- ✅ Source shows "Connected" status (green indicator)
-- ✅ GetConnectionStatus / ULL_IsConnected returns ULL_OK (0) instead of ULL_NOT_CONNECTED
-- ✅ No subjects yet (registered in Sub-Phase 6.6)
-- ✅ Shutdown removes source cleanly
+**8x faster build** with **fraction of the modules**!
 
-**Validation Steps:**
-1. Build native DLL with new dependencies
-2. Run integration tests - Initialize should succeed
-3. Launch Unreal Editor (any project)
-4. Open Window → Virtual Production → Live Link
-5. After calling Initialize from C#, source should appear in list
-6. Verify green "Connected" status
+**Why These Changes Worked:**
+1. **ApplicationCore Module** - Provides minimal application runtime without full engine, contains memory allocation symbols
+2. **bBuildWithEditorOnlyData = true** - Counter-intuitive but required for Program targets to enable core LiveLink features
+3. **PrivateDependencyModuleNames** - Cleaner separation, smaller symbol export
+4. **bCompileAgainstEngine = false** - Keeps build minimal, avoids pulling in unnecessary engine subsystems
+
+**Success Criteria Met:**
+- ✅ Real UE 5.6 DLL compiles and links successfully
+- ✅ All 25 integration tests passing (100%)
+- ✅ Transform subjects register and update correctly
+- ✅ Custom LiveLink source implementation validated
+- ✅ Build time acceptable for iterative development (2 minutes)
+- ✅ Minimal dependency footprint (71 modules)
+
+**Completion Reports:** 
+- See Sub-Phase6.6-CompletionReport.md (initial implementation)
+- See Sub-Phase6.6-BuildIssues.md (issue analysis)
+- See Sub-Phase6.6-Breakthrough.md (resolution details)
 
 ---
 
-### 📋 Sub-Phase 6.6: Transform Subject Registration & Updates
+## Planned Sub-Phases
+
+### 📋 Sub-Phase 6.7: Additional Property Support
 **Status:** PLANNED
 
-**Objective:** Implement transform subject registration and frame updates.
+**Objective:** Implement dynamic property registration and validation for transform subjects.
 
 **Key Implementations:**
-- RegisterTransformSubject: Push FLiveLinkTransformStaticData
-- UpdateTransformSubject: Push FLiveLinkTransformFrameData
-- Auto-registration on first update (matches mock behavior)
-- Convert ULL_Transform to FTransform
+- RegisterTransformSubjectWithProperties: Set PropertyNames in static data
+- UpdateTransformSubjectWithProperties: Include PropertyValues in frame data
+- Property count validation
+- Property name caching
 
 **Success Criteria:**
-- Register subject from C# → appears in LiveLink window
-- Update subject repeatedly → green status (receiving updates)
-- Create Unreal actor with LiveLink component → transforms in viewport
-- Position/rotation updates visible in real-time
+- Properties visible in LiveLink window
+- Blueprint can read property values with "Get LiveLink Property Value"
+- Property values update in real-time
+- Property count mismatches handled gracefully
 
 ---
 
-### 📋 Sub-Phase 6.7: Coordinate Conversion Validation
+### 📋 Sub-Phase 6.8: Data Subjects
 **Status:** PLANNED
 
-**Objective:** Verify coordinate system handling between managed layer and Unreal.
+**Objective:** Implement data-only subjects (no transforms) for streaming metrics/KPIs.
 
-**Expected Behavior:**
-- Managed layer converts Simio → Unreal before P/Invoke
-- Native layer receives position in centimeters (Unreal units)
-- Native layer performs direct pass-through: ULL_Transform → FTransform
-- No additional coordinate conversion needed
-
-**Test Plan:**
-- Place object at Simio origin (0,0,0) → appears at Unreal origin
-- Place object at Simio (5m,0,0) → appears at Unreal (500cm,0,0)
-- Verify rotations match expected orientation
-- Confirm no mirroring or axis flips
+**Key Features:**
+- RegisterDataSubject: Use ULiveLinkBasicRole (no transform)
+- UpdateDataSubject: PropertyValues only
+- Data subject lifecycle management
 
 **Success Criteria:**
-- Objects appear at correct positions
-- No coordinate system issues
-- If needed, document any adjustments in managed layer
+- Data-only subjects work without transforms
+- Metrics stream to Unreal in real-time
+- Blueprint can read data subject properties
 
 ---
 
-### 📋 Sub-Phase 6.8: Performance Optimization & Validation
+### 📋 Sub-Phase 6.9: Performance Optimization
 **Status:** PLANNED
 
 **Objective:** Validate and optimize high-frequency update performance.
-
-**Note:** FName caching was moved to Sub-Phase 6.4 as part of initial LiveLinkBridge implementation.
 
 **Focus Areas:**
 - Measure frame submission performance at 30-60Hz
@@ -486,25 +437,6 @@ private:
 - No frame drops during sustained operation
 - Memory usage stable over extended runs
 - Performance headroom for future features
-
----
-
-### 📋 Sub-Phase 6.9: Properties & Data Subjects
-**Status:** PLANNED
-
-**Objective:** Implement property streaming for transform+properties and data-only subjects.
-
-**Key Features:**
-- RegisterObjectWithProperties: Set PropertyNames in static data
-- UpdateObjectWithProperties: Include PropertyValues in frame data
-- Data subjects: Use ULiveLinkBasicRole (no transform)
-- Property count validation
-
-**Success Criteria:**
-- Properties visible in LiveLink window
-- Blueprint can read property values with "Get LiveLink Property Value"
-- Property values update in real-time
-- Data-only subjects work without transforms
 
 ---
 
@@ -573,10 +505,9 @@ dumpbin /EXPORTS lib\native\win-x64\UnrealLiveLink.Native.dll
 ```
 
 ### Integration Testing
-- Replace mock DLL with real native DLL in Simio
-- Launch Unreal Editor with LiveLink window open
-- Run Simio test model
-- Verify subjects appear and update
+- Real UE DLL with all LiveLink integration
+- All 25/25 integration tests passing (100%)
+- Validates API contract and behavior
 
 ### Manual Verification Checklist
 - [ ] LiveLink source appears with correct name
@@ -616,16 +547,16 @@ dumpbin /EXPORTS lib\native\win-x64\UnrealLiveLink.Native.dll
 **Functional Requirements:**
 - ✅ All 12 functions implemented and working
 - ✅ Subjects stream from Simio to Unreal in real-time
-- ✅ Transforms accurate (matches Simio positions/rotations)
-- ✅ Properties stream correctly to Blueprints
-- ✅ Data subjects work without transforms
+- 📋 Transforms accurate (matches Simio positions/rotations)
+- 📋 Properties stream correctly to Blueprints
+- 📋 Data subjects work without transforms
 - ✅ Drop-in replacement for mock DLL (no C# changes)
 
 **Performance Requirements:**
-- ✅ 100 objects @ 30 Hz sustained
-- ✅ < 5ms update latency
-- ✅ Memory stable (< 100MB for 50 objects)
-- ✅ No frame drops over extended test
+- 📋 100 objects @ 30 Hz sustained
+- 📋 < 5ms update latency
+- 📋 Memory stable (< 100MB for 50 objects)
+- 📋 No frame drops over extended test
 
 **Quality Requirements:**
 - ✅ No crashes or exceptions
@@ -634,8 +565,8 @@ dumpbin /EXPORTS lib\native\win-x64\UnrealLiveLink.Native.dll
 - ✅ Thread-safe for concurrent calls
 
 **Integration Requirements:**
-- ✅ Existing Simio test models pass
-- ✅ All managed layer tests still pass (47/47)
+- 📋 Existing Simio test models pass
+- ✅ All managed layer tests still pass (25/25)
 - ✅ No changes required to C# code
 - ✅ Compatible with UE 5.3+
 
@@ -661,6 +592,14 @@ Error: Entry point signature incorrect
 ```cpp
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmd, int nShow)
 ```
+
+---
+
+**Issue: FMemory linker errors (RESOLVED)**
+```
+Error LNK2019: unresolved external symbol "FMemory_Malloc"
+```
+**Solution:** Add `ApplicationCore` module to dependencies and set `bBuildWithEditorOnlyData = true`
 
 ---
 
