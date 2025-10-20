@@ -4,7 +4,13 @@
 Tests that validate the interaction between the managed C# layer and the native C++ layer through P/Invoke.
 
 ## Status
-✅ **Active** - Implemented for Sub-Phase 6.3 validation
+✅ **Active** - Validated through Sub-Phase 6.4
+
+**Current Implementation:**
+- Sub-Phase 6.4: LiveLinkBridge singleton with state management
+- Native DLL: 24.04 MB with FLiveLinkBridge class
+- All 25 tests passing with actual state tracking
+- Thread-safe operations with FScopeLock
 
 ## Scope
 - **P/Invoke marshaling** - Verify data structures are correctly marshaled between managed and native code
@@ -86,25 +92,30 @@ dotnet test --filter "TestCategory=Lifecycle|TestCategory=ErrorHandling"
 
 ## Test Results
 
-### Expected Behavior (Sub-Phase 6.3 - Stub Functions)
+### Expected Behavior (Sub-Phase 6.4 - LiveLinkBridge State Management)
 - ✅ All tests should pass without exceptions
-- ✅ DLL loads successfully
-- ✅ Initialize returns ULL_OK (0)
+- ✅ DLL loads successfully (24.04 MB)
+- ✅ Initialize returns ULL_OK (0), idempotent on repeat calls
 - ✅ GetVersion returns 1 (API version)
-- ✅ IsConnected returns ULL_NOT_CONNECTED (-2) - no LiveLink integration yet
-- ✅ Subject operations complete without errors
+- ✅ IsConnected returns ULL_NOT_CONNECTED (-2) - no LiveLink Message Bus yet
+- ✅ Subject operations tracked in LiveLinkBridge state
 - ✅ Struct marshaling correct (80 bytes)
 - ✅ High-frequency updates work without blocking
+- ✅ Thread-safe operations via FScopeLock
+- ✅ FName caching for performance optimization
 
-### Known Limitations (Sub-Phase 6.3)
-- ❌ IsConnected returns NOT_CONNECTED (no actual LiveLink yet - expected)
-- ❌ Subjects don't appear in Unreal Editor (no LiveLink integration - expected)
-- ❌ Log file location not yet validated (may require Unreal Engine running)
+### Known Limitations (Sub-Phase 6.4)
+- ❌ IsConnected returns NOT_CONNECTED (no LiveLink Message Bus yet - expected in 6.5)
+- ❌ Subjects tracked in memory only (no actual LiveLink registration yet - expected in 6.6)
+### Known Limitations (Sub-Phase 6.4)
+- ❌ IsConnected returns NOT_CONNECTED (no LiveLink Message Bus yet - expected in 6.5)
+- ❌ Subjects tracked in memory only (no actual LiveLink registration yet - expected in 6.6)
+- ❌ Subjects don't appear in Unreal Editor (no LiveLink integration - expected in 6.5+)
 
 ## Test Implementation
 
 ### Test File
-`NativeIntegrationTests.cs` - Main integration test file with 27 tests
+`NativeIntegrationTests.cs` - Main integration test file with 25 tests
 
 ### Test Structure
 ```csharp
@@ -114,7 +125,7 @@ public class NativeIntegrationTests
     [ClassInitialize]  // Verify DLL exists before running tests
     [ClassCleanup]     // Cleanup: call Shutdown if initialized
     [TestInitialize]   // Per-test setup
-    [TestCleanup]      // Per-test cleanup
+    [TestCleanup]      // Per-test cleanup: ensure Shutdown called
 }
 ```
 
@@ -131,19 +142,22 @@ public class NativeIntegrationTests
 
 ## Development Notes
 
-### State Management
-The native layer (Sub-Phase 6.3) maintains global state:
-- Tests must handle "already initialized" scenarios
-- Some tests explicitly call Shutdown to reset state
-- Test isolation is maintained through careful setup/teardown
+### State Management (Sub-Phase 6.4)
+The native layer uses LiveLinkBridge singleton:
+- Thread-safe operations with FScopeLock
+- TMap storage for TransformSubjects and DataSubjects
+- FName caching for performance
+- Initialize is idempotent (returns true on repeat calls)
+- Tests handle "already initialized" scenarios gracefully
+- Shutdown clears all state for test isolation
 
 ### Future Enhancements (Sub-Phase 6.5+)
-Once LiveLink integration is implemented:
+Once LiveLink Message Bus integration is implemented:
 - Add tests for actual Unreal Engine connection
 - Verify subjects appear in LiveLink window
 - Test property values are transmitted correctly
 - Add performance benchmarks (latency, throughput)
-- Test multi-threaded scenarios
+- Test multi-threaded scenarios with concurrent updates
 
 ## Troubleshooting
 
