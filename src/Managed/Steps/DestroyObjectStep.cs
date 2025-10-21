@@ -44,12 +44,12 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
                 if (removed)
                 {
                     // 🆕 ADD TRACE INFORMATION - Currently missing!
-                    context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' destroyed successfully");
+                    context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' destroyed successfully.");
                 }
                 else
                 {
                     // This is just a warning since the object might already be destroyed
-                    context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' was not found (may have already been destroyed)");
+                    context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' was not found (may have already been destroyed).");
                 }
 
                 return ExitType.FirstExit;

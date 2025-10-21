@@ -101,7 +101,7 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
                         // 🆕 Loop protection: trace max once per second for high-frequency steps
                         if (!_lastTraceTime.HasValue || (DateTime.Now - _lastTraceTime.Value).TotalSeconds >= 1.0)
                         {
-                            context.ExecutionInformation.TraceInformation($"LiveLink data transmitted to {objectNames.Count} objects with {dataValues.Count} values");
+                            context.ExecutionInformation.TraceInformation($"LiveLink data transmitted to {objectNames.Count} objects with {dataValues.Count} values.");
                             _lastTraceTime = DateTime.Now;
                         }
                     }

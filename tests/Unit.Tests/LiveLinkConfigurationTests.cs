@@ -23,18 +23,12 @@ namespace SimioUnrealEngineLiveLinkConnector.Unit.Tests
         {
             var config = new LiveLinkConfiguration {
                 SourceName = "TestSource",
-                EnableLogging = true,
-                LogFilePath = "C:/temp/log.txt",
-                UnrealEnginePath = "C:/UE",
-                Host = "localhost",
-                Port = 8080,
-                ConnectionTimeout = System.TimeSpan.FromSeconds(5.0),
-                RetryAttempts = 3
+                EnableLogging = true
             };
             var validated = config.CreateValidated();
             Assert.IsNotNull(validated);
             Assert.AreEqual("TestSource", validated.SourceName);
-            Assert.AreEqual(8080, validated.Port);
+            Assert.IsTrue(validated.EnableLogging);
         }
 
         [TestMethod]
@@ -42,19 +36,13 @@ namespace SimioUnrealEngineLiveLinkConnector.Unit.Tests
         {
             var config = new LiveLinkConfiguration {
                 SourceName = "",
-                EnableLogging = true,
-                LogFilePath = "",
-                UnrealEnginePath = "",
-                Host = "",
-                Port = -1,
-                ConnectionTimeout = System.TimeSpan.FromSeconds(-5.0),
-                RetryAttempts = -3
+                EnableLogging = false
             };
             var validated = config.CreateValidated();
             Assert.IsNotNull(validated);
+            // Empty source name should default to "SimioSimulation"
             Assert.AreEqual("SimioSimulation", validated.SourceName);
-            Assert.AreEqual(11111, validated.Port);
-            Assert.AreEqual(3, validated.RetryAttempts);
+            Assert.IsFalse(validated.EnableLogging);
         }
 
         [TestMethod]
@@ -62,19 +50,38 @@ namespace SimioUnrealEngineLiveLinkConnector.Unit.Tests
         {
             var config = new LiveLinkConfiguration {
                 SourceName = "TestSource",
-                EnableLogging = true,
-                LogFilePath = "C:/temp/log.txt",
-                UnrealEnginePath = "C:/UE",
-                Host = "localhost",
-                Port = 8080,
-                ConnectionTimeout = System.TimeSpan.FromSeconds(5.0),
-                RetryAttempts = 3
+                EnableLogging = true
             };
             var validated = config.CreateValidated();
             Assert.IsNotNull(validated);
             var output = validated.ToString();
+            // Should contain source name in output
             Assert.IsTrue(output.Contains("TestSource"));
-            Assert.IsTrue(output.Contains("8080"));
+        }
+
+        [TestMethod]
+        public void LiveLinkConfiguration_Validate_EmptySourceName_ShouldReturnError()
+        {
+            var config = new LiveLinkConfiguration {
+                SourceName = "",
+                EnableLogging = false
+            };
+            var errors = config.Validate();
+            Assert.IsNotNull(errors);
+            Assert.IsTrue(errors.Length > 0);
+            Assert.IsTrue(errors[0].Contains("Source Name"));
+        }
+
+        [TestMethod]
+        public void LiveLinkConfiguration_Validate_ValidConfig_ShouldReturnNoErrors()
+        {
+            var config = new LiveLinkConfiguration {
+                SourceName = "TestSource",
+                EnableLogging = true
+            };
+            var errors = config.Validate();
+            Assert.IsNotNull(errors);
+            Assert.AreEqual(0, errors.Length);
         }
     }
 }

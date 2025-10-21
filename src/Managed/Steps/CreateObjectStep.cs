@@ -71,7 +71,7 @@ namespace SimioUnrealEngineLiveLinkConnector.Steps
                 objectUpdater.UpdateTransform(x, y, z, heading, pitch, roll);
 
                 // 🆕 ADD TRACE INFORMATION - Currently missing!
-                context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' created at position ({x:F2}, {y:F2}, {z:F2})");
+                context.ExecutionInformation.TraceInformation($"LiveLink object '{objectName}' created at position ({x:F2}, {y:F2}, {z:F2}).");
 
                 return ExitType.FirstExit;
             }

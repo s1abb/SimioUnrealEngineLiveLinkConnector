@@ -100,7 +100,8 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
 
     /// <summary>
     /// Configuration object for LiveLink connection initialization
-    /// Contains all essential properties for Element configuration
+    /// Uses Message Bus (UDP multicast) for automatic discovery - no manual network configuration needed
+    /// Logging output can be viewed using DebugView++ (https://github.com/CobaltFusion/DebugViewPP)
     /// </summary>
     public class LiveLinkConfiguration
     {
@@ -110,39 +111,9 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
         public string SourceName { get; set; } = "SimioSimulation";
 
         /// <summary>
-        /// Enable logging for debugging and diagnostics
+        /// Enable native logging for debugging and diagnostics (view with DebugView++)
         /// </summary>
         public bool EnableLogging { get; set; } = false;
-
-        /// <summary>
-        /// Path to log file for LiveLink operations
-        /// </summary>
-        public string LogFilePath { get; set; } = "SimioUnrealLiveLink.log";
-
-        /// <summary>
-        /// Path to Unreal Engine installation directory
-        /// </summary>
-        public string UnrealEnginePath { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Host name or IP address for LiveLink server
-        /// </summary>
-        public string Host { get; set; } = "localhost";
-
-        /// <summary>
-        /// Port number for LiveLink server
-        /// </summary>
-        public int Port { get; set; } = 11111;
-
-        /// <summary>
-        /// Connection timeout duration
-        /// </summary>
-        public System.TimeSpan ConnectionTimeout { get; set; } = System.TimeSpan.FromSeconds(5.0);
-
-        /// <summary>
-        /// Number of retry attempts for failed connections
-        /// </summary>
-        public int RetryAttempts { get; set; } = 3;
 
         /// <summary>
         /// Validates the configuration and returns any error messages
@@ -157,36 +128,6 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
                 errors.Add("Source Name must not be empty");
             }
 
-            if (string.IsNullOrWhiteSpace(Host))
-            {
-                errors.Add("LiveLink Host must not be empty");
-            }
-
-            if (Port < 1 || Port > 65535)
-            {
-                errors.Add($"LiveLink Port must be between 1 and 65535, got: {Port}");
-            }
-
-            if (ConnectionTimeout.TotalSeconds <= 0)
-            {
-                errors.Add("Connection Timeout must be positive");
-            }
-
-            if (ConnectionTimeout.TotalSeconds > 300)
-            {
-                errors.Add("Connection Timeout cannot exceed 300 seconds");
-            }
-
-            if (RetryAttempts < 0)
-            {
-                errors.Add("Retry Attempts cannot be negative");
-            }
-
-            if (RetryAttempts > 10)
-            {
-                errors.Add("Retry Attempts cannot exceed 10");
-            }
-
             return errors.ToArray();
         }
 
@@ -199,15 +140,7 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
             return new LiveLinkConfiguration
             {
                 SourceName = string.IsNullOrWhiteSpace(SourceName) ? "SimioSimulation" : SourceName.Trim(),
-                EnableLogging = EnableLogging,
-                LogFilePath = string.IsNullOrWhiteSpace(LogFilePath) ? "SimioUnrealLiveLink.log" : LogFilePath.Trim(),
-                UnrealEnginePath = string.IsNullOrWhiteSpace(UnrealEnginePath) ? @"C:\Program Files\Epic Games\UE_5.3" : UnrealEnginePath.Trim(),
-                Host = string.IsNullOrWhiteSpace(Host) ? "localhost" : Host.Trim(),
-                Port = Port < 1 || Port > 65535 ? 11111 : Port,
-                ConnectionTimeout = ConnectionTimeout.TotalSeconds <= 0 || ConnectionTimeout.TotalSeconds > 300 
-                    ? System.TimeSpan.FromSeconds(5.0) 
-                    : ConnectionTimeout,
-                RetryAttempts = RetryAttempts < 0 || RetryAttempts > 10 ? 3 : RetryAttempts
+                EnableLogging = EnableLogging
             };
         }
 
@@ -217,9 +150,7 @@ namespace SimioUnrealEngineLiveLinkConnector.UnrealIntegration
         /// <returns>Human-readable configuration description</returns>
         public override string ToString()
         {
-            return $"LiveLinkConfiguration(Source:'{SourceName}', Host:'{Host}:{Port}', " +
-                   $"Timeout:{ConnectionTimeout.TotalSeconds:F1}s, Retries:{RetryAttempts}, " +
-                   $"Logging:{EnableLogging})";
+            return $"LiveLinkConfiguration(Source:'{SourceName}', Logging:{EnableLogging})";
         }
     }
 }

@@ -25,7 +25,7 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
         }
 
         /// <summary>
-        /// Reads all 7 essential properties from ElementData and creates validated configuration
+        /// Reads all essential properties from ElementData and creates validated configuration
         /// </summary>
         private LiveLinkConfiguration ReadAndValidateProperties(IElementData elementData)
         {
@@ -34,28 +34,13 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
             // Read properties with defaults
             string sourceName = ReadStringProperty("SourceName", elementData, "SimioSimulation");
             bool enableLogging = ReadBooleanProperty("EnableLogging", elementData, false);
-            string logFilePath = ReadStringProperty("LogFilePath", elementData, "SimioUnrealLiveLink.log");
-            string unrealEnginePath = ReadStringProperty("UnrealEnginePath", elementData, string.Empty);
-            string liveLinkHost = ReadStringProperty("LiveLinkHost", elementData, "localhost");
-            int liveLinkPort = ReadIntegerProperty("LiveLinkPort", elementData, 11111);
-            double connectionTimeout = ReadRealProperty("ConnectionTimeout", elementData, 5.0);
-            int retryAttempts = ReadIntegerProperty("RetryAttempts", elementData, 3);
 
-            // Validate and normalize properties
+            // Validate and create configuration
             var config = new LiveLinkConfiguration
             {
                 SourceName = sourceName,
-                EnableLogging = enableLogging,
-                LogFilePath = PropertyValidation.NormalizeFilePath(logFilePath, context),
-                UnrealEnginePath = PropertyValidation.ValidateUnrealEnginePath(unrealEnginePath, context),
-                Host = liveLinkHost,
-                Port = liveLinkPort,
-                ConnectionTimeout = TimeSpan.FromSeconds(PropertyValidation.ValidateTimeout(connectionTimeout, context)),
-                RetryAttempts = PropertyValidation.ValidateRetryAttempts(retryAttempts, context)
+                EnableLogging = enableLogging
             };
-
-            // Additional network validation
-            PropertyValidation.ValidateNetworkEndpoint(config.Host, config.Port, context);
 
             return config;
         }
@@ -180,9 +165,9 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
                 // Initialize the LiveLink connection via the singleton manager
                 LiveLinkManager.Instance.Initialize(_configuration);
                 
-                // 🆕 ADD TRACE INFORMATION - Currently missing!
+                // Report successful initialization with Message Bus discovery info
                 _elementData.ExecutionContext.ExecutionInformation.TraceInformation(
-                    $"LiveLink connection initialized with source '{_configuration.SourceName}' on {_configuration.Host}:{_configuration.Port}");
+                    $"LiveLink Message Bus provider '{_configuration.SourceName}' initialized (UDP multicast auto-discovery).");
             }
             catch (Exception ex)
             {

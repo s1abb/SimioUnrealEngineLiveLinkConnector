@@ -16,7 +16,7 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
 
         public string Name => "UnrealEngineLiveLinkConnector";
 
-        public string Description => "Element that manages a LiveLink connection to Unreal Engine for streaming real-time simulation data";
+        public string Description => "Element that manages a LiveLink Message Bus connection to Unreal Engine for streaming real-time simulation data via UDP multicast auto-discovery.";
 
         public Image Icon => null!;
 
@@ -27,45 +27,14 @@ namespace SimioUnrealEngineLiveLinkConnector.Element
             // === LiveLink Connection Category ===
             var sourceNameProperty = schema.PropertyDefinitions.AddStringProperty("SourceName", "SimioSimulation");
             sourceNameProperty.DisplayName = "Source Name";
-            sourceNameProperty.Description = "Name displayed in Unreal Engine's LiveLink Sources window";
+            sourceNameProperty.Description = "Name displayed in Unreal Engine's LiveLink Sources window.";
             sourceNameProperty.CategoryName = "LiveLink Connection";
 
-            var liveLinkHostProperty = schema.PropertyDefinitions.AddStringProperty("LiveLinkHost", "localhost");
-            liveLinkHostProperty.DisplayName = "LiveLink Host";
-            liveLinkHostProperty.Description = "IP address or hostname of the Unreal Engine LiveLink server";
-            liveLinkHostProperty.CategoryName = "LiveLink Connection";
-
-            var liveLinkPortProperty = schema.PropertyDefinitions.AddRealProperty("LiveLinkPort", 11111);
-            liveLinkPortProperty.DisplayName = "LiveLink Port";
-            liveLinkPortProperty.Description = "Port number for the LiveLink server (typically 11111)";
-            liveLinkPortProperty.CategoryName = "LiveLink Connection";
-
-            var connectionTimeoutProperty = schema.PropertyDefinitions.AddRealProperty("ConnectionTimeout", 5.0);
-            connectionTimeoutProperty.DisplayName = "Connection Timeout (s)";
-            connectionTimeoutProperty.Description = "Maximum time in seconds to wait for LiveLink connection";
-            connectionTimeoutProperty.CategoryName = "LiveLink Connection";
-
-            var retryAttemptsProperty = schema.PropertyDefinitions.AddRealProperty("RetryAttempts", 3);
-            retryAttemptsProperty.DisplayName = "Retry Attempts";
-            retryAttemptsProperty.Description = "Number of times to retry failed LiveLink connections";
-            retryAttemptsProperty.CategoryName = "LiveLink Connection";
-
             // === Logging Category ===
-                var enableLoggingProperty = schema.PropertyDefinitions.AddExpressionProperty("EnableLogging", "True");
+            var enableLoggingProperty = schema.PropertyDefinitions.AddExpressionProperty("EnableLogging", "True");
             enableLoggingProperty.DisplayName = "Enable Logging";
-                enableLoggingProperty.Description = "Enable or disable detailed logging for troubleshooting (True/False, default True)";
+            enableLoggingProperty.Description = "Enable or disable detailed native logging for troubleshooting. View logs using DebugView++ (https://github.com/CobaltFusion/DebugViewPP).";
             enableLoggingProperty.CategoryName = "Logging";
-
-            var logFilePathProperty = schema.PropertyDefinitions.AddStringProperty("LogFilePath", "SimioUnrealLiveLink.log");
-            logFilePathProperty.DisplayName = "Log File Path";
-            logFilePathProperty.Description = "Path to log file for LiveLink operations (relative to simulation or absolute)";
-            logFilePathProperty.CategoryName = "Logging";
-
-            // === Unreal Engine Category ===
-            var unrealEnginePathProperty = schema.PropertyDefinitions.AddStringProperty("UnrealEnginePath", string.Empty);
-            unrealEnginePathProperty.DisplayName = "Unreal Engine Path";
-            unrealEnginePathProperty.Description = "Full path to Unreal Engine installation directory (e.g., 'C:\\Program Files\\Epic Games\\UE_5.6')";
-            unrealEnginePathProperty.CategoryName = "Unreal Engine";
         }
 
         public IElement CreateElement(IElementData elementData)
