@@ -13,12 +13,12 @@ public class UnrealLiveLinkNativeTarget : TargetRules
         
         // Minimal program configuration based on UnrealLiveLinkCInterface reference
         bBuildDeveloperTools = false;
-        bBuildWithEditorOnlyData = true;     // CHANGED: Reference project uses true
-        bCompileAgainstEngine = false;       // Keep minimal (reference uses false)
+        bBuildWithEditorOnlyData = true;
+        bCompileAgainstEngine = false;
         bCompileAgainstCoreUObject = true;
-        bCompileWithPluginSupport = false;   // CHANGED: Don't need plugins
-        bIncludePluginsForTargetPlatforms = false;  // CHANGED: Minimal dependencies
-        bCompileICU = false;                 // NEW: Disable ICU (reference uses this)
+        bCompileWithPluginSupport = false;
+        bIncludePluginsForTargetPlatforms = false;
+        bCompileICU = false;
         
         // Enable logging for diagnostics
         bUseLoggingInShipping = true;

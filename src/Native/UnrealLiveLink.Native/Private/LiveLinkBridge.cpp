@@ -4,14 +4,14 @@
 #include "Misc/ScopeLock.h"
 #include "Misc/CString.h"
 
-// UE Program initialization (Sub-Phase 6.6.2 - GEngineLoop)
+// UE Program initialization (GEngineLoop)
 // Note: Don't include RequiredProgramMainCPPInclude.h here - it's in UnrealLiveLinkNativeMain.cpp only!
 #include "LaunchEngineLoop.h"              // For GEngineLoop access
 #include "Modules/ModuleManager.h"
 #include "Interfaces/IPluginManager.h"
 #include "Misc/CommandLine.h"
 
-// LiveLink includes (Sub-Phase 6.6.1 - Message Bus Provider API)
+// LiveLink includes Message Bus Provider API
 // Disable C4099 warning: UE has inconsistent class/struct forward declarations
 #pragma warning(push)
 #pragma warning(disable: 4099)
@@ -22,7 +22,7 @@
 #pragma warning(pop)
 
 //=============================================================================
-// Sub-Phase 6.6.1: LiveLink Message Bus Integration
+// LiveLink Message Bus Integration
 //=============================================================================
 // Using ILiveLinkProvider API which handles Message Bus communication automatically.
 // This enables cross-process streaming: Simio → Message Bus → Unreal Engine
@@ -30,13 +30,13 @@
 //=============================================================================
 
 //=============================================================================
-// Sub-Phase 6.6: LiveLinkBridge Implementation with Transform Subject Registration
+// LiveLinkBridge Implementation with Transform Subject Registration
 //=============================================================================
 // This implementation creates actual LiveLink Message Bus source and streams
 // transform data to Unreal Engine's LiveLink subsystem.
 //=============================================================================
 
-// Static member initialization (Sub-Phase 6.6.2)
+// Static member initialization
 // CRITICAL: GEngineLoop.PreInit() can only be called ONCE per process
 bool FLiveLinkBridge::bGEngineLoopInitialized = false;
 
@@ -64,7 +64,7 @@ bool FLiveLinkBridge::Initialize(const FString& InProviderName)
 		return true;
 	}
 	
-	// Sub-Phase 6.6.2: Initialize Unreal Engine runtime environment
+	// Initialize Unreal Engine runtime environment
 	// Based on reference: UnrealLiveLinkCInterface (github.com/jakedowns/UnrealLiveLinkCInterface)
 	// CRITICAL: GEngineLoop.PreInit() can only be called ONCE per process!
 	// Check static flag to prevent crash on simulation restart
@@ -150,7 +150,7 @@ void FLiveLinkBridge::Shutdown()
 	       DataSubjects.Num(), 
 	       NameCache.Num());
 	
-	// Remove LiveLink provider if created (Sub-Phase 6.6.1)
+	// Remove LiveLink provider if created
 	if (bLiveLinkSourceCreated && LiveLinkProvider.IsValid())
 	{
 		UE_LOG(LogUnrealLiveLinkNative, Log, 
@@ -173,7 +173,7 @@ void FLiveLinkBridge::Shutdown()
 	bInitialized = false;
 	bLiveLinkReady = false;
 	
-	// Sub-Phase 6.6.2: DO NOT shutdown GEngineLoop in DLL!
+	// DO NOT shutdown GEngineLoop in DLL!
 	// WARNING: RequestEngineExit() and AppExit() terminate the HOST PROCESS (Simio.exe)!
 	// This is only safe in standalone programs, not DLLs loaded by other applications.
 	UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Skipping GEngineLoop shutdown (DLL loaded in host process)"));
@@ -196,13 +196,13 @@ int FLiveLinkBridge::GetConnectionStatus() const
 		return ULL_NOT_INITIALIZED;
 	}
 	
-	// Sub-Phase 6.6.1: Check if LiveLink provider is created
+	// Check if LiveLink provider is created
 	if (bLiveLinkSourceCreated && LiveLinkProvider.IsValid())
 	{
 		return ULL_OK;
 	}
 	
-	// Sub-Phase 6.5: Check if LiveLink framework is ready
+	// Check if LiveLink framework is ready
 	if (bLiveLinkReady)
 	{
 		return ULL_OK;
@@ -212,7 +212,7 @@ int FLiveLinkBridge::GetConnectionStatus() const
 }
 
 //=============================================================================
-// Helper Methods (Sub-Phase 6.6)
+// Helper Methods
 //=============================================================================
 
 void FLiveLinkBridge::EnsureLiveLinkSource()
@@ -231,7 +231,7 @@ void FLiveLinkBridge::EnsureLiveLinkSource()
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
 	       TEXT("EnsureLiveLinkSource: Using UDP Message Bus for cross-process communication"));
 	
-	// Create LiveLink Message Bus Provider (Sub-Phase 6.6.1)
+	// Create LiveLink Message Bus Provider
 	// This enables communication between Simio process → UE process via UDP multicast
 	// Default protocol: UDP 230.0.0.1:6666
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
@@ -320,7 +320,7 @@ void FLiveLinkBridge::RegisterTransformSubject(const FName& SubjectName)
 	// No properties for basic transform subject
 	TransformStaticData->PropertyNames.Empty();
 	
-	// Push static data to LiveLink via Message Bus Provider (Sub-Phase 6.6.1)
+	// Push static data to LiveLink via Message Bus Provider
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
 	       TEXT("RegisterTransformSubject: Broadcasting static data via Message Bus..."));
 	
@@ -401,7 +401,7 @@ void FLiveLinkBridge::RegisterTransformSubjectWithProperties(
 	// Set property names
 	TransformStaticData->PropertyNames = PropertyNames;
 	
-	// Push static data to LiveLink via Message Bus Provider (Sub-Phase 6.6.1)
+	// Push static data to LiveLink via Message Bus Provider
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
 	       TEXT("RegisterTransformSubjectWithProperties: Broadcasting static data with properties via Message Bus..."));
 	
@@ -478,7 +478,7 @@ void FLiveLinkBridge::UpdateTransformSubject(
 	TransformFrameData->Transform = Transform;
 	TransformFrameData->WorldTime = FLiveLinkWorldTime(FPlatformTime::Seconds());
 	
-	// Push frame data to LiveLink via Message Bus Provider (Sub-Phase 6.6.1)
+	// Push frame data to LiveLink via Message Bus Provider
 	LiveLinkProvider->UpdateSubjectFrameData(
 		SubjectName,
 		MoveTemp(FrameData));
@@ -565,7 +565,7 @@ void FLiveLinkBridge::UpdateTransformSubjectWithProperties(
 	TransformFrameData->WorldTime = FLiveLinkWorldTime(FPlatformTime::Seconds());
 	TransformFrameData->PropertyValues = PropertyValues;
 	
-	// Push frame data to LiveLink via Message Bus Provider (Sub-Phase 6.6.1)
+	// Push frame data to LiveLink via Message Bus Provider
 	LiveLinkProvider->UpdateSubjectFrameData(
 		SubjectName,
 		MoveTemp(FrameData));
@@ -600,7 +600,7 @@ void FLiveLinkBridge::RemoveTransformSubject(const FName& SubjectName)
 		       TEXT("RemoveTransformSubject: Removed '%s' from local tracking"), 
 		       *SubjectName.ToString());
 		
-		// Remove from LiveLink if provider exists (Sub-Phase 6.6.1)
+		// Remove from LiveLink if provider exists
 		if (bLiveLinkSourceCreated && LiveLinkProvider.IsValid())
 		{
 			LiveLinkProvider->RemoveSubject(SubjectName);
@@ -660,7 +660,7 @@ void FLiveLinkBridge::RegisterDataSubject(
 		       *PropertyNames[i].ToString());
 	}
 	
-	// TODO: Sub-Phase 6.9 - Register with LiveLink as BasicRole
+	// TODO: Register with LiveLink as BasicRole
 }
 
 void FLiveLinkBridge::UpdateDataSubject(
@@ -712,7 +712,7 @@ void FLiveLinkBridge::UpdateDataSubject(
 		       PropertyValues.Num());
 	}
 	
-	// TODO: Sub-Phase 6.9 - Push data frame to LiveLink
+	// TODO: Push data frame to LiveLink
 }
 
 void FLiveLinkBridge::RemoveDataSubject(const FName& SubjectName)
@@ -733,7 +733,7 @@ void FLiveLinkBridge::RemoveDataSubject(const FName& SubjectName)
 		       TEXT("RemoveDataSubject: Removed '%s'"), 
 		       *SubjectName.ToString());
 		
-		// TODO: Sub-Phase 6.9 - Mark subject as removed in LiveLink
+		// TODO: Mark subject as removed in LiveLink
 	}
 	else
 	{

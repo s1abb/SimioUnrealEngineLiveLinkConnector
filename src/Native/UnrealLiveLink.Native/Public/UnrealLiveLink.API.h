@@ -14,8 +14,7 @@
 // String Marshaling: ANSI (const char*)
 // Array Marshaling: Pointer + count (no length prefix)
 //
-// Sub-Phase 6.3: Stub implementations (logging only, no LiveLink)
-// Sub-Phase 6.5+: Actual LiveLink integration via FLiveLinkMessageBusSource
+// Actual LiveLink integration via FLiveLinkMessageBusSource
 //=============================================================================
 
 #ifdef __cplusplus
@@ -33,8 +32,7 @@ extern "C" {
 /// <param name="providerName">Name displayed in Unreal's LiveLink window (e.g., "SimioSimulation")</param>
 /// <returns>ULL_OK on success, ULL_ERROR on failure</returns>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs and returns success)
-/// Sub-Phase 6.5: Will create FLiveLinkMessageBusSource
+/// Create FLiveLinkMessageBusSource
 /// </remarks>
 __declspec(dllexport) int ULL_Initialize(const char* providerName);
 
@@ -43,8 +41,7 @@ __declspec(dllexport) int ULL_Initialize(const char* providerName);
 /// Flushes all messages and releases resources.
 /// </summary>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.5: Will cleanup LiveLink resources
+/// Cleanup LiveLink resources
 /// Safe to call multiple times.
 /// </remarks>
 __declspec(dllexport) void ULL_Shutdown();
@@ -64,8 +61,7 @@ __declspec(dllexport) int ULL_GetVersion();
 /// </summary>
 /// <returns>ULL_OK if connected, ULL_NOT_CONNECTED if no connection, ULL_NOT_INITIALIZED if not initialized</returns>
 /// <remarks>
-/// Sub-Phase 6.3: Returns ULL_NOT_CONNECTED (not implemented yet)
-/// Sub-Phase 6.5: Will check actual LiveLink connection status
+/// Check actual LiveLink connection status
 /// </remarks>
 __declspec(dllexport) int ULL_IsConnected();
 
@@ -79,8 +75,7 @@ __declspec(dllexport) int ULL_IsConnected();
 /// </summary>
 /// <param name="subjectName">Unique identifier for this object (e.g., "Forklift_01")</param>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.6: Will register with LiveLink as ULiveLinkTransformRole
+/// Register with LiveLink as ULiveLinkTransformRole
 /// Subsequent calls with same name are ignored.
 /// Name is case-sensitive.
 /// </remarks>
@@ -94,8 +89,7 @@ __declspec(dllexport) void ULL_RegisterObject(const char* subjectName);
 /// <param name="propertyNames">Array of property names (e.g., ["Speed", "Load", "Battery"])</param>
 /// <param name="propertyCount">Number of properties</param>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.9: Will register properties with LiveLink frame data
+/// Register properties with LiveLink frame data
 /// Property names are case-sensitive.
 /// All subsequent updates must include same number of property values.
 /// </remarks>
@@ -111,8 +105,7 @@ __declspec(dllexport) void ULL_RegisterObjectWithProperties(
 /// <param name="subjectName">Object identifier</param>
 /// <param name="transform">Transform data (position, rotation, scale)</param>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.6: Will submit frame data to LiveLink
+/// Submit frame data to LiveLink
 /// Call at your desired update rate (e.g., 30-60 Hz).
 /// </remarks>
 __declspec(dllexport) void ULL_UpdateObject(
@@ -127,8 +120,7 @@ __declspec(dllexport) void ULL_UpdateObject(
 /// <param name="propertyValues">Array of property values (must match registration order)</param>
 /// <param name="propertyCount">Number of property values (must match registration count)</param>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.9: Will submit frame data with properties to LiveLink
+/// Submit frame data with properties to LiveLink
 /// Property count must match registration count, or update is ignored.
 /// </remarks>
 __declspec(dllexport) void ULL_UpdateObjectWithProperties(
@@ -143,8 +135,7 @@ __declspec(dllexport) void ULL_UpdateObjectWithProperties(
 /// </summary>
 /// <param name="subjectName">Object identifier to remove</param>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.6: Will mark subject as removed in LiveLink
+/// Mark subject as removed in LiveLink
 /// Safe to call on non-existent objects (no error).
 /// </remarks>
 __declspec(dllexport) void ULL_RemoveObject(const char* subjectName);
@@ -160,8 +151,7 @@ __declspec(dllexport) void ULL_RemoveObject(const char* subjectName);
 /// <param name="propertyNames">Array of property name strings</param>
 /// <param name="propertyCount">Number of properties in the array</param>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.9: Will register with LiveLink as ULiveLinkBasicRole
+/// Register with LiveLink as ULiveLinkBasicRole
 /// </remarks>
 __declspec(dllexport) void ULL_RegisterDataSubject(
     const char* subjectName,
@@ -176,8 +166,7 @@ __declspec(dllexport) void ULL_RegisterDataSubject(
 /// <param name="propertyValues">Array of property values (float)</param>
 /// <param name="propertyCount">Number of values in the array</param>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.9: Will submit data frame to LiveLink
+/// Submit data frame to LiveLink
 /// </remarks>
 __declspec(dllexport) void ULL_UpdateDataSubject(
     const char* subjectName,
@@ -190,8 +179,7 @@ __declspec(dllexport) void ULL_UpdateDataSubject(
 /// </summary>
 /// <param name="subjectName">Subject identifier to remove</param>
 /// <remarks>
-/// Sub-Phase 6.3: Stub implementation (logs only)
-/// Sub-Phase 6.9: Will mark data subject as removed in LiveLink
+/// Mark data subject as removed in LiveLink
 /// </remarks>
 __declspec(dllexport) void ULL_RemoveDataSubject(const char* subjectName);
 
@@ -215,8 +203,7 @@ __declspec(dllexport) void ULL_RemoveDataSubject(const char* subjectName);
 //   - No dynamic allocation or ownership transfer
 //
 // Thread Safety:
-//   - Sub-Phase 6.3: Not applicable (stubs only)
-//   - Sub-Phase 6.4+: Will use FCriticalSection in LiveLinkBridge
+//   - FCriticalSection in LiveLinkBridge
 //
 // Error Handling:
 //   - Parameter validation (null checks, bounds)

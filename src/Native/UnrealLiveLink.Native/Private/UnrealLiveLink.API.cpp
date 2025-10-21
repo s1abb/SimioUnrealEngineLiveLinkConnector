@@ -5,17 +5,17 @@
 #include "Misc/CString.h"
 
 //=============================================================================
-// Sub-Phase 6.4: C API Implementation with LiveLinkBridge
+// C API Implementation with LiveLinkBridge
 //=============================================================================
 // This file implements all 12 C API functions using the LiveLinkBridge singleton.
 // Functions perform parameter validation and delegate to FLiveLinkBridge.
 //
 // Implementation Status by Sub-Phase:
-// - 6.3 (Complete): Stub functions with logging and validation
-// - 6.4 (Current): LiveLinkBridge state tracking with thread safety
-// - 6.5: Add actual FLiveLinkMessageBusSource
-// - 6.6: Implement transform subject registration and updates
-// - 6.9: Implement property and data subject support
+// - (Complete): Stub functions with logging and validation
+// - (Current): LiveLinkBridge state tracking with thread safety
+// - (Pending): Add actual FLiveLinkMessageBusSource
+// - (Pending): Implement transform subject registration and updates
+// - (Pending): Implement property and data subject support
 //=============================================================================
 
 //=============================================================================

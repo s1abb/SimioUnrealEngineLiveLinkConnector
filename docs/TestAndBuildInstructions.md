@@ -229,6 +229,7 @@ dotnet test tests/Unit.Tests/ tests/Integration.Tests/
 ```powershell
 # Build native DLL
 .\build\BuildNative.ps1
+.\build\CleanupBuildArtifacts.ps1 -IncludeNative
 
 # Expected output:
 # ✅ UBT build completed
@@ -406,6 +407,7 @@ dotnet test tests/Unit.Tests/ tests/Integration.Tests/
 ```powershell
 # Remove all build artifacts
 .\build\CleanupBuildArtifacts.ps1
+.\build\CleanupBuildArtifacts.ps1 -IncludeNative
 
 # Rebuild from scratch
 .\build\BuildMockDLL.ps1

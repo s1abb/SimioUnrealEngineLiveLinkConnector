@@ -4,7 +4,7 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogUnrealLiveLinkNative, Log, All);
 
-// Verbose logging control (Sub-Phase 6.6+)
+// Verbose logging control
 // Set to 0 to disable verbose logs in production builds
 #ifndef ULL_ENABLE_VERBOSE_LOGGING
     #define ULL_ENABLE_VERBOSE_LOGGING 1

@@ -1,4 +1,4 @@
 #pragma once
 
-// Coordinate conversion helpers - will be implemented in Sub-Phase 6.7
+// Coordinate conversion helpers - will be implemented
 // For now, just a placeholder

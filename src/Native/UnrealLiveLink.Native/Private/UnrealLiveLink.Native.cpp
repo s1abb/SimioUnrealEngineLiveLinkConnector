@@ -5,7 +5,7 @@
 //=============================================================================
 // Log category definition for native layer.
 //
-// NOTE: Starting Sub-Phase 6.6.2, GInternalProjectName, GForeignEngineDir, 
+// NOTE: GInternalProjectName, GForeignEngineDir, 
 // and WinMain entry point are provided by UnrealLiveLinkNativeMain.cpp via
 // IMPLEMENT_APPLICATION macro. This file now only defines the log category.
 //=============================================================================

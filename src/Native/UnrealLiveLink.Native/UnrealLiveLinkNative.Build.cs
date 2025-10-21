@@ -16,13 +16,13 @@ public class UnrealLiveLinkNative : ModuleRules
             "Core",
             "CoreUObject",
             "ApplicationCore",              // Required for minimal runtime
-            "Projects",                     // Plugin manager (Sub-Phase 6.6.2)
+            "Projects",                     // Plugin manager
             "LiveLinkInterface",            // LiveLink type definitions
             "LiveLinkMessageBusFramework",  // Message Bus framework
             "UdpMessaging",                 // Network transport
         });
         
-        // Add include paths for Program main includes (Sub-Phase 6.6.2)
+        // Add include paths for Program main includes
         PrivateIncludePaths.Add("Runtime/Launch/Public");
         
         // Export symbols for DLL

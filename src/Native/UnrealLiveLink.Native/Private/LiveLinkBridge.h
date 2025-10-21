@@ -5,7 +5,7 @@
 #include "Math/Transform.h"
 #include "UnrealLiveLink.Types.h"
 
-// LiveLink includes (Sub-Phase 6.6.1 - Message Bus Provider API)
+// LiveLink includes Message Bus Provider API
 // Disable C4099 warning: UE has inconsistent class/struct forward declarations
 #pragma warning(push)
 #pragma warning(disable: 4099)
@@ -16,15 +16,15 @@
 #pragma warning(pop)
 
 //=============================================================================
-// Sub-Phase 6.6: LiveLinkBridge with Transform Subject Registration
+// LiveLinkBridge with Transform Subject Registration
 //=============================================================================
 // This class manages LiveLink state AND actual LiveLink Message Bus integration.
 // 
 // Implementation Status:
-// - Sub-Phase 6.4 (Complete): State tracking, thread safety, FName caching
-// - Sub-Phase 6.5 (Complete): LiveLink framework dependencies integrated
-// - Sub-Phase 6.6 (Current): Transform subject registration and frame updates
-// - Sub-Phase 6.9 (Pending): Property streaming with subjects
+// - (Complete): State tracking, thread safety, FName caching
+// - (Complete): LiveLink framework dependencies integrated
+// - (Current): Transform subject registration and frame updates
+// - (Pending): Property streaming with subjects
 //=============================================================================
 
 /// <summary>
@@ -165,7 +165,7 @@ private:
 	~FLiveLinkBridge() = default;
 	
 	//=============================================================================
-	// Helper Methods (Sub-Phase 6.6)
+	// Helper Methods
 	//=============================================================================
 	
 	/// <summary>
@@ -181,12 +181,12 @@ private:
 	bool bInitialized = false;
 	FString ProviderName;
 	
-	// LiveLink integration state (Sub-Phase 6.5-6.6.1)
-	bool bLiveLinkReady = false;                        // Framework is ready (6.5)
-	TSharedPtr<ILiveLinkProvider> LiveLinkProvider;     // 🆕 Message Bus Provider (6.6.1)
-	bool bLiveLinkSourceCreated = false;                // Track if source created (6.6)
+	// LiveLink integration state
+	bool bLiveLinkReady = false;
+	TSharedPtr<ILiveLinkProvider> LiveLinkProvider;
+	bool bLiveLinkSourceCreated = false;
 	
-	// GEngineLoop initialization tracking (Sub-Phase 6.6.2)
+	// GEngineLoop initialization tracking
 	// CRITICAL: GEngineLoop.PreInit() can only be called ONCE per process!
 	// This static flag prevents crashes when simulation is restarted in Simio
 	static bool bGEngineLoopInitialized;
