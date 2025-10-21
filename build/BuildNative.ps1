@@ -1,4 +1,4 @@
-# Build Native UnrealLiveLink.Native DLL using Unreal Build Tool
+﻿# Build Native UnrealLiveLink.Native DLL using Unreal Build Tool
 param(
     [string]$Configuration = "Development",
     [string]$Platform = "Win64",
@@ -70,7 +70,7 @@ if (-not (Test-Path $UBTPath)) {
 $IsSourceBuild = Test-Path (Join-Path $UEPath "GenerateProjectFiles.bat")
 Write-Host "UE Installation Type: $(if ($IsSourceBuild) { 'Source Build' } else { 'Binary Build' })" -ForegroundColor Yellow
 
-Write-Host "✅ Prerequisites verified" -ForegroundColor Green
+Write-Host "Γ£à Prerequisites verified" -ForegroundColor Green
 
 # Step 1: Copy source to UE Programs directory
 Write-Host "Copying source to UE Programs directory..." -ForegroundColor Yellow
@@ -87,7 +87,7 @@ if (Test-Path $UETargetDir) {
 }
 
 Copy-Item -Recurse $NativeSourceDir $UETargetDir
-Write-Host "✅ Source copied to: $UETargetDir" -ForegroundColor Green
+Write-Host "Γ£à Source copied to: $UETargetDir" -ForegroundColor Green
 
 # Step 2: Generate project files (if source build)
 if ($IsSourceBuild) {
@@ -98,17 +98,15 @@ if ($IsSourceBuild) {
     try {
         $Process = Start-Process -FilePath $GenerateProjectFilesScript -Wait -PassThru -NoNewWindow
         if ($Process.ExitCode -ne 0) {
-            Write-Host "⚠️  GenerateProjectFiles.bat exited with code $($Process.ExitCode)" -ForegroundColor Yellow
-            Write-Host "   This is usually due to warnings about optional modules (SwarmInterface, etc.)" -ForegroundColor Gray
-            Write-Host "   Continuing with build if our target files were generated..." -ForegroundColor Gray
-        } else {
-            Write-Host "✅ Project files generated" -ForegroundColor Green
+            Write-Error "GenerateProjectFiles.bat failed with exit code: $($Process.ExitCode)"
+            exit 1
         }
+        Write-Host "Γ£à Project files generated" -ForegroundColor Green
     } finally {
         Pop-Location
     }
 } else {
-    Write-Host "⚠️ Binary UE build - skipping project generation" -ForegroundColor Yellow
+    Write-Host "ΓÜá∩╕Å Binary UE build - skipping project generation" -ForegroundColor Yellow
 }
 
 # Step 3: Build with UBT
@@ -124,7 +122,7 @@ Write-Host "UBT Command: $UBTPath $($UBTArgs -join ' ')"
 
 $Process = Start-Process -FilePath $UBTPath -ArgumentList $UBTArgs -Wait -PassThru -NoNewWindow
 if ($Process.ExitCode -ne 0) {
-    Write-Host "❌ UBT build failed with exit code: $($Process.ExitCode)" -ForegroundColor Red
+    Write-Host "Γ¥î UBT build failed with exit code: $($Process.ExitCode)" -ForegroundColor Red
     
     # Check UBT log for more details
     $UBTLogPath = "$env:LOCALAPPDATA\UnrealBuildTool\Log.txt"
@@ -140,7 +138,7 @@ if ($Process.ExitCode -ne 0) {
     exit 1
 }
 
-Write-Host "✅ UBT build completed" -ForegroundColor Green
+Write-Host "Γ£à UBT build completed" -ForegroundColor Green
 
 # Step 4: Verify output and copy to repository
 Write-Host "Verifying build output..." -ForegroundColor Yellow
@@ -189,9 +187,9 @@ if (Test-Path $OutputPdb) {
     $TargetPdbName = $TargetRepoName -replace '\.(exe|dll)$', '.pdb'
     $TargetPdbPath = Join-Path $RepoOutputDir $TargetPdbName
     Copy-Item $OutputPdb $TargetPdbPath -Force
-    Write-Host "✅ Copied $OutputType and PDB to: $RepoOutputDir" -ForegroundColor Green
+    Write-Host "Γ£à Copied $OutputType and PDB to: $RepoOutputDir" -ForegroundColor Green
 } else {
-    Write-Host "✅ Copied $OutputType to: $RepoOutputDir (PDB not found)" -ForegroundColor Green
+    Write-Host "Γ£à Copied $OutputType to: $RepoOutputDir (PDB not found)" -ForegroundColor Green
 }
 
 # Copy additional DLL artifacts (export and import libraries)
@@ -215,7 +213,7 @@ if ($OutputType -eq "DLL") {
 # Display build results
 $OutputInfo = Get-Item $TargetRepoPath
 Write-Host ""
-Write-Host "🎉 BUILD SUCCESS!" -ForegroundColor Green
+Write-Host "≡ƒÄë BUILD SUCCESS!" -ForegroundColor Green
 Write-Host "Output Type: $OutputType" -ForegroundColor Green
 Write-Host "Output File: $($OutputInfo.FullName)" -ForegroundColor Green
 Write-Host "Size: $($OutputInfo.Length) bytes ($([math]::Round($OutputInfo.Length / 1MB, 2)) MB)"

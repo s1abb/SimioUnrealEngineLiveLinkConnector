@@ -10,6 +10,7 @@
 #include "Modules/ModuleManager.h"
 #include "Interfaces/IPluginManager.h"
 #include "Misc/CommandLine.h"
+#include "Containers/Ticker.h"             // For FTSTicker - required for Message Bus announcement
 
 // LiveLink includes Message Bus Provider API
 // Disable C4099 warning: UE has inconsistent class/struct forward declarations
@@ -129,6 +130,25 @@ bool FLiveLinkBridge::Initialize(const FString& InProviderName)
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
 	       TEXT("Initialize: Ready for LiveLink integration with provider '%s'"), 
 	       *ProviderName);
+	
+	// CRITICAL: Create LiveLink provider immediately for auto-discovery
+	// The Message Bus auto-discover panel only shows sources that are actively broadcasting
+	// If we wait until first subject registration (lazy creation), Unreal won't discover us
+	UE_LOG(LogUnrealLiveLinkNative, Log, 
+	       TEXT("Initialize: Creating LiveLink Message Bus provider for auto-discovery..."));
+	
+	EnsureLiveLinkSource();
+	
+	if (bLiveLinkSourceCreated)
+	{
+		UE_LOG(LogUnrealLiveLinkNative, Log, 
+		       TEXT("Initialize: ✅ LiveLink provider created and broadcasting on Message Bus"));
+	}
+	else
+	{
+		UE_LOG(LogUnrealLiveLinkNative, Warning, 
+		       TEXT("Initialize: ⚠️ Provider creation deferred (will retry on first subject registration)"));
+	}
 	
 	return true;
 }
@@ -254,6 +274,13 @@ void FLiveLinkBridge::EnsureLiveLinkSource()
 	}
 	
 	bLiveLinkSourceCreated = true;
+	
+	// CRITICAL: Tick the core ticker to trigger Message Bus announcement
+	// Reference: UnrealLiveLinkCInterface calls FTSTicker::GetCoreTicker().Tick(1.0f) after CreateLiveLinkProvider
+	// This processes the Message Bus queue and broadcasts the provider for auto-discovery
+	UE_LOG(LogUnrealLiveLinkNative, Log, 
+	       TEXT("EnsureLiveLinkSource: Ticking core ticker to trigger Message Bus announcement..."));
+	FTSTicker::GetCoreTicker().Tick(1.0f);
 	
 	UE_LOG(LogUnrealLiveLinkNative, Log, 
 	       TEXT("EnsureLiveLinkSource: ✅ SUCCESS! LiveLink Message Bus Provider created"));
