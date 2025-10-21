@@ -21,20 +21,7 @@
     <ProjectReference Include="..\..\src\Managed\SimioUnrealEngineLiveLinkConnector.csproj" />
   </ItemGroup>
 
-  <!-- Copy native DLL to test output directory -->
-  <ItemGroup>
-    <Content Include="..\..\lib\native\win-x64\UnrealLiveLink.Native.dll">
-      <Link>UnrealLiveLink.Native.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\lib\native\win-x64\UnrealLiveLink.Native.exp" Condition="Exists('..\..\lib\native\win-x64\UnrealLiveLink.Native.exp')">
-      <Link>UnrealLiveLink.Native.exp</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\lib\native\win-x64\UnrealLiveLink.Native.lib" Condition="Exists('..\..\lib\native\win-x64\UnrealLiveLink.Native.lib')">
-      <Link>UnrealLiveLink.Native.lib</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+  <!-- Native DLL is copied by RunIntegrationTests.ps1 script to avoid file locking issues -->
+  <!-- Removed CopyToOutputDirectory to prevent build conflicts when testhost.exe locks the DLL -->
 
 </Project>

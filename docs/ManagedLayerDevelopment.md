@@ -5,6 +5,9 @@
 **Scope:** Implementation patterns, code organization, testing approach  
 **Not Included:** Current status/progress (see DevelopmentPlan.md), architecture rationale (see Architecture.md)
 
+**Last Updated:** October 21, 2025  
+**Implementation Context:** DLL hosted in Simio.exe, supports multiple simulation runs per session
+
 ---
 
 ## Overview
@@ -13,7 +16,15 @@
 - **Key capabilities:** Transform streaming, data streaming, object lifecycle management
 - **Integration point:** Simio's IElementDefinition and IStepDefinition interfaces
 - **Total API surface:** 12 P/Invoke functions, 8 Element properties, 4 Steps
+- **Lifecycle model:** Supports multiple Initialize/Shutdown cycles (simulation restart scenarios)
+- **Performance:** First initialization ~21ms, subsequent ~1ms (native layer optimization)
 - [Link to Architecture.md for design context]
+
+**Critical Context: DLL Hosted in Simio Process**
+- Managed layer is loaded as extension DLL in Simio.exe
+- Element.Initialize() may be called multiple times (user runs simulation repeatedly)
+- Native layer handles restart optimization (static initialization flag)
+- Managed layer must be stateless or properly reset in Shutdown()
 
 ---
 
@@ -237,6 +248,102 @@ objectUpdater.UpdateTransform(x, y, z, heading, pitch, roll);
 
 ---
 
+### Lifecycle Management Pattern (Multi-Run Support)
+
+**Element Lifecycle:**
+```csharp
+public class SimioUnrealEngineLiveLinkElement : IElement
+{
+    private LiveLinkConfiguration? _configuration;
+    
+    public void Initialize(IElementData elementData)
+    {
+        // Read configuration properties
+        _configuration = CreateConfiguration(elementData);
+        
+        // Initialize LiveLink (idempotent - safe to call multiple times)
+        // First call: ~21ms (native GEngineLoop initialization)
+        // Subsequent calls: ~1ms (native static flag optimization)
+        LiveLinkManager.Instance.Initialize(_configuration);
+        
+        // Trace for user feedback
+        elementData.ExecutionContext.ExecutionInformation.TraceInformation(
+            $"LiveLink initialized: Source='{_configuration.SourceName}'");
+    }
+    
+    public void Shutdown(IElementData elementData)
+    {
+        // Clean shutdown (native layer handles restart optimization)
+        LiveLinkManager.Instance.Shutdown();
+        
+        // DO NOT add TraceInformation here - overwrites simulation traces
+        // Native layer keeps modules loaded for fast restart
+    }
+}
+```
+
+**Key Points:**
+- `Initialize()` may be called multiple times (simulation restart scenarios)
+- First initialization: ~21ms (native layer startup)
+- Subsequent: ~1ms (native static flag skips GEngineLoop.PreInit)
+- `Shutdown()` cleans up LiveLink provider but keeps native modules loaded
+- Performance optimization transparent to managed layer
+
+**LiveLinkManager Restart Behavior:**
+```csharp
+public class LiveLinkManager
+{
+    private bool _isInitialized = false;
+    
+    public void Initialize(LiveLinkConfiguration config)
+    {
+        if (_isInitialized)
+        {
+            // Already initialized - native layer handles restart logic
+            return;
+        }
+        
+        // Validate API version compatibility
+        int version = UnrealLiveLinkNative.ULL_GetVersion();
+        if (version != 1)
+        {
+            throw new LiveLinkInitializationException(
+                $"API version mismatch: expected 1, got {version}");
+        }
+        
+        // Initialize native layer (idempotent - safe to call multiple times)
+        int result = UnrealLiveLinkNative.ULL_Initialize(config.SourceName);
+        if (result != UnrealLiveLinkNative.ULL_OK)
+        {
+            throw new LiveLinkInitializationException(
+                $"Failed to initialize native layer: {result}");
+        }
+        
+        _configuration = config;
+        _isInitialized = true;
+    }
+    
+    public void Shutdown()
+    {
+        if (!_isInitialized) return;
+        
+        // Clean up all objects
+        foreach (var updater in _objectRegistry.Values)
+        {
+            updater.Dispose();
+        }
+        _objectRegistry.Clear();
+        
+        // Shutdown native layer (keeps modules loaded for restart)
+        UnrealLiveLinkNative.ULL_Shutdown();
+        
+        _isInitialized = false;
+    }
+}
+```
+
+---
+
 ## Component Development Sequence
 
 ### Phase 1: UnrealIntegration Layer
@@ -281,6 +388,7 @@ objectUpdater.UpdateTransform(x, y, z, heading, pitch, roll);
 - Connection health tracking with 1-second cache (performance optimization)
 - Configuration storage: `LiveLinkConfiguration` property
 - API version checking at initialization
+- **Restart support:** Idempotent `Initialize()` method (safe to call multiple times)
 - Methods:
   - `Initialize(LiveLinkConfiguration)` or `Initialize(string sourceName)`
   - `Shutdown()`, `IsConnectionHealthy`, `GetOrCreateObject(name)`
@@ -308,6 +416,7 @@ objectUpdater.UpdateTransform(x, y, z, heading, pitch, roll);
 - **Shutdown():** Call `LiveLinkManager.Instance.Shutdown()` (no TraceInformation to avoid overwriting traces)
 - Expose `IsConnectionHealthy` property for Steps to check
 - Property reader helpers: `ReadStringProperty()`, `ReadBooleanProperty()`, `ReadIntegerProperty()`, `ReadRealProperty()`
+- **Restart awareness:** Initialize() may be called multiple times (native layer handles optimization)
 
 ---
 
@@ -570,7 +679,7 @@ public class TypesTests
 }
 ```
 
-#### LiveLinkManager Tests (9 tests)
+#### LiveLinkManager Tests (12+ tests)
 ```csharp
 [TestClass]
 public class LiveLinkManagerTests
@@ -586,6 +695,14 @@ public class LiveLinkManagerTests
     [TestMethod]
     public void LiveLinkManager_GetOrCreateObject_ShouldCreateOnFirstCall()
     // Test lazy object creation
+    
+    [TestMethod]
+    public void LiveLinkManager_MultipleInitialize_ShouldNotThrow()
+    // Test idempotent initialization (restart scenario)
+    
+    [TestMethod]
+    public void LiveLinkManager_InitializeShutdownInitialize_ShouldWork()
+    // Test full restart cycle (validates native layer restart logic)
 }
 ```
 
@@ -611,12 +728,90 @@ public class UtilsTests
 }
 ```
 
+---
+
 ### Integration Test Strategy
 
 **Mock DLL Tests:**
 - Full workflow: `Initialize() → CreateObject() → UpdateObject() → DestroyObject() → Shutdown()`
 - Property registration and updates
 - Error handling: null names, invalid transforms, disposed objects
+- **Restart scenarios:** Multiple `Initialize() → Shutdown()` cycles (critical for Simio)
+
+**Restart Testing (Critical):**
+```csharp
+[TestClass]
+public class RestartTests
+{
+    [TestMethod]
+    public void MultipleRestarts_10Cycles_ShouldNotDegrade()
+    {
+        // Simulate 10 simulation runs in same session
+        for (int i = 0; i < 10; i++)
+        {
+            // Initialize
+            LiveLinkManager.Instance.Initialize("TestSource");
+            Assert.IsTrue(LiveLinkManager.Instance.IsConnectionHealthy);
+            
+            // Use LiveLink (create/update/destroy objects)
+            var updater = LiveLinkManager.Instance.GetOrCreateObject($"TestObj_{i}");
+            updater.UpdateTransform(1.0, 2.0, 3.0, 0.0, 0.0, 0.0);
+            
+            // Shutdown
+            LiveLinkManager.Instance.Shutdown();
+        }
+        
+        // Verify no memory leaks, no performance degradation
+    }
+    
+    [TestMethod]
+    public void InitializeWithoutShutdown_ShouldNotLeak()
+    {
+        // Simulate user running simulation multiple times without proper cleanup
+        for (int i = 0; i < 5; i++)
+        {
+            LiveLinkManager.Instance.Initialize("TestSource");
+            // Note: No Shutdown() call
+        }
+        
+        // Should not crash or leak resources
+    }
+}
+```
+
+**Performance Testing:**
+```csharp
+[TestClass]
+public class PerformanceTests
+{
+    [TestMethod]
+    public void FirstInitialization_ShouldCompleteWithin50ms()
+    {
+        var stopwatch = Stopwatch.StartNew();
+        LiveLinkManager.Instance.Initialize("PerfTest");
+        stopwatch.Stop();
+        
+        // First init: ~21ms native + ~5ms managed = ~26ms typical
+        Assert.IsTrue(stopwatch.ElapsedMilliseconds < 50);
+    }
+    
+    [TestMethod]
+    public void SubsequentInitialization_ShouldCompleteWithin5ms()
+    {
+        // First init
+        LiveLinkManager.Instance.Initialize("PerfTest");
+        LiveLinkManager.Instance.Shutdown();
+        
+        // Second init (native static flag optimization)
+        var stopwatch = Stopwatch.StartNew();
+        LiveLinkManager.Instance.Initialize("PerfTest");
+        stopwatch.Stop();
+        
+        // Subsequent: ~1ms native + ~2ms managed = ~3ms typical
+        Assert.IsTrue(stopwatch.ElapsedMilliseconds < 5);
+    }
+}
+```
 
 **Test Execution:**
 ```powershell
@@ -734,6 +929,7 @@ Before marking a component complete:
 - [ ] Unit tests written and passing
 - [ ] Edge cases covered (null inputs, invalid values, empty strings)
 - [ ] Integration tests pass with mock DLL
+- [ ] **Restart scenarios tested** (multiple Initialize/Shutdown cycles)
 
 **Code Quality:**
 - [ ] Error messages include object/context information
@@ -746,16 +942,46 @@ Before marking a component complete:
 **Resource Management:**
 - [ ] IDisposable implemented where resource cleanup needed
 - [ ] No memory leaks (dispose object updaters, clear buffers)
+- [ ] Singleton properly handles restart scenarios (reset state in Shutdown)
 
 **Thread Safety:**
 - [ ] Thread-safety considered (document assumptions)
 - [ ] LiveLinkManager singleton used correctly
 - [ ] No static mutable state in Steps
 
+**Restart Stability:**
+- [ ] Element.Initialize() can be called multiple times safely
+- [ ] LiveLinkManager.Initialize() is idempotent
+- [ ] Shutdown() properly resets all state for next run
+- [ ] No static state persists between simulation runs
+
 **Documentation:**
 - [ ] XML comments for public APIs
 - [ ] Inline comments for non-obvious logic
 - [ ] README updated if new features added
+
+---
+
+## Performance Expectations
+
+**Initialization Performance:**
+- **First initialization:** ~26ms total (21ms native + 5ms managed)
+  - Native: GEngineLoop.PreInit, module loading (one-time per Simio session)
+  - Managed: Configuration validation, singleton setup
+- **Subsequent initialization:** ~3ms total (1ms native + 2ms managed)
+  - Native: Static flag check only (21x faster)
+  - Managed: Configuration validation, connection check
+
+**Runtime Performance:**
+- Transform update: <1ms per call (including coordinate conversion)
+- Data subject update: <0.5ms per call (lighter payload)
+- Connection health check: <0.1ms (1-second cache reduces P/Invoke overhead)
+
+**Why This Matters:**
+- User runs simulation multiple times in same Simio session
+- First run: ~26ms acceptable startup overhead
+- Subsequent runs: ~3ms nearly imperceptible
+- Native layer optimization (static flag) provides 21x speedup
 
 ---
 
@@ -771,6 +997,8 @@ Managed layer is complete when:
 **Testing:**
 - [ ] 50+ unit tests passing (current: 37, target: 80+)
 - [ ] Integration tests pass with mock DLL
+- [ ] **Restart stability tests pass** (10+ Initialize/Shutdown cycles)
+- [ ] Performance tests validate initialization timing (26ms / 3ms)
 - [ ] No failing tests in CI
 
 **Deployment:**
@@ -782,11 +1010,18 @@ Managed layer is complete when:
 - [ ] TraceInformation provides adequate feedback
 - [ ] Error messages are clear and actionable
 - [ ] No silent failures (all errors reported)
+- [ ] Restart scenarios work seamlessly (user runs simulation 10+ times)
 
 **Code Quality:**
 - [ ] No warnings in build output
 - [ ] Code reviewed and documented
 - [ ] Follows established patterns consistently
+
+**Restart Stability (Critical):**
+- [ ] Element can be initialized multiple times in same session
+- [ ] No performance degradation after 10+ simulation runs
+- [ ] No memory leaks across multiple runs
+- [ ] Native layer restart optimization confirmed (1ms subsequent init)
 
 ---
 
@@ -797,3 +1032,4 @@ Managed layer is complete when:
 - **Build/test:** [TestAndBuildInstructions.md](TestAndBuildInstructions.md) - Build commands and troubleshooting
 - **Current status:** [DevelopmentPlan.md](DevelopmentPlan.md) - Phase tracking and completion checklists
 - **Coordinate math:** [CoordinateSystems.md](CoordinateSystems.md) - Mathematical derivations for coordinate transformations
+- **Lessons learned:** [ArchitecturalLessonsLearned.md](ArchitecturalLessonsLearned.md) - Comparison with reference implementation

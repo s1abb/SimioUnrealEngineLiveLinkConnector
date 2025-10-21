@@ -5,7 +5,8 @@
 **Scope:** Timeless design decisions, component relationships, technical constraints  
 **Not Included:** Implementation details (see layer dev docs), current status (see DevelopmentPlan.md)
 
-**Last Updated:** October 17, 2025
+**Last Updated:** October 21, 2025  
+**Implementation Status:** Sub-Phase 6.6 Complete (Transform subjects working with real UE integration)
 
 ---
 
@@ -24,6 +25,7 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 - **Lazy Registration:** Objects auto-register on first use, reducing boilerplate
 - **Configuration-Driven:** Comprehensive Element properties for flexible deployment
 - **Message Bus Architecture:** Uses Unreal's LiveLink Message Bus for loose coupling (third-party integration pattern)
+- **DLL Hosted Context:** Designed as DLL loaded in Simio.exe, not standalone executable (critical for lifecycle management)
 
 ---
 
@@ -42,11 +44,18 @@ Our architecture is based on a **proven production system**:
 - ✅ **Performance:** Proven to handle "thousands of float values @ 60Hz" in production
 - ✅ **Deployment Reality:** Additional Unreal DLLs required (tbbmalloc.dll, etc.)
 - ✅ **Message Bus Protocol:** Stable across Unreal versions (4.26 through 5.x)
+- ✅ **GEngineLoop Initialization:** Core initialization pattern from reference
+- ✅ **ILiveLinkProvider API:** Battle-tested Message Bus creation API
 
 **Performance Baseline:**
 - Reference system: ~3,000+ floats @ 60Hz = ~180,000 values/sec
 - Our target: 100 objects @ 30Hz × 10 doubles = 30,000 values/sec
 - **Safety margin: 6x lighter than proven reference**
+
+**Critical Adaptations for DLL Context:**
+- **Static initialization tracking:** Reference assumes single-use; we support simulation restart (21x faster subsequent init)
+- **DLL-safe shutdown:** Reference calls AppExit (terminates process); we skip it (DLL must not terminate host)
+- **Module lifecycle:** Reference unloads modules; we keep loaded for restart stability
 
 ---
 
@@ -77,33 +86,74 @@ Our architecture is based on a **proven production system**:
 **Architecture Type:** Standalone UBT Program (NOT a plugin)
 - Built with Unreal Build Tool as a Program target
 - Lives in `Engine/Source/Programs/UnrealLiveLinkNative/`
-- Outputs standalone executable/DLL
+- Outputs standalone DLL (not executable despite "Program" target type)
 - No Unreal Editor required for third-party integration
+
+**Critical Context: DLL Hosted in Simio.exe**
+- Unlike reference implementation (standalone executable), we run as DLL in host process
+- **Cannot call AppExit/RequestEngineExit** - would terminate Simio
+- Must support multiple initialization cycles (simulation restart scenarios)
+- Requires static initialization tracking to prevent double-init crashes
 
 **Key Components:**
 - **P/Invoke API Surface:** 12 exported C functions with `__cdecl` calling convention
-- **LiveLinkBridge:** Singleton managing FLiveLinkMessageBusSource and subject registry
+- **GEngineLoop Management:** Unreal Engine core initialization with restart safety
+- **LiveLinkBridge:** Singleton managing ILiveLinkProvider and subject registry
 - **Coordinate Helpers:** ULL_Transform → FTransform conversion utilities (optional, managed layer handles primary conversion)
 - **String Conversion:** C string → FName caching for performance
+- **Static Initialization Flag:** `bGEngineLoopInitialized` prevents fatal restart crashes
 
-**Unreal LiveLink Integration via Message Bus:**
-- Creates `FLiveLinkMessageBusSource` via `ILiveLinkClient`
+**Unreal Engine Initialization (GEngineLoop Pattern):**
+```cpp
+// First initialization (21ms typical)
+GEngineLoop.PreInit(TEXT("UnrealLiveLinkNative -Messaging"));
+GetTargetPlatformManager();
+ProcessNewlyLoadedUObjects();
+FModuleManager::Get().StartProcessingNewlyLoadedObjects();
+FModuleManager::Get().LoadModule(TEXT("UdpMessaging"));
+IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PreDefault);
+
+// Subsequent restarts (1ms typical) - skip if bGEngineLoopInitialized == true
+```
+
+**Unreal LiveLink Integration via ILiveLinkProvider:**
+- Creates LiveLink provider via `ILiveLinkProvider::CreateLiveLinkProvider(ProviderName)`
 - Registers subjects with `ULiveLinkTransformRole` or `ULiveLinkBasicRole`
-- Submits frame data via `PushSubjectFrameData_AnyThread`
-- Communicates over UDP (port 6666 default) to Unreal Editor
+- Submits frame data via Message Bus (UDP multicast 230.0.0.1:6666)
+- Communicates over network to Unreal Editor
 - No direct coupling - Editor and DLL run as separate processes
+
+**Required Module Dependencies:**
+```csharp
+PrivateDependencyModuleNames.AddRange(new string[] 
+{
+    "Core",                         // Unreal fundamentals
+    "CoreUObject",                  // UObject system
+    "ApplicationCore",              // Provides FMemory_* symbols for Program targets
+    "Projects",                     // Plugin loading system
+    "LiveLinkInterface",            // LiveLink API types
+    "LiveLinkMessageBusFramework",  // Message Bus framework
+    "UdpMessaging",                 // Network transport for LiveLink
+});
+```
 
 **Deployment Dependencies (Critical):**
 > "copying just the dll may not be enough. There may be other dependencies that need to be copied such as the tbbmalloc.dll" - Reference Project Warning
 
 Expected additional DLLs (50-200MB total):
-- tbbmalloc.dll (Intel Threading Building Blocks)
+- tbbmalloc.dll (Intel Threading Building Blocks) - **Required, not mentioned in reference docs**
 - UnrealEditor-Core.dll
 - UnrealEditor-CoreUObject.dll
 - UnrealEditor-LiveLink.dll
 - UnrealEditor-LiveLinkInterface.dll
 - UnrealEditor-Messaging.dll
 - UnrealEditor-UdpMessaging.dll
+
+**Performance Characteristics:**
+- First initialization: ~21ms (GEngineLoop.PreInit, module loading)
+- Subsequent initialization: ~1ms (static flag bypasses GEngineLoop)
+- Update latency: <5ms per frame (30-60Hz sustainable)
+- Memory footprint: ~28.5 MB DLL + stable runtime overhead
 
 ---
 
@@ -129,22 +179,22 @@ Expected additional DLLs (50-200MB total):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         Simio Process                                │
-│  (Model entities moving, producing, triggering steps)                │
+│                         Simio Process                               │
+│  (Model entities moving, producing, triggering steps)               │
 └────────────────────────────────┬────────────────────────────────────┘
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    Simio Steps (Managed C#)                          │
+│                    Simio Steps (Managed C#)                         │
 │  CreateObject | SetPositionOrientation | TransmitValues | Destroy   │
 └────────────────────────────────┬────────────────────────────────────┘
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     LiveLinkManager (Singleton)                      │
-│  - Object registry (ConcurrentDictionary)                            │
-│  - Connection health (1s cache)                                      │
-│  - Configuration management                                          │
+│                     LiveLinkManager (Singleton)                     │
+│  - Object registry (ConcurrentDictionary)                           │
+│  - Connection health (1s cache)                                     │
+│  - Configuration management                                         │
 └────────────┬───────────────────────────────────┬────────────────────┘
              │                                   │
              ▼                                   ▼
@@ -154,30 +204,35 @@ Expected additional DLLs (50-200MB total):
 │ - Property tracking     │      │   - Euler → Quaternion           │
 │ - Update buffering      │      │   - Meters → Centimeters         │
 └────────────┬────────────┘      └──────────────┬───────────────────┘
-             │                                   │
-             └───────────────┬───────────────────┘
+             │                                  │
+             └───────────────┬──────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                  P/Invoke Boundary (12 Functions)                    │
+│                  P/Invoke Boundary (12 Functions)                   │
 │  ULL_Initialize | ULL_RegisterObject | ULL_UpdateObject | etc.      │
-└────────────────────────────────┬────────────────────────────────────┘
+└────────────────────────────────────┬────────────────────────────────┘
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│           Native Bridge (UBT-Compiled Standalone Program)            │
-│  - LiveLinkBridge singleton                                          │
-│  - FLiveLinkMessageBusSource management                              │
-│  - Subject registration/updates                                      │
-│  - Thread-safe operations (FCriticalSection)                         │
+│           Native Bridge (UBT-Compiled Standalone Program)           │
+│  **DLL Hosted in Simio.exe - Critical Lifecycle Constraints**       │
+│  - Static initialization flag (bGEngineLoopInitialized)             │
+│  - GEngineLoop.PreInit (first run only, 21ms)                       │
+│  - Module loading (UdpMessaging, Plugins)                           │
+│  - LiveLinkBridge singleton                                         │
+│  - ILiveLinkProvider management                                     │
+│  - Subject registration/updates                                     │
+│  - Thread-safe operations (FCriticalSection)                        │
+│  - DLL-safe shutdown (NO AppExit - would kill Simio!)               │
 └────────────────────────────────┬────────────────────────────────────┘
                                  │
-                                 ▼ (LiveLink Message Bus - UDP)
+                                 ▼ (LiveLink Message Bus - UDP 230.0.0.1:6666)
 ┌─────────────────────────────────────────────────────────────────────┐
-│                  Unreal Engine LiveLink System                       │
-│  - LiveLink window (source visibility)                               │
-│  - Actor binding (transform subjects)                                │
-│  - Blueprint access (data subjects via Get LiveLink Property Value)  │
+│                  Unreal Engine LiveLink System                      │
+│  - LiveLink window (source visibility)                              │
+│  - Actor binding (transform subjects)                               │
+│  - Blueprint access (data subjects via Get LiveLink Property Value) │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -196,8 +251,8 @@ Expected additional DLLs (50-200MB total):
 3. `LiveLinkObjectUpdater.UpdateTransform()` marshals to `ULL_Transform` struct
 4. P/Invoke call: `ULL_UpdateObject(name, transform)`
 5. Native bridge constructs Unreal `FTransform` (direct pass-through expected)
-6. LiveLink Message Bus source submits `FLiveLinkFrameDataStruct`
-7. Frame transmitted over UDP to Unreal Editor (separate process)
+6. ILiveLinkProvider sends frame via Message Bus (UDP multicast)
+7. Frame transmitted over network to Unreal Editor (separate process)
 8. Unreal Editor displays object in LiveLink window, bound actors update
 
 ### Data Streaming Pipeline
@@ -232,12 +287,95 @@ Expected additional DLLs (50-200MB total):
 - **No UBT for Consumer:** Third-party apps use standard P/Invoke (no Unreal dependency)
 - **Production Proven:** Reference project validates this approach
 - **Protocol Stability:** Message Bus protocol stable across UE versions
-- **Network Capable:** Can stream to remote Unreal instances (UDP)
+- **Network Capable:** Can stream to remote Unreal instances (UDP multicast)
+- **Binary UE Compatible:** Works with UE Binary installations, no source required on target machine
 
 **Trade-offs:**
 - **Extra Memory Copy:** One additional copy per frame (proven acceptable in reference)
 - **Deployment Size:** Requires Unreal DLLs (50-200MB vs ~1MB for pure native)
 - **Connection Dependency:** Requires Unreal Editor running with LiveLink Message Bus Source active
+
+### DLL Hosted Context vs Standalone Program (Critical)
+
+**Architectural Constraint:** We are a DLL loaded in Simio.exe, NOT a standalone executable
+
+**Key Implications:**
+
+1. **Shutdown Behavior:**
+   - **Reference:** Calls `AppExit()`, `RequestEngineExit()` - acceptable for standalone program
+   - **Ours:** CANNOT call these - would terminate Simio process
+   - **Solution:** Minimal shutdown (reset LiveLink provider, keep modules loaded)
+
+2. **Multi-Initialization Support:**
+   - **Reference:** Single initialization per process lifetime
+   - **Ours:** Multiple simulation runs in same Simio session
+   - **Solution:** Static flag `bGEngineLoopInitialized` prevents double-init crash
+   - **Performance:** First init 21ms, subsequent 1ms (21x faster)
+
+3. **Module Lifecycle:**
+   - **Reference:** Unload modules at shutdown
+   - **Ours:** Keep modules loaded for restart stability
+   - **Benefit:** Subsequent initializations nearly instant
+
+**Design Decision Rationale:**
+- Reference implementation provides 80% of architecture
+- Remaining 20% requires understanding DLL vs Program context
+- Static initialization flag is the key enabler for stable restart
+
+### GEngineLoop Initialization Pattern (From Reference)
+
+**Why Needed:** Unreal Engine requires core initialization before using any UE APIs
+
+**Pattern:**
+```cpp
+void Initialize() {
+    if (bGEngineLoopInitialized) {
+        return; // Already initialized - skip (DLL restart scenario)
+    }
+    
+    // Core initialization
+    GEngineLoop.PreInit(TEXT("UnrealLiveLinkNative -Messaging"));
+    GetTargetPlatformManager();
+    ProcessNewlyLoadedUObjects();
+    
+    // Module system startup
+    FModuleManager::Get().StartProcessingNewlyLoadedObjects();
+    FModuleManager::Get().LoadModule(TEXT("UdpMessaging"));
+    
+    // Plugin loading
+    IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PreDefault);
+    
+    bGEngineLoopInitialized = true; // Mark complete
+}
+```
+
+**Critical Components:**
+- **GEngineLoop.PreInit:** Initializes core subsystems (20ms typical)
+- **Target Platform Manager:** Required for module loading
+- **Module Manager:** Loads UdpMessaging for Message Bus transport
+- **Plugin Manager:** Enables plugin-based features
+- **Static Flag:** Prevents fatal "Delayed Startup phase already run" crash on restart
+
+**Performance Impact:**
+- First call: ~21ms (one-time cost per Simio session)
+- Subsequent calls: ~1ms (flag check only)
+- Acceptable for simulation startup overhead
+
+### ILiveLinkProvider API (Working Implementation)
+
+**Actual API Used:**
+```cpp
+TSharedPtr<ILiveLinkProvider> LiveLinkProvider = 
+    ILiveLinkProvider::CreateLiveLinkProvider(ProviderName);
+```
+
+**Why This API:**
+- Validated by reference implementation
+- Handles Message Bus creation internally
+- Thread-safe, cross-version compatible
+- Requires UDP multicast (230.0.0.1:6666 default)
+
+**Alternative Considered:** `FLiveLinkMessageBusSource` (plugin-specific header, not accessible to Program targets)
 
 ### Coordinate System Conversion
 
@@ -312,7 +450,7 @@ Expected additional DLLs (50-200MB total):
 - `FCriticalSection` protects LiveLink API access
 - Subject registry access serialized (Unreal APIs not thread-safe)
 - C API functions may be called from multiple threads (protect shared state)
-- LiveLink provides `_AnyThread` function variants for thread-safe operations
+- ILiveLinkProvider thread-safe by design
 
 ---
 
@@ -440,8 +578,13 @@ void ULL_RemoveDataSubject(const char* subjectName);
 **Memory Footprint:**
 - Target: <100MB for typical simulation (50 objects, 10 data subjects)
 - Managed layer: ~10MB base + ~1KB per object (including updater, buffers)
-- Native layer: ~20MB base (Unreal Engine LiveLink modules overhead)
+- Native layer: ~28.5MB DLL + stable runtime overhead
 - Deployment: 50-200MB total (including Unreal DLL dependencies)
+
+**Initialization Performance:**
+- First initialization: ~21ms (GEngineLoop.PreInit + module loading)
+- Subsequent initialization: ~1ms (static flag bypass)
+- 21x faster restart performance (critical for Simio multi-run scenarios)
 
 **Connection Health Check Caching:**
 - Cache duration: 1 second
@@ -457,10 +600,10 @@ void ULL_RemoveDataSubject(const char* subjectName);
 ```
 %PROGRAMFILES%\Simio LLC\Simio\UserExtensions\SimioUnrealEngineLiveLinkConnector\
 ├── SimioUnrealEngineLiveLinkConnector.dll  (managed layer)
-├── UnrealLiveLink.Native.dll               (native layer)
+├── UnrealLiveLink.Native.dll               (native layer, 28.5 MB)
 ├── System.Drawing.Common.dll               (managed dependency)
 └── [Unreal Engine Dependencies - 50-200MB total:]
-    ├── tbbmalloc.dll
+    ├── tbbmalloc.dll                       *** CRITICAL - not in reference docs ***
     ├── UnrealEditor-Core.dll
     ├── UnrealEditor-CoreUObject.dll
     ├── UnrealEditor-LiveLink.dll
@@ -477,7 +620,8 @@ void ULL_RemoveDataSubject(const char* subjectName);
 4. Element.Initialize() triggers first P/Invoke call
 5. .NET Framework loads `UnrealLiveLink.Native.dll` from same directory
 6. Native DLL dynamically loads Unreal dependencies (must be in same folder)
-7. Native DLL initializes LiveLink Message Bus source
+7. Native DLL initializes via GEngineLoop.PreInit (first time only)
+8. Subsequent runs bypass GEngineLoop initialization (static flag optimization)
 
 **Dependency Management (Critical):**
 > "copying just the dll may not be enough. There may be other dependencies that need to be copied such as the tbbmalloc.dll" - Reference Project Warning
@@ -486,6 +630,7 @@ void ULL_RemoveDataSubject(const char* subjectName);
 - Test deployment on machine without Unreal Engine installed
 - All dependencies must be in same folder as native DLL
 - No PATH search - .NET loads from managed DLL location
+- **tbbmalloc.dll is REQUIRED** - discovered through testing, not documented in reference
 
 ---
 
@@ -500,6 +645,7 @@ void ULL_RemoveDataSubject(const char* subjectName);
 - Supported: 5.1+
 - Tested: 5.3, 5.4, 5.6
 - LiveLink Message Bus Protocol: Stable since UE 4.26
+- Binary installations: Work with deployed DLL (no source required)
 - Note: "The Unreal Live Link Message Bus line protocol doesn't change that often. As such, you will find that building the Unreal DLL will work for a number of Unreal versions." - Reference Project
 
 **.NET Framework:**
@@ -548,7 +694,8 @@ void ULL_RemoveDataSubject(const char* subjectName);
 
 **Key APIs:**
 - Simio Extensions API - IElementDefinition, IStepDefinition, IPropertyReader
-- Unreal LiveLink API - FLiveLinkMessageBusSource, ILiveLinkClient, FLiveLinkFrameDataStruct
+- Unreal Engine Core - GEngineLoop, FModuleManager, IPluginManager
+- Unreal LiveLink API - ILiveLinkProvider, Message Bus protocol
 - .NET P/Invoke - DllImport, marshaling, struct layout
 
 **Build Tools:**
@@ -566,7 +713,7 @@ void ULL_RemoveDataSubject(const char* subjectName);
 **Dependencies:**
 - System.Drawing.Common 6.0.0 (NuGet)
 - Simio API assemblies (from installation)
-- Unreal Engine LiveLink modules (for native implementation)
+- Unreal Engine modules (for native implementation)
 
 ---
 
@@ -593,13 +740,15 @@ Unit Tests (Coordinate, Utils)
 - **Property Workflow:** RegisterWithProperties → UpdateWithProperties
 - **Data Subjects:** RegisterDataSubject → UpdateDataSubject → RemoveDataSubject
 - **Error Handling:** Null pointers, invalid counts, disposed updaters
+- **Restart Scenarios:** Multiple Initialize/Shutdown cycles (validates static flag)
 
 **E2E Tests (Real Simio + Unreal):**
 - **Transform Streaming:** Objects appear and move in Unreal viewport
 - **Data Subject Streaming:** Blueprint reads property values correctly via Get LiveLink Property Value
 - **Performance:** 100 objects at 30 Hz sustained
 - **Connection Recovery:** Unreal restart, network interruption
-- **Message Bus:** Verify UDP communication (port 6666 default)
+- **Message Bus:** Verify UDP communication (multicast 230.0.0.1:6666)
+- **Multi-Run Stability:** Run simulation 10+ times in same Simio session (validates restart logic)
 
 **Mock vs Real:**
 - **Development:** Mock for rapid iteration (no Unreal Engine needed)
@@ -608,6 +757,110 @@ Unit Tests (Coordinate, Utils)
 - **Production:** Real DLL with dependencies deployed to end users
 
 [See TestAndBuildInstructions.md for test execution commands]
+
+---
+
+## Architecture Decision Records
+
+### ADR-1: Why Program Target (Not Plugin)?
+
+**Decision:** Build as UBT Program target, output as DLL  
+**Rationale:**  
+- Plugins require Unreal Editor at runtime
+- Programs work with binary UE installations (no source required on target)
+- Third-party integration pattern proven by reference implementation
+
+**Impact:**  
+- Simpler deployment (works with UE Binary)
+- No Unreal Editor dependency on end-user machines
+- Requires GEngineLoop initialization (handled via reference pattern)
+
+### ADR-2: Why Message Bus Protocol?
+
+**Decision:** Use ILiveLinkProvider with Message Bus (UDP multicast)  
+**Rationale:**  
+- Cross-process communication (Simio ≠ Unreal Editor)
+- Cross-version stability (protocol unchanged since UE 4.26)
+- Network-capable (can stream to remote Unreal instances)
+- Battle-tested API (reference implementation validation)
+
+**Impact:**  
+- Loose coupling between Simio and Unreal
+- UDP multicast (230.0.0.1:6666) requires network stack
+- Adds one memory copy per frame (acceptable overhead)
+
+### ADR-3: Why Static Initialization Flag?
+
+**Decision:** Add `bGEngineLoopInitialized` static flag  
+**Context:** Reference implementation assumes single-use (standalone program); we run as DLL with multiple simulation runs  
+**Problem:** Calling GEngineLoop.PreInit twice causes fatal "Delayed Startup phase already run" crash
+
+**Solution:**
+```cpp
+static bool bGEngineLoopInitialized = false;
+
+void ULL_Initialize() {
+    if (bGEngineLoopInitialized) {
+        return; // Skip initialization - already done
+    }
+    
+    GEngineLoop.PreInit(...);
+    // ... module loading ...
+    
+    bGEngineLoopInitialized = true;
+}
+```
+
+**Impact:**  
+- Enables stable simulation restart (critical for Simio)
+- 21x faster subsequent initialization (21ms → 1ms)
+- Requires keeping modules loaded at shutdown
+- Validated through integration tests
+
+### ADR-4: Why No AppExit in Shutdown?
+
+**Decision:** Do NOT call AppExit/RequestEngineExit in ULL_Shutdown()  
+**Context:** Reference implementation is standalone program; we are DLL in Simio.exe
+
+**Problem:** Calling AppExit terminates the host process (Simio crashes)
+
+**Solution:**
+```cpp
+void ULL_Shutdown() {
+    // Reset LiveLink provider
+    LiveLinkProvider.Reset();
+    
+    // Keep modules loaded (for restart)
+    // DO NOT call: AppExit(), RequestEngineExit(), UnloadModulesAtShutdown()
+}
+```
+
+**Impact:**  
+- Simio remains stable after shutdown
+- Modules stay loaded (enables fast restart)
+- LiveLink provider cleanup sufficient for resource management
+
+### ADR-5: Why ApplicationCore Module?
+
+**Decision:** Include ApplicationCore in PrivateDependencyModuleNames  
+**Context:** Program targets need FMemory_* symbols not provided by Core alone
+
+**Problem:** Linker errors for FMemory_Malloc, FMemory_Realloc, FMemory_Free
+
+**Solution:**
+```csharp
+PrivateDependencyModuleNames.AddRange(new string[] {
+    "Core",
+    "CoreUObject",
+    "ApplicationCore", // ← Provides FMemory_* for Program targets
+    // ...
+});
+```
+
+**Impact:**  
+- Clean compilation without linker errors
+- Minimal runtime overhead
+- Essential for Program target architecture
 
 ---
 
@@ -628,4 +881,4 @@ Unit Tests (Coordinate, Utils)
 
 **User Guides:** 
 - [SimioInstructions.md](SimioInstructions.md) - Simio deployment and usage
-- [UnrealSetup.md](UnrealSetup.md) - Unreal Editor LiveLink configuration
+- [UnrealInstructions.md](UnrealInstructions.md) - Unreal Editor LiveLink configuration

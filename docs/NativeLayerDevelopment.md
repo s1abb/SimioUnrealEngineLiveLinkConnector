@@ -5,11 +5,13 @@
 **Scope:** API contract, build procedures, implementation patterns, technical design  
 **Not Included:** Project status/phase tracking (see DevelopmentPlan.md)
 
-**Last Updated:** October 20, 2025
+**Last Updated:** October 21, 2025
 
 **Implementation Status:**
-- ✅ Sub-Phase 6.1-6.6: UBT setup, type definitions, C API layer, LiveLinkBridge singleton, LiveLink framework integration, and transform subject registration
+- ✅ Sub-Phase 6.1-6.6: UBT setup, type definitions, C API layer, LiveLinkBridge singleton, **GEngineLoop initialization**, LiveLink framework integration, and transform subject registration
 - 📋 Sub-Phase 6.7+: Additional properties, data subjects, optimization (planned)
+
+**Critical Context:** DLL hosted in Simio.exe, supports multiple initialization cycles with restart optimization
 
 ---
 
@@ -36,6 +38,30 @@ Simio (C# P/Invoke) → Native DLL (UBT-compiled) → LiveLink Message Bus → U
 - Reference handles: ~3,000+ floats @ 60Hz = ~180,000 values/sec
 - Our target: 100 objects @ 30Hz × 10 doubles = 30,000 values/sec
 - **Safety margin: 6x lighter than proven reference**
+
+---
+
+### Critical Adaptations for DLL Context
+
+**Reference Implementation:** Standalone executable (single-use)  
+**Our Implementation:** DLL hosted in Simio.exe (multi-use with restart)
+
+**Key Differences:**
+
+| Aspect | Reference | Ours |
+|--------|-----------|------|
+| **Context** | Standalone .exe | DLL in Simio.exe |
+| **Lifecycle** | Single init/shutdown | Multiple init/shutdown cycles |
+| **GEngineLoop** | PreInit once | PreInit once, cached via static flag |
+| **Shutdown** | AppExit() terminates process | NO AppExit - would kill Simio |
+| **Module unloading** | Unload at shutdown | Keep loaded for restart |
+| **Init timing** | ~20ms (irrelevant) | First: 21ms, Subsequent: 1ms |
+| **Restart support** | N/A | Critical - users run simulations repeatedly |
+
+**Architectural Enabler:** Static initialization flag `bGEngineLoopInitialized`
+- Prevents fatal "Delayed Startup phase already run" crash
+- Enables 21x faster subsequent initialization
+- Makes DLL practical for Simio multi-run scenarios
 
 ---
 
@@ -240,7 +266,7 @@ cd C:\repos\SimioUnrealEngineLiveLinkConnector
 5. Copies output to `lib\native\win-x64\`
 
 **Expected Output:**
-- `UnrealLiveLink.Native.dll` (29.7 MB)
+- `UnrealLiveLink.Native.dll` (28.5 MB)
 - `UnrealLiveLink.Native.pdb` (debug symbols)
 
 **Build Times:**
@@ -284,7 +310,7 @@ cd C:\UE\UE_5.6_Source
 
 **Location:** `src/Native/UnrealLiveLink.Native/UnrealLiveLinkNative.Target.cs`
 
-**WORKING Configuration (Sub-Phase 6.6):**
+**WORKING Configuration:**
 ```csharp
 using UnrealBuildTool;
 using System.Collections.Generic;
@@ -325,7 +351,7 @@ public class UnrealLiveLinkNativeTarget : TargetRules
 
 **Location:** `src/Native/UnrealLiveLink.Native/UnrealLiveLinkNative.Build.cs`
 
-**WORKING Configuration (Sub-Phase 6.6):**
+**WORKING Configuration:**
 ```csharp
 using UnrealBuildTool;
 
@@ -343,10 +369,14 @@ public class UnrealLiveLinkNative : ModuleRules
             "CoreUObject",                  // UObject system
             "ApplicationCore",              // CRITICAL: Provides minimal runtime without full engine
                                            // Contains FMemory_* symbols needed for Program targets
+            "Projects",                     // CRITICAL: Plugin loading system (for IPluginManager)
             "LiveLinkInterface",            // LiveLink API types
             "LiveLinkMessageBusFramework",  // Message Bus framework
             "UdpMessaging",                 // Network transport for LiveLink
         });
+        
+        // Required for GEngineLoop and module system access
+        PrivateIncludePaths.Add("Runtime/Launch/Public");
         
         bEnableExceptions = false;     // Unreal doesn't use exceptions
         bUseRTTI = false;              // No RTTI needed
@@ -356,13 +386,239 @@ public class UnrealLiveLinkNative : ModuleRules
 
 **Critical Notes:**
 - `ApplicationCore` module is ESSENTIAL - provides FMemory symbols and minimal runtime
+- `Projects` module is ESSENTIAL - provides IPluginManager for plugin loading
+- `PrivateIncludePaths` for Launch module - needed for GEngineLoop access
 - `PrivateDependencyModuleNames` instead of `PublicDependencyModuleNames` - cleaner separation
 - This configuration resolves the FMemory linker errors that occur without ApplicationCore
 
 **Why This Works:**
 1. **ApplicationCore** - Bridges the gap between Program targets and Engine features without requiring full engine compilation
-2. **Private Dependencies** - Keeps LiveLink dependencies internal, not exposed in public API
-3. **Minimal Set** - Only includes what's absolutely necessary (71 modules compiled)
+2. **Projects** - Enables plugin system for LiveLink plugins
+3. **Private Dependencies** - Keeps LiveLink dependencies internal, not exposed in public API
+4. **Minimal Set** - Only includes what's absolutely necessary (71 modules compiled)
+
+---
+
+## GEngineLoop Initialization (Critical)
+
+### Overview
+
+**What is GEngineLoop?**
+- Unreal Engine's core initialization system
+- Manages engine subsystems, module loading, plugin system
+- Required before using ANY Unreal APIs (including LiveLink)
+
+**Why We Need It:**
+- LiveLink uses UObject system, module system, plugin system
+- Cannot call ILiveLinkProvider::CreateLiveLinkProvider() without initialized engine
+- Reference implementation uses GEngineLoop - proven pattern
+
+**DLL Context Challenge:**
+- Reference: Single initialization per process lifetime (standalone .exe)
+- Ours: Multiple initializations per process lifetime (DLL in Simio.exe)
+- Problem: Calling GEngineLoop.PreInit() twice causes fatal crash
+- Solution: Static flag tracks initialization state
+
+---
+
+### Static Initialization Flag Pattern
+
+**The Critical Discovery:**
+```cpp
+// Global static flag - persists across DLL function calls
+static bool bGEngineLoopInitialized = false;
+
+int ULL_Initialize(const char* providerName) {
+    if (bGEngineLoopInitialized) {
+        // Already initialized - skip GEngineLoop initialization
+        // Native layer remains ready for LiveLink operations
+        UE_LOG(LogUnrealLiveLinkNative, Log, 
+               TEXT("ULL_Initialize: Already initialized, skipping GEngineLoop"));
+        return ULL_OK;  // Fast path: ~1ms
+    }
+    
+    // First initialization - full engine startup
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("ULL_Initialize: First initialization, starting GEngineLoop..."));
+    
+    // [GEngineLoop initialization code here]
+    
+    bGEngineLoopInitialized = true;  // Mark complete
+    return ULL_OK;  // Slow path: ~21ms
+}
+```
+
+**Why Static Flag Works:**
+- `static` keyword: Variable persists in DLL's data segment
+- Survives across ULL_Initialize() calls
+- Survives ULL_Shutdown() (intentional - keep engine alive)
+- Reset only when DLL unloads (Simio exits)
+
+**Performance Impact:**
+- First call: ~21ms (GEngineLoop.PreInit + module loading)
+- Subsequent calls: ~1ms (flag check only)
+- **21x speedup for simulation restart scenarios**
+
+---
+
+### Full Initialization Sequence
+
+**Complete ULL_Initialize Implementation:**
+```cpp
+int ULL_Initialize(const char* providerName) {
+    // Validate input
+    if (!providerName || providerName[0] == '\0') {
+        UE_LOG(LogUnrealLiveLinkNative, Error, 
+               TEXT("ULL_Initialize: Invalid providerName"));
+        return ULL_ERROR;
+    }
+    
+    // Check if already initialized (restart scenario)
+    if (bGEngineLoopInitialized) {
+        UE_LOG(LogUnrealLiveLinkNative, Log, 
+               TEXT("ULL_Initialize: Already initialized (restart detected)"));
+        
+        // LiveLinkBridge handles provider recreation if needed
+        FString ProviderFString = UTF8_TO_TCHAR(providerName);
+        bool success = FLiveLinkBridge::Get().Initialize(ProviderFString);
+        return success ? ULL_OK : ULL_ERROR;
+    }
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("========================================"));
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("ULL_Initialize: First initialization..."));
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("========================================"));
+    
+    // Step 1: Initialize GEngineLoop (core engine systems)
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Step 1: GEngineLoop.PreInit..."));
+    int32 Result = GEngineLoop.PreInit(TEXT("UnrealLiveLinkNative -Messaging"));
+    if (Result != 0) {
+        UE_LOG(LogUnrealLiveLinkNative, Error, 
+               TEXT("GEngineLoop.PreInit failed with code %d"), Result);
+        return ULL_ERROR;
+    }
+    
+    // Step 2: Initialize target platform manager (required for modules)
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Step 2: GetTargetPlatformManager..."));
+    GetTargetPlatformManager();
+    
+    // Step 3: Process newly loaded UObjects
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Step 3: ProcessNewlyLoadedUObjects..."));
+    ProcessNewlyLoadedUObjects();
+    
+    // Step 4: Start module processing
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Step 4: StartProcessingNewlyLoadedObjects..."));
+    FModuleManager::Get().StartProcessingNewlyLoadedObjects();
+    
+    // Step 5: Load UdpMessaging module (required for LiveLink Message Bus)
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Step 5: Loading UdpMessaging module..."));
+    FModuleManager::Get().LoadModule(TEXT("UdpMessaging"));
+    
+    // Step 6: Load enabled plugins (required for LiveLink plugins)
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Step 6: Loading enabled plugins..."));
+    IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PreDefault);
+    
+    // Mark initialization complete
+    bGEngineLoopInitialized = true;
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("========================================"));
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("GEngineLoop initialization complete!"));
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("========================================"));
+    
+    // Step 7: Initialize LiveLink provider
+    FString ProviderFString = UTF8_TO_TCHAR(providerName);
+    bool success = FLiveLinkBridge::Get().Initialize(ProviderFString);
+    
+    return success ? ULL_OK : ULL_ERROR;
+}
+```
+
+**Required Includes:**
+```cpp
+#include "RequiredProgramMainCPPInclude.h"  // For GEngineLoop
+#include "Modules/ModuleManager.h"          // For FModuleManager
+#include "Interfaces/IPluginManager.h"      // For IPluginManager
+```
+
+---
+
+### Shutdown Implementation (DLL-Safe)
+
+**Critical: Do NOT Call AppExit!**
+```cpp
+void ULL_Shutdown() {
+    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("ULL_Shutdown: Starting shutdown..."));
+    
+    // Shutdown LiveLink provider
+    FLiveLinkBridge::Get().Shutdown();
+    
+    // CRITICAL: Do NOT call these functions in DLL context!
+    // These terminate the host process (Simio would crash)
+    //
+    // DO NOT CALL:
+    // - RequestEngineExit(TEXT("ULL_Shutdown"))
+    // - FEngineLoop::AppPreExit()
+    // - FModuleManager::Get().UnloadModulesAtShutdown()
+    // - FEngineLoop::AppExit()
+    
+    // Keep GEngineLoop initialized (bGEngineLoopInitialized stays true)
+    // Keep modules loaded (enables fast restart)
+    // Native layer ready for next ULL_Initialize() call
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("ULL_Shutdown: Complete (modules kept loaded for restart)"));
+}
+```
+
+**Why This Approach:**
+1. **DLL Context:** We're loaded in Simio.exe, not standalone
+2. **AppExit() terminates process:** Would crash Simio
+3. **Module unloading unnecessary:** They'll be reused on restart
+4. **Performance benefit:** Subsequent init 21x faster (1ms vs 21ms)
+
+**Reference Implementation Difference:**
+- Reference: Standalone .exe, AppExit() acceptable
+- Ours: DLL in host process, AppExit() fatal
+
+---
+
+### Required Module Dependencies for GEngineLoop
+
+**From Build.cs (Updated):**
+```csharp
+PrivateDependencyModuleNames.AddRange(new string[] 
+{
+    "Core",                         // GEngineLoop, basic types
+    "CoreUObject",                  // UObject system
+    "ApplicationCore",              // FMemory_* symbols
+    "Projects",                     // IPluginManager (for Step 6)
+    "LiveLinkInterface",            // LiveLink API
+    "LiveLinkMessageBusFramework",  // Message Bus
+    "UdpMessaging",                 // UDP transport (loaded at runtime in Step 5)
+});
+
+PrivateIncludePaths.Add("Runtime/Launch/Public");  // GEngineLoop access
+```
+
+**Why Each Module:**
+- **Core**: GEngineLoop, FModuleManager, basic Unreal types
+- **CoreUObject**: UObject system (required by LiveLink)
+- **ApplicationCore**: FMemory_* functions (required by Program targets)
+- **Projects**: IPluginManager (plugin loading in Step 6)
+- **LiveLinkInterface**: ILiveLinkProvider and related APIs
+- **LiveLinkMessageBusFramework**: Message Bus infrastructure
+- **UdpMessaging**: Network transport (dynamically loaded in initialization)
 
 ---
 
@@ -506,13 +762,13 @@ struct FSubjectInfo {
 };
 ```
 
-**Header (LiveLinkBridge.h):**
+**Header (LiveLinkBridge.h) - UPDATED:**
 ```cpp
 class FLiveLinkBridge {
 public:
     static FLiveLinkBridge& Get();  // Meyer's singleton
     
-    // Lifecycle (idempotent Initialize)
+    // Lifecycle (idempotent Initialize, DLL-safe Shutdown)
     bool Initialize(const FString& ProviderName);
     void Shutdown();
     bool IsInitialized() const { return bInitialized; }
@@ -542,37 +798,103 @@ private:
     
     bool bInitialized = false;
     FString ProviderName;
-    FGuid LiveLinkSourceGuid;           // Source identifier (Sub-Phase 6.6)
-    bool bLiveLinkSourceCreated = false; // Track if source created (Sub-Phase 6.6)
+    TSharedPtr<ILiveLinkProvider> LiveLinkProvider;  // Created via ILiveLinkProvider::CreateLiveLinkProvider
     
     TMap<FName, FSubjectInfo> TransformSubjects;  // Property tracking
     TMap<FName, FSubjectInfo> DataSubjects;       // Property tracking
     TMap<FString, FName> NameCache;               // UTF8 string → FName cache
     
     mutable FCriticalSection CriticalSection;     // Thread safety
-    
-    // Helper methods (Sub-Phase 6.6)
-    void EnsureLiveLinkSource();  // On-demand source creation
 };
 ```
 
-**Usage in C API:**
+**Initialization Implementation (LiveLinkBridge.cpp):**
 ```cpp
-extern "C" {
-    __declspec(dllexport) int ULL_Initialize(const char* providerName) {
-        if (!providerName || providerName[0] == '\0') {
-            UE_LOG(LogUnrealLiveLinkNative, Error, TEXT("ULL_Initialize: Invalid providerName"));
-            return ULL_ERROR;
-        }
+bool FLiveLinkBridge::Initialize(const FString& InProviderName) {
+    FScopeLock Lock(&CriticalSection);
+    
+    if (bInitialized) {
+        UE_LOG(LogUnrealLiveLinkNative, Warning, 
+               TEXT("Initialize: Already initialized with provider '%s'"), 
+               *ProviderName);
         
-        FString ProviderFString = UTF8_TO_TCHAR(providerName);
-        bool success = FLiveLinkBridge::Get().Initialize(ProviderFString);
-        return success ? ULL_OK : ULL_ERROR;
+        // Check if provider name changed
+        if (ProviderName != InProviderName) {
+            UE_LOG(LogUnrealLiveLinkNative, Log, 
+                   TEXT("Initialize: Provider name changed from '%s' to '%s', recreating..."),
+                   *ProviderName, *InProviderName);
+            
+            // Reset and recreate with new name
+            LiveLinkProvider.Reset();
+            bInitialized = false;
+            ProviderName = InProviderName;
+        } else {
+            // Same provider name - reuse existing provider
+            return true;
+        }
+    } else {
+        ProviderName = InProviderName;
     }
     
-    __declspec(dllexport) int ULL_IsConnected() {
-        return FLiveLinkBridge::Get().GetConnectionStatus();
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("Initialize: Creating LiveLink provider '%s'..."), 
+           *ProviderName);
+    
+    // Create LiveLink provider (uses Message Bus internally)
+    LiveLinkProvider = ILiveLinkProvider::CreateLiveLinkProvider(ProviderName);
+    
+    if (!LiveLinkProvider.IsValid()) {
+        UE_LOG(LogUnrealLiveLinkNative, Error, 
+               TEXT("Initialize: Failed to create LiveLink provider"));
+        return false;
     }
+    
+    bInitialized = true;
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("✅ Initialize: LiveLink provider created successfully"));
+    
+    return true;
+}
+```
+
+**Shutdown Implementation (DLL-Safe):**
+```cpp
+void FLiveLinkBridge::Shutdown() {
+    FScopeLock Lock(&CriticalSection);
+    
+    if (!bInitialized) {
+        UE_LOG(LogUnrealLiveLinkNative, Warning, TEXT("Shutdown: Not initialized"));
+        return;
+    }
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Cleaning up..."));
+    
+    // Remove all subjects
+    for (const auto& Pair : TransformSubjects) {
+        LiveLinkProvider->RemoveSubject(Pair.Key);
+    }
+    TransformSubjects.Empty();
+    
+    for (const auto& Pair : DataSubjects) {
+        LiveLinkProvider->RemoveSubject(Pair.Key);
+    }
+    DataSubjects.Empty();
+    
+    // Clear name cache
+    NameCache.Empty();
+    
+    // Reset provider (releases Message Bus connection)
+    LiveLinkProvider.Reset();
+    
+    ProviderName.Empty();
+    bInitialized = false;
+    
+    // NOTE: GEngineLoop and modules stay initialized (bGEngineLoopInitialized stays true)
+    // This enables fast restart (1ms vs 21ms)
+    
+    UE_LOG(LogUnrealLiveLinkNative, Log, 
+           TEXT("✅ Shutdown: Complete (engine kept alive for restart)"));
 }
 ```
 
@@ -595,7 +917,7 @@ void FLiveLinkBridge::SomeMethod() {
 **Critical Sections:**
 - All public methods in FLiveLinkBridge
 - Access to TransformSubjects and DataSubjects maps
-- LiveLink API calls (use `_AnyThread` variants when available)
+- LiveLink API calls (ILiveLinkProvider methods are thread-safe)
 
 ---
 
@@ -660,158 +982,40 @@ extern "C" {
 
 ## LiveLink Integration
 
-### Custom LiveLink Source (Sub-Phase 6.6)
+### ILiveLinkProvider API (Working Implementation)
 
 **Status:** ✅ IMPLEMENTED
 
-**Purpose:** Minimal ILiveLinkSource implementation that avoids plugin header dependencies
+**Purpose:** Create LiveLink provider that communicates via Message Bus
 
-**Implementation (LiveLinkBridge.cpp):**
+**API Usage:**
 ```cpp
-// Custom LiveLink source - minimal implementation
-// Avoids dependency on FLiveLinkMessageBusSource (plugin-specific header)
-class FSimioLiveLinkSource : public ILiveLinkSource
-{
-public:
-    FSimioLiveLinkSource(const FText& InSourceType, const FText& InSourceMachineName)
-        : SourceType(InSourceType)
-        , SourceMachineName(InSourceMachineName)
-    {
-    }
-
-    // ILiveLinkSource interface
-    virtual void ReceiveClient(ILiveLinkClient* InClient, FGuid InSourceGuid) override
-    {
-        Client = InClient;
-        SourceGuid = InSourceGuid;
-    }
-
-    virtual bool IsSourceStillValid() const override { return true; }
-    
-    virtual bool RequestSourceShutdown() override { return true; }
-    
-    virtual FText GetSourceType() const override { return SourceType; }
-    
-    virtual FText GetSourceMachineName() const override { return SourceMachineName; }
-    
-    virtual FText GetSourceStatus() const override 
-    { 
-        return FText::FromString(TEXT("Active")); 
-    }
-
-private:
-    FText SourceType;
-    FText SourceMachineName;
-    ILiveLinkClient* Client = nullptr;
-    FGuid SourceGuid;
-};
+// In FLiveLinkBridge::Initialize()
+TSharedPtr<ILiveLinkProvider> LiveLinkProvider = 
+    ILiveLinkProvider::CreateLiveLinkProvider(ProviderName);
 ```
 
-**Why Custom Source:**
-- Plugin headers (like `FLiveLinkMessageBusSource`) not accessible to Program targets
-- Minimal implementation provides all required functionality
-- Validated by 25/25 integration tests passing
+**Why This API:**
+- Validated by reference implementation
+- Handles Message Bus creation internally (UDP multicast 230.0.0.1:6666)
+- Thread-safe by design
+- Cross-version compatible (stable since UE 4.26)
+- No plugin-specific headers required (works in Program targets)
+
+**Required Include:**
+```cpp
+#include "ILiveLinkProvider.h"
+```
+
+**Alternative (NOT Used):** `FLiveLinkMessageBusSource` - plugin-specific header, not accessible to Program targets
 
 ---
 
-### LiveLink Source Creation (Sub-Phase 6.6)
+### Transform Subject Registration
 
 **Status:** ✅ IMPLEMENTED
 
-**On-Demand Source Creation:**
-```cpp
-void FLiveLinkBridge::EnsureLiveLinkSource()
-{
-    FScopeLock Lock(&CriticalSection);
-    
-    if (bLiveLinkSourceCreated)
-    {
-        return;  // Already created
-    }
-    
-    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("EnsureLiveLinkSource: Creating LiveLink source..."));
-    
-    // Get LiveLink client via modular features
-    ILiveLinkClient* Client = &IModularFeatures::Get()
-        .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-    
-    if (!Client)
-    {
-        UE_LOG(LogUnrealLiveLinkNative, Error, 
-               TEXT("❌ EnsureLiveLinkSource: Failed to get ILiveLinkClient"));
-        return;
-    }
-    
-    // Create custom LiveLink source
-    TSharedPtr<ILiveLinkSource> Source = MakeShared<FSimioLiveLinkSource>(
-        FText::FromString(TEXT("Simio")),
-        FText::FromString(ProviderName));
-    
-    // Add source to LiveLink
-    LiveLinkSourceGuid = Client->AddSource(Source);
-    bLiveLinkSourceCreated = true;
-    
-    UE_LOG(LogUnrealLiveLinkNative, Log, 
-           TEXT("✅ EnsureLiveLinkSource: LiveLink source created successfully (GUID: %s)"),
-           *LiveLinkSourceGuid.ToString());
-}
-```
-
-**Required Includes:**
-```cpp
-#include "ILiveLinkClient.h"
-#include "Features/IModularFeatures.h"
-#include "LiveLinkTypes.h"
-```
-
-**Shutdown Update:**
-```cpp
-void FLiveLinkBridge::Shutdown()
-{
-    FScopeLock Lock(&CriticalSection);
-    
-    if (!bInitialized)
-    {
-        UE_LOG(LogUnrealLiveLinkNative, Warning, TEXT("Shutdown: Not initialized"));
-        return;
-    }
-    
-    // Remove LiveLink source if created
-    if (bLiveLinkSourceCreated && LiveLinkSourceGuid.IsValid())
-    {
-        ILiveLinkClient* Client = &IModularFeatures::Get()
-            .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-        
-        if (Client)
-        {
-            Client->RemoveSource(LiveLinkSourceGuid);
-            UE_LOG(LogUnrealLiveLinkNative, Log, 
-                   TEXT("✅ Shutdown: Removed LiveLink source (GUID: %s)"),
-                   *LiveLinkSourceGuid.ToString());
-        }
-        
-        LiveLinkSourceGuid.Invalidate();
-        bLiveLinkSourceCreated = false;
-    }
-    
-    // Clear all state
-    TransformSubjects.Empty();
-    DataSubjects.Empty();
-    NameCache.Empty();
-    ProviderName.Empty();
-    bInitialized = false;
-    
-    UE_LOG(LogUnrealLiveLinkNative, Log, TEXT("Shutdown: Complete"));
-}
-```
-
----
-
-### Transform Subject Registration (Sub-Phase 6.6)
-
-**Status:** ✅ IMPLEMENTED
-
-**Purpose:** Create subject with ULiveLinkTransformRole
+**Purpose:** Create subject with transform role
 
 **Implementation:**
 ```cpp
@@ -819,42 +1023,20 @@ void FLiveLinkBridge::RegisterTransformSubject(const FName& SubjectName)
 {
     FScopeLock Lock(&CriticalSection);
     
-    if (!bInitialized)
+    if (!bInitialized || !LiveLinkProvider.IsValid())
     {
         UE_LOG(LogUnrealLiveLinkNative, Warning, 
                TEXT("RegisterTransformSubject: Not initialized"));
         return;
     }
     
-    // Ensure LiveLink source exists
-    EnsureLiveLinkSource();
-    
-    if (!bLiveLinkSourceCreated || !LiveLinkSourceGuid.IsValid())
-    {
-        UE_LOG(LogUnrealLiveLinkNative, Error, 
-               TEXT("RegisterTransformSubject: LiveLink source not created"));
-        return;
-    }
-    
-    // Get LiveLink client
-    ILiveLinkClient* Client = &IModularFeatures::Get()
-        .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-    
-    if (!Client)
-    {
-        UE_LOG(LogUnrealLiveLinkNative, Error, 
-               TEXT("RegisterTransformSubject: Failed to get ILiveLinkClient"));
-        return;
-    }
-    
-    // Create static data (structure definition - sent once)
+    // Create static data (structure definition - sent once per subject)
     FLiveLinkStaticDataStruct StaticData(FLiveLinkTransformStaticData::StaticStruct());
     FLiveLinkTransformStaticData* TransformStaticData = StaticData.Cast<FLiveLinkTransformStaticData>();
     
     // Push to LiveLink
-    FLiveLinkSubjectKey SubjectKey(LiveLinkSourceGuid, SubjectName);
-    Client->PushSubjectStaticData_AnyThread(
-        SubjectKey,
+    LiveLinkProvider->UpdateSubjectStaticData(
+        SubjectName,
         ULiveLinkTransformRole::StaticClass(),
         MoveTemp(StaticData));
     
@@ -871,11 +1053,11 @@ void FLiveLinkBridge::RegisterTransformSubject(const FName& SubjectName)
 - `FLiveLinkStaticDataStruct` - Container for static data (sent once per subject)
 - `FLiveLinkTransformStaticData` - Static data for transform subjects
 - `ULiveLinkTransformRole::StaticClass()` - Identifies this as a transform subject
-- Use `_AnyThread` variants for thread safety
+- `UpdateSubjectStaticData` is thread-safe
 
 ---
 
-### Frame Data Submission (Sub-Phase 6.6)
+### Frame Data Submission
 
 **Status:** ✅ IMPLEMENTED
 
@@ -887,7 +1069,7 @@ void FLiveLinkBridge::UpdateTransformSubject(const FName& SubjectName, const FTr
 {
     FScopeLock Lock(&CriticalSection);
     
-    if (!bInitialized || !bLiveLinkSourceCreated)
+    if (!bInitialized || !LiveLinkProvider.IsValid())
     {
         return;
     }
@@ -900,15 +1082,6 @@ void FLiveLinkBridge::UpdateTransformSubject(const FName& SubjectName, const FTr
         RegisterTransformSubject(SubjectName);
     }
     
-    // Get LiveLink client
-    ILiveLinkClient* Client = &IModularFeatures::Get()
-        .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-    
-    if (!Client)
-    {
-        return;
-    }
-    
     // Create frame data (per-frame update)
     FLiveLinkFrameDataStruct FrameData(FLiveLinkTransformFrameData::StaticStruct());
     FLiveLinkTransformFrameData* TransformFrameData = FrameData.Cast<FLiveLinkTransformFrameData>();
@@ -916,9 +1089,8 @@ void FLiveLinkBridge::UpdateTransformSubject(const FName& SubjectName, const FTr
     TransformFrameData->Transform = Transform;
     TransformFrameData->WorldTime = FLiveLinkWorldTime(FPlatformTime::Seconds());
     
-    // Push frame
-    FLiveLinkSubjectKey SubjectKey(LiveLinkSourceGuid, SubjectName);
-    Client->PushSubjectFrameData_AnyThread(SubjectKey, MoveTemp(FrameData));
+    // Push frame (thread-safe)
+    LiveLinkProvider->UpdateSubjectFrameData(SubjectName, MoveTemp(FrameData));
     
     // Throttled logging (every 60th call)
     static int32 UpdateCount = 0;
@@ -930,7 +1102,7 @@ void FLiveLinkBridge::UpdateTransformSubject(const FName& SubjectName, const FTr
 }
 ```
 
-**Performance Note:** `_AnyThread` functions are thread-safe and optimized for high-frequency calls
+**Performance Note:** `UpdateSubjectFrameData` is thread-safe and optimized for high-frequency calls
 
 ---
 
@@ -948,25 +1120,15 @@ void FLiveLinkBridge::RegisterTransformSubjectWithProperties(
 {
     FScopeLock Lock(&CriticalSection);
     
-    if (!bInitialized) return;
-    
-    EnsureLiveLinkSource();
-    
-    if (!bLiveLinkSourceCreated) return;
-    
-    ILiveLinkClient* Client = &IModularFeatures::Get()
-        .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-    
-    if (!Client) return;
+    if (!bInitialized || !LiveLinkProvider.IsValid()) return;
     
     // Create static data with properties
     FLiveLinkStaticDataStruct StaticData(FLiveLinkTransformStaticData::StaticStruct());
     FLiveLinkTransformStaticData* TransformStaticData = StaticData.Cast<FLiveLinkTransformStaticData>();
     TransformStaticData->PropertyNames = PropertyNames;
     
-    FLiveLinkSubjectKey SubjectKey(LiveLinkSourceGuid, SubjectName);
-    Client->PushSubjectStaticData_AnyThread(
-        SubjectKey,
+    LiveLinkProvider->UpdateSubjectStaticData(
+        SubjectName,
         ULiveLinkTransformRole::StaticClass(),
         MoveTemp(StaticData));
     
@@ -998,11 +1160,6 @@ void FLiveLinkBridge::UpdateTransformSubjectWithProperties(
         }
     }
     
-    ILiveLinkClient* Client = &IModularFeatures::Get()
-        .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-    
-    if (!Client) return;
-    
     // Create frame with properties
     FLiveLinkFrameDataStruct FrameData(FLiveLinkTransformFrameData::StaticStruct());
     FLiveLinkTransformFrameData* TransformFrameData = FrameData.Cast<FLiveLinkTransformFrameData>();
@@ -1010,8 +1167,7 @@ void FLiveLinkBridge::UpdateTransformSubjectWithProperties(
     TransformFrameData->PropertyValues = PropertyValues;
     TransformFrameData->WorldTime = FLiveLinkWorldTime(FPlatformTime::Seconds());
     
-    FLiveLinkSubjectKey SubjectKey(LiveLinkSourceGuid, SubjectName);
-    Client->PushSubjectFrameData_AnyThread(SubjectKey, MoveTemp(FrameData));
+    LiveLinkProvider->UpdateSubjectFrameData(SubjectName, MoveTemp(FrameData));
 }
 ```
 
@@ -1036,12 +1192,7 @@ void FLiveLinkBridge::UpdateDataSubject(
 {
     FScopeLock Lock(&CriticalSection);
     
-    if (!bInitialized || !bLiveLinkSourceCreated) return;
-    
-    ILiveLinkClient* Client = &IModularFeatures::Get()
-        .GetModularFeature<ILiveLinkClient>(ILiveLinkClient::ModularFeatureName);
-    
-    if (!Client) return;
+    if (!bInitialized || !LiveLinkProvider.IsValid()) return;
     
     // Create frame with properties only
     FLiveLinkFrameDataStruct FrameData(FLiveLinkBaseFrameData::StaticStruct());
@@ -1051,8 +1202,7 @@ void FLiveLinkBridge::UpdateDataSubject(
     BaseFrameData->WorldTime = FLiveLinkWorldTime(FPlatformTime::Seconds());
     
     // Push frame
-    FLiveLinkSubjectKey SubjectKey(LiveLinkSourceGuid, SubjectName);
-    Client->PushSubjectFrameData_AnyThread(SubjectKey, MoveTemp(FrameData));
+    LiveLinkProvider->UpdateSubjectFrameData(SubjectName, MoveTemp(FrameData));
 }
 ```
 
@@ -1138,7 +1288,7 @@ Dependencies.exe C:\UE\UE_5.6_Source\Engine\Binaries\Win64\UnrealLiveLink.Native
 ```
 
 **Expected Dependencies:**
-- tbbmalloc.dll (Intel Threading Building Blocks)
+- tbbmalloc.dll (Intel Threading Building Blocks) - **CRITICAL, not in reference docs**
 - UnrealEditor-Core.dll
 - UnrealEditor-CoreUObject.dll
 - UnrealEditor-ApplicationCore.dll
@@ -1149,6 +1299,41 @@ Dependencies.exe C:\UE\UE_5.6_Source\Engine\Binaries\Win64\UnrealLiveLink.Native
 
 **Package Size:** Expect 50-200MB total (including all dependencies)
 
+### Our Approach: PATH-Based Dependency Resolution
+Instead of packaging hundreds of megabytes of Unreal Engine DLLs with our connector, we solved the dependency problem by adding the UE binaries directory to PATH at runtime:
+
+What We Do:
+
+```ps1
+# In RunIntegrationTests.ps1 (and should be in DeployToSimio.ps1)
+$UEBinPath = "C:\UE\UE_5.6_Source\Engine\Binaries\Win64"
+$env:PATH = "$UEBinPath;$env:PATH"
+```
+
+Why This Works:
+
+Windows DLL Search Order: When loading a DLL, Windows searches:
+- Application directory
+- System directory
+- Directories in PATH ← We leverage this
+Our 28.5 MB DLL depends on UE DLLs (Core, CoreUObject, LiveLink, etc.)
+At runtime, Windows finds those dependencies in the UE installation via PATH
+No redistribution needed - we ship only our 28.5 MB DLL
+
+Deployment Requirements:
+- User must have Unreal Engine 5.6 installed (development environment requirement)
+- Installation script adds Win64 to system PATH
+- OR Simio launches with modified PATH (programmatic approach)
+
+Benefits:
+✅ Tiny package: 28.5 MB instead of 50-200 MB
+✅ No version conflicts: Uses exact UE version from user's installation
+✅ Simpler updates: Update UE separately from our connector
+✅ Legal compliance: No redistribution of Epic's binaries
+
+Trade-off:
+❌ Requires UE installation on target machine (but that's already a requirement for development workflow)
+
 ---
 
 ### Deployment Package Structure
@@ -1156,9 +1341,9 @@ Dependencies.exe C:\UE\UE_5.6_Source\Engine\Binaries\Win64\UnrealLiveLink.Native
 **Target Structure:**
 ```
 lib/native/win-x64/
-├── UnrealLiveLink.Native.dll
+├── UnrealLiveLink.Native.dll (28.5 MB)
 ├── UnrealLiveLink.Native.pdb
-├── tbbmalloc.dll
+├── tbbmalloc.dll (*** CRITICAL - discovered through testing ***)
 ├── UnrealEditor-Core.dll
 ├── UnrealEditor-CoreUObject.dll
 └── [other required DLLs]
@@ -1204,6 +1389,60 @@ UE_LOG(LogTemp, Log, TEXT("ULL_Transform size: %d bytes"), sizeof(ULL_Transform)
 - Parameter validation
 - Thread safety
 - Performance (FName caching)
+- **Restart scenarios (NEW - Critical)**
+
+**Restart Testing (NEW):**
+```csharp
+[TestMethod]
+public void NativeLayer_MultipleInitialize_ShouldNotCrash()
+{
+    // Simulate 10 simulation runs
+    for (int i = 0; i < 10; i++)
+    {
+        int result = UnrealLiveLinkNative.ULL_Initialize("RestartTest");
+        Assert.AreEqual(UnrealLiveLinkNative.ULL_OK, result);
+        
+        // Use LiveLink (create/update objects)
+        // ...
+        
+        UnrealLiveLinkNative.ULL_Shutdown();
+    }
+    
+    // Should complete without crashes, memory leaks, or performance degradation
+}
+
+[TestMethod]
+public void NativeLayer_FirstInitialization_ShouldBeSlow()
+{
+    var stopwatch = Stopwatch.StartNew();
+    UnrealLiveLinkNative.ULL_Initialize("PerfTest");
+    stopwatch.Stop();
+    
+    // First init: ~21ms (GEngineLoop initialization)
+    Assert.IsTrue(stopwatch.ElapsedMilliseconds >= 15 && 
+                  stopwatch.ElapsedMilliseconds <= 50);
+    
+    UnrealLiveLinkNative.ULL_Shutdown();
+}
+
+[TestMethod]
+public void NativeLayer_SubsequentInitialization_ShouldBeFast()
+{
+    // First init
+    UnrealLiveLinkNative.ULL_Initialize("PerfTest");
+    UnrealLiveLinkNative.ULL_Shutdown();
+    
+    // Second init (static flag bypass)
+    var stopwatch = Stopwatch.StartNew();
+    UnrealLiveLinkNative.ULL_Initialize("PerfTest");
+    stopwatch.Stop();
+    
+    // Subsequent: ~1ms (21x faster)
+    Assert.IsTrue(stopwatch.ElapsedMilliseconds <= 5);
+    
+    UnrealLiveLinkNative.ULL_Shutdown();
+}
+```
 
 ---
 
@@ -1245,20 +1484,36 @@ UE_LOG(LogTemp, Log, TEXT("ULL_Transform size: %d bytes"), sizeof(ULL_Transform)
 3. [ ] Check memory usage (should be stable)
 4. [ ] Verify no frame drops or stuttering
 
+**Restart Stability (NEW - Critical):**
+1. [ ] Run simulation in Simio
+2. [ ] Stop simulation
+3. [ ] Run simulation again (10+ times)
+4. [ ] Verify first run: ~26ms startup (21ms native + 5ms managed)
+5. [ ] Verify subsequent runs: ~3ms startup (1ms native + 2ms managed)
+6. [ ] Verify no memory leaks (check Task Manager)
+7. [ ] Verify consistent performance (no degradation after 10+ runs)
+
 ---
 
 ## Performance Targets
 
-| Metric | Target | How to Measure |
-|--------|--------|----------------|
-| Initialization Time | < 2 seconds | From ULL_Initialize to first IsConnected success |
-| Update Latency | < 5 ms | Timestamp in Simio vs receipt in Unreal |
-| Throughput | 100 objects @ 30Hz | Sustained without frame drops |
-| Memory per Object | < 1 KB | Profile with Unreal Insights |
-| Build Time (Incremental) | < 15 seconds | Time BuildNative.ps1 after code change |
+| Metric | Target | How to Measure | Notes |
+|--------|--------|----------------|-------|
+| **First Initialization** | < 50ms | Timestamp ULL_Initialize entry/exit | ~21ms native + ~5ms managed = ~26ms typical |
+| **Subsequent Initialization** | < 5ms | Timestamp after first Shutdown | ~1ms native (static flag) + ~2ms managed = ~3ms typical |
+| **Update Latency** | < 5 ms | Timestamp in Simio vs receipt in Unreal | Per-frame overhead |
+| **Throughput** | 100 objects @ 30Hz | Sustained without frame drops | 30,000 values/sec target |
+| **Memory per Object** | < 1 KB | Profile with Unreal Insights | Subject + frame data |
+| **Build Time (Incremental)** | < 15 seconds | Time BuildNative.ps1 after code change | Hot compilation |
 
 **Baseline:** Reference project handles "thousands of floats @ 60Hz" successfully  
 **Our Target:** 30,000 values/sec (6x lighter than reference)
+
+**Restart Performance (NEW):**
+- **First init:** ~21ms (GEngineLoop.PreInit + module loading)
+- **Subsequent init:** ~1ms (static flag bypass)
+- **Speedup:** 21x faster restart
+- **User Impact:** Subsequent simulation runs nearly instant
 
 ---
 
@@ -1292,11 +1547,19 @@ Error: Unable to find module 'LiveLinkInterface'
 
 ---
 
-**Issue: Plugin headers not accessible**
+**Issue: GEngineLoop.PreInit not accessible**
 ```
-Error: Cannot find FLiveLinkMessageBusSource.h
+Error: 'GEngineLoop' undeclared identifier
 ```
-**Solution:** Use custom FSimioLiveLinkSource instead (see LiveLink Integration section)
+**Solution:** Add `PrivateIncludePaths.Add("Runtime/Launch/Public");` to Build.cs and include `RequiredProgramMainCPPInclude.h`
+
+---
+
+**Issue: IPluginManager not found**
+```
+Error: Cannot find IPluginManager
+```
+**Solution:** Add `Projects` module to PrivateDependencyModuleNames in Build.cs
 
 ---
 
@@ -1310,6 +1573,23 @@ DllNotFoundException: UnrealLiveLink.Native.dll
 1. Copy DLL to same folder as managed DLL
 2. Verify 64-bit DLL for 64-bit process
 3. **CRITICAL:** Copy ALL dependencies (use Dependencies.exe)
+4. **Don't forget tbbmalloc.dll** (not mentioned in reference docs)
+
+---
+
+**Issue: Crash on second ULL_Initialize call**
+```
+Fatal error: Delayed Startup phase already run
+```
+**Solution:** Implement static initialization flag `bGEngineLoopInitialized` to skip GEngineLoop.PreInit on subsequent calls
+
+---
+
+**Issue: Simio crashes on simulation restart**
+```
+Access violation or process termination
+```
+**Solution:** Remove `AppExit()`, `RequestEngineExit()`, and module unloading from ULL_Shutdown(). These terminate the host process.
 
 ---
 
@@ -1320,9 +1600,20 @@ RegisterObject succeeds but subject doesn't appear in LiveLink window
 **Checklist:**
 - [ ] Unreal Editor is running
 - [ ] LiveLink window is open (Window → Virtual Production → Live Link)
-- [ ] Subject registered and updated at least once
+- [ ] GEngineLoop properly initialized (check UE_LOG output)
+- [ ] UdpMessaging module loaded (Step 5 of initialization)
+- [ ] Plugins loaded (Step 6 of initialization)
+- [ ] Subject registered AND updated at least once
 - [ ] Check UE_LOG output for errors
 - [ ] Try manual refresh in LiveLink window
+
+---
+
+**Issue: Slow performance after first initialization**
+```
+Second simulation run still takes 20ms to start
+```
+**Solution:** Verify static flag `bGEngineLoopInitialized` is NOT being reset in Shutdown(). Should stay true across restarts.
 
 ---
 
@@ -1342,6 +1633,3 @@ RegisterObject succeeds but subject doesn't appear in LiveLink window
 
 **Reference Implementation:**
 - `src/Native/Mock/MockLiveLink.cpp` - Working mock implementation showing expected API behavior
-
-**Completion Reports:**
-- [Sub-Phase6.6-Breakthrough.md](Sub-Phase6.6-Breakthrough.md) - Details on resolving build configuration issues
