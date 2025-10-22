@@ -448,6 +448,11 @@ Build/*/**
 # Don't ignore icon files in Build
 !Build/**/*.ico
 
+# Exception: Allow build/ directory (lowercase) for PowerShell build scripts
+# This overrides the Build/* pattern above (case-insensitive on Windows)
+!build/
+!build/*.ps1
+
 # Built data for maps
 *_BuiltData.uasset
 
