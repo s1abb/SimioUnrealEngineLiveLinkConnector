@@ -255,19 +255,26 @@ cd C:\repos\SimioUnrealEngineLiveLinkConnector
 .\build\BuildNative.ps1
 ```
 
+**UE Installation Auto-Detection:**
+1. Priority 1: Source build (`C:\UE\UE_5.6_Source`)
+2. Priority 2: Binary build (`C:\UE\UE_5.6`)
+3. Fallback: Manual `-UEPath` parameter
+
 **What BuildNative.ps1 Does:**
-1. Auto-detects UE installation (searches common paths)
+1. Auto-detects UE installation (using priorities above)
 2. Copies source to `[UE_ROOT]\Engine\Source\Programs\UnrealLiveLinkNative\`
-3. Runs `GenerateProjectFiles.bat` to update UE5.sln
+3. Runs `GenerateProjectFiles.bat` to update UE5.sln (source builds only)
 4. Builds via UBT command line:
    ```
    .\Engine\Build\BatchFiles\Build.bat UnrealLiveLinkNative Win64 Development
    ```
 5. Copies output to `lib\native\win-x64\`
 
-**Expected Output:**
-- `UnrealLiveLink.Native.dll` (28.5 MB)
-- `UnrealLiveLink.Native.pdb` (debug symbols)
+**Build Output Naming:**
+- UBT builds: `UnrealLiveLinkNative.dll` (UE naming convention)
+- BuildNative.ps1 copies to: `UnrealLiveLink.Native.dll` (repo convention with dot separator)
+- Both refer to the same 28.5 MB DLL
+- Also generates: `UnrealLiveLink.Native.pdb` (debug symbols)
 
 **Build Times:**
 - First build: ~120 seconds (2 minutes)
@@ -315,27 +322,31 @@ cd C:\UE\UE_5.6_Source
 using UnrealBuildTool;
 using System.Collections.Generic;
 
+[SupportedPlatforms(UnrealPlatformClass.Desktop)]
 public class UnrealLiveLinkNativeTarget : TargetRules
 {
     public UnrealLiveLinkNativeTarget(TargetInfo Target) : base(Target)
     {
         Type = TargetType.Program;
+        bShouldCompileAsDLL = true;  // DLL output for P/Invoke
         LinkType = TargetLinkType.Monolithic;
         LaunchModuleName = "UnrealLiveLinkNative";
         
-        // CRITICAL: These settings are required for Program targets with LiveLink
-        bCompileAgainstEngine = false;          // Keep minimal - don't pull in 551 modules!
-        bCompileAgainstCoreUObject = true;      // Need Core + CoreUObject
-        bBuildWithEditorOnlyData = true;        // Required for LiveLink (counter-intuitive but necessary)
+        // Minimal program - key to build success
+        bBuildDeveloperTools = false;
+        bBuildWithEditorOnlyData = true;      // CRITICAL for ApplicationCore
+        bCompileAgainstEngine = false;        // CRITICAL - keeps build minimal (71 modules)
+        bCompileAgainstCoreUObject = true;
+        bCompileWithPluginSupport = false;
+        bIncludePluginsForTargetPlatforms = false;
+        bCompileICU = false;
         
-        bCompileWithPluginSupport = false;      // Not needed for Program targets
-        bCompileICU = false;                    // Disable ICU localization
-        bUseLoggingInShipping = true;           // Enable UE_LOG in release builds
+        // Diagnostics
+        bUseLoggingInShipping = true;
+        GlobalDefinitions.Add("UE_TRACE_ENABLED=1");
         
-        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;  // Use latest include order
-        
-        // Output as DLL
-        bShouldCompileAsDLL = true;
+        // Latest include order
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
     }
 }
 ```
@@ -343,6 +354,11 @@ public class UnrealLiveLinkNativeTarget : TargetRules
 **Critical Notes:**
 - `bCompileAgainstEngine = false` - Keeps build minimal (71 modules instead of 551)
 - `bBuildWithEditorOnlyData = true` - Counter-intuitive but required for Program targets to access LiveLink features
+- `bCompileWithPluginSupport = false` - Not needed for Program targets
+- `bIncludePluginsForTargetPlatforms = false` - Reduce build scope
+- `bCompileICU = false` - Disable ICU localization
+- `bUseLoggingInShipping = true` - Enable UE_LOG in release builds
+- `GlobalDefinitions.Add("UE_TRACE_ENABLED=1")` - Enable Unreal Insights tracing
 - This configuration came from analyzing the UnrealLiveLinkCInterface reference project
 
 ---
@@ -361,6 +377,9 @@ public class UnrealLiveLinkNative : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         
+        // Disable unity builds for cleaner compilation
+        bUseUnity = false;
+        
         // CRITICAL: Use PrivateDependencyModuleNames, not Public
         // This keeps dependencies internal and avoids symbol export issues
         PrivateDependencyModuleNames.AddRange(new string[] 
@@ -377,6 +396,12 @@ public class UnrealLiveLinkNative : ModuleRules
         
         // Required for GEngineLoop and module system access
         PrivateIncludePaths.Add("Runtime/Launch/Public");
+        
+        // Export symbols for DLL
+        PublicDefinitions.Add("ULL_API=__declspec(dllexport)");
+        
+        // Optimize for shipping
+        OptimizeCode = CodeOptimization.InShippingBuildsOnly;
         
         bEnableExceptions = false;     // Unreal doesn't use exceptions
         bUseRTTI = false;              // No RTTI needed
@@ -1267,98 +1292,86 @@ FTransform ConvertToFTransform(const ULL_Transform* transform) {
 
 ## Dependency Management (Critical for Deployment)
 
-### Reference Project Warning
+### Our Approach: PATH-Based Dependency Resolution
 
-> "copying just the dll may not be enough. There may be other dependencies that need to be copied such as the tbbmalloc.dll. Use the Dependencies application to determine what additional dlls are needed."
+Instead of packaging hundreds of megabytes of Unreal Engine DLLs with our connector, we solved the dependency problem by adding the UE binaries directory to PATH at runtime.
 
-**Reality:** Native DLL will require additional Unreal Engine DLLs for redistribution.
+**What We Do:**
+```ps1
+# In BuildNative.ps1, RunIntegrationTests.ps1, and deployment scripts
+$UEBinPath = "C:\UE\UE_5.6_Source\Engine\Binaries\Win64"
+$env:PATH = "$UEBinPath;$env:PATH"
+```
+
+**Why This Works:**
+
+Windows DLL Search Order: When loading a DLL, Windows searches:
+1. Application directory
+2. System directory
+3. Directories in PATH ← **We leverage this**
+
+Our 28.5 MB DLL depends on UE DLLs (Core, CoreUObject, LiveLink, etc.). At runtime, Windows finds those dependencies in the UE installation via PATH. No redistribution needed - we ship only our 28.5 MB DLL.
+
+**Benefits:**
+- ✅ Tiny package: 28.5 MB instead of 50-200 MB
+- ✅ No version conflicts: Uses exact UE version from user's installation
+- ✅ Simpler updates: Update UE separately from our connector
+- ✅ Legal compliance: No redistribution of Epic's binaries
+
+**Trade-off:**
+- ❌ Requires UE 5.6 installation on target machine (but that's already a requirement for development workflow)
 
 ---
 
-### Dependencies.exe Tool
+### Dependencies.exe Tool (Optional Analysis)
 
-**Required Tool:** https://github.com/lucasg/Dependencies
+**Tool:** https://github.com/lucasg/Dependencies
 
-**Purpose:** Analyze DLL to identify runtime dependencies
+**Purpose:** Analyze DLL to identify runtime dependencies (for reference/debugging)
 
 **Usage:**
 ```powershell
 # After building UnrealLiveLinkNative.dll
-Dependencies.exe C:\UE\UE_5.6_Source\Engine\Binaries\Win64\UnrealLiveLink.Native.dll
+Dependencies.exe C:\UE\UE_5.6_Source\Engine\Binaries\Win64\UnrealLiveLinkNative.dll
 ```
 
-**Expected Dependencies:**
-- tbbmalloc.dll (Intel Threading Building Blocks) - **CRITICAL, not in reference docs**
+**Expected Dependencies (resolved via PATH):**
 - UnrealEditor-Core.dll
 - UnrealEditor-CoreUObject.dll
 - UnrealEditor-ApplicationCore.dll
 - UnrealEditor-LiveLinkInterface.dll
 - UnrealEditor-Messaging.dll
 - UnrealEditor-UdpMessaging.dll
+- tbbmalloc.dll (Intel Threading Building Blocks)
 - Additional Unreal runtime DLLs
 
-**Package Size:** Expect 50-200MB total (including all dependencies)
-
-### Our Approach: PATH-Based Dependency Resolution
-Instead of packaging hundreds of megabytes of Unreal Engine DLLs with our connector, we solved the dependency problem by adding the UE binaries directory to PATH at runtime:
-
-What We Do:
-
-```ps1
-# In RunIntegrationTests.ps1 (and should be in DeployToSimio.ps1)
-$UEBinPath = "C:\UE\UE_5.6_Source\Engine\Binaries\Win64"
-$env:PATH = "$UEBinPath;$env:PATH"
-```
-
-Why This Works:
-
-Windows DLL Search Order: When loading a DLL, Windows searches:
-- Application directory
-- System directory
-- Directories in PATH ← We leverage this
-Our 28.5 MB DLL depends on UE DLLs (Core, CoreUObject, LiveLink, etc.)
-At runtime, Windows finds those dependencies in the UE installation via PATH
-No redistribution needed - we ship only our 28.5 MB DLL
-
-Deployment Requirements:
-- User must have Unreal Engine 5.6 installed (development environment requirement)
-- Installation script adds Win64 to system PATH
-- OR Simio launches with modified PATH (programmatic approach)
-
-Benefits:
-✅ Tiny package: 28.5 MB instead of 50-200 MB
-✅ No version conflicts: Uses exact UE version from user's installation
-✅ Simpler updates: Update UE separately from our connector
-✅ Legal compliance: No redistribution of Epic's binaries
-
-Trade-off:
-❌ Requires UE installation on target machine (but that's already a requirement for development workflow)
+**Total Size if Packaged:** 50-200MB (which is why we use PATH instead)
 
 ---
 
 ### Deployment Package Structure
 
-**Target Structure:**
+**Actual Structure (PATH-Based):**
 ```
 lib/native/win-x64/
-├── UnrealLiveLink.Native.dll (28.5 MB)
-├── UnrealLiveLink.Native.pdb
-├── tbbmalloc.dll (*** CRITICAL - discovered through testing ***)
-├── UnrealEditor-Core.dll
-├── UnrealEditor-CoreUObject.dll
-└── [other required DLLs]
+├── UnrealLiveLink.Native.dll (28.5 MB) ← Only this ships
+└── UnrealLiveLink.Native.pdb (debug symbols)
 ```
 
 **Deployment to Simio:**
 ```
 %PROGRAMFILES%\Simio LLC\Simio\UserExtensions\SimioUnrealEngineLiveLinkConnector\
 ├── SimioUnrealEngineLiveLinkConnector.dll (managed)
-├── UnrealLiveLink.Native.dll (native)
-├── System.Drawing.Common.dll
-└── [Unreal dependency DLLs]
+├── UnrealLiveLink.Native.dll (native, 28.5 MB)
+└── System.Drawing.Common.dll
 ```
 
-**Testing:** Must test on clean machine WITHOUT Unreal Engine installed
+**Deployment Requirements:**
+1. User must have Unreal Engine 5.6 installed
+2. Deployment script adds `C:\UE\UE_5.6_Source\Engine\Binaries\Win64` to system PATH
+3. OR Simio launch script sets PATH before loading DLL
+
+**Testing:** Test on machine WITH UE installed but WITHOUT bundled dependencies to verify PATH resolution works
 
 ---
 
@@ -1380,7 +1393,7 @@ UE_LOG(LogTemp, Log, TEXT("ULL_Transform size: %d bytes"), sizeof(ULL_Transform)
 
 ### Integration Tests (C# with Real DLL)
 
-**Current Status:** 25/25 tests passing (100%) with real UE DLL
+**Current Status:** All tests passing (100%) with real UE DLL
 
 **Test Categories:**
 - Lifecycle operations (Initialize, Shutdown, GetVersion, IsConnected)
@@ -1572,8 +1585,20 @@ DllNotFoundException: UnrealLiveLink.Native.dll
 **Solutions:**
 1. Copy DLL to same folder as managed DLL
 2. Verify 64-bit DLL for 64-bit process
-3. **CRITICAL:** Copy ALL dependencies (use Dependencies.exe)
-4. **Don't forget tbbmalloc.dll** (not mentioned in reference docs)
+3. Ensure UE binaries directory is in PATH
+
+---
+
+**Issue: DLL loads but fails at runtime with missing UE dependencies**
+```
+System.Exception: Unable to load DLL 'UnrealLiveLink.Native.dll': 
+The specified module could not be found (or its dependencies)
+```
+**Solution:** Add UE binaries directory to PATH before loading DLL:
+```ps1
+$env:PATH = "C:\UE\UE_5.6_Source\Engine\Binaries\Win64;$env:PATH"
+```
+Or ensure deployment script sets PATH automatically. Use Dependencies.exe to identify missing DLLs.
 
 ---
 
@@ -1614,6 +1639,12 @@ RegisterObject succeeds but subject doesn't appear in LiveLink window
 Second simulation run still takes 20ms to start
 ```
 **Solution:** Verify static flag `bGEngineLoopInitialized` is NOT being reset in Shutdown(). Should stay true across restarts.
+
+**Issue: Dependencies.exe shows many missing DLLs**
+```
+tbbmalloc.dll, UnrealEditor-Core.dll, UnrealEditor-CoreUObject.dll, etc.
+```
+**Solution:** This is expected with PATH-based approach. Don't package these DLLs - they're resolved via PATH at runtime. Only ship UnrealLiveLink.Native.dll (28.5 MB).
 
 ---
 

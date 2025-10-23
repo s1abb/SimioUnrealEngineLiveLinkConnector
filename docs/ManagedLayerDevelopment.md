@@ -5,7 +5,7 @@
 **Scope:** Implementation patterns, code organization, testing approach  
 **Not Included:** Current status/progress (see DevelopmentPlan.md), architecture rationale (see Architecture.md)
 
-**Last Updated:** October 21, 2025  
+**Last Updated:** October 23, 2025  
 **Implementation Context:** DLL hosted in Simio.exe, supports multiple simulation runs per session
 
 ---
@@ -15,7 +15,7 @@
 - **Managed layer role:** Simio extension providing Element and 4 Steps
 - **Key capabilities:** Transform streaming, data streaming, object lifecycle management
 - **Integration point:** Simio's IElementDefinition and IStepDefinition interfaces
-- **Total API surface:** 12 P/Invoke functions, 8 Element properties, 4 Steps
+- **Total API surface:** 12 P/Invoke functions, 2 Element properties, 4 Steps
 - **Lifecycle model:** Supports multiple Initialize/Shutdown cycles (simulation restart scenarios)
 - **Performance:** First initialization ~21ms, subsequent ~1ms (native layer optimization)
 - [Link to Architecture.md for design context]
@@ -165,15 +165,22 @@ int rowCount = repeatGroup.GetCount(context);
 
 for (int i = 0; i < rowCount; i++)
 {
-    using (repeatGroup.EnterRowContext(context, i))
+    using (IPropertyReaders valueRow = repeatGroup.GetRow(i, context))
     {
-        string name = GetStringPropertyFromGroup("Name", context, repeatGroup);
-        double value = GetDoublePropertyFromGroup("Value", context, repeatGroup);
+        // Get property name
+        var nameReader = valueRow.GetProperty("ValueName");
+        string valueName = nameReader?.GetStringValue(context) ?? string.Empty;
+        
+        // Get property value as expression
+        var valueReader = valueRow.GetProperty("ValueExpression") as IExpressionPropertyReader;
+        var valueResult = valueReader?.GetExpressionValue(context);
         
         // Process row...
     }
 }
 ```
+
+**Note:** TransmitValuesStep uses `GetRow(i, context)` instead of `EnterRowContext()`. The repeating group properties are "ValueName" and "ValueExpression" (verified in code).
 
 ---
 
@@ -211,6 +218,12 @@ if (!_lastTraceTime.HasValue || (DateTime.Now - _lastTraceTime.Value).TotalSecon
 - SetPositionOrientation called 30-60+ times per second per object
 - Without throttling: Trace window floods, performance degrades
 - 1-second throttle: User sees updates without overwhelming system
+
+**Current Implementation Status:**
+- ✅ SetObjectPositionOrientationStep: Has loop protection (line 16, 77, 80)
+- ✅ TransmitValuesStep: Has loop protection (line 15, 102, 105)
+- ✅ CreateObjectStep: No loop protection (not needed - low frequency)
+- ✅ DestroyObjectStep: No loop protection (not needed - low frequency)
 
 ---
 
@@ -397,26 +410,60 @@ public class LiveLinkManager
 ---
 
 ### Phase 2: Element Implementation
-**Goal:** Connection lifecycle management with 8 properties
+**Goal:** Connection lifecycle management with 2 properties
 
 #### 2.1 SimioUnrealEngineLiveLinkElementDefinition.cs
 - Generate unique GUID: `[Guid]::NewGuid().ToString().ToUpper()` in PowerShell
-- Define schema with **8 properties in 3 categories:**
-  - **LiveLink Connection (5):** SourceName, LiveLinkHost, LiveLinkPort, ConnectionTimeout, RetryAttempts
-  - **Logging (2):** EnableLogging (ExpressionProperty), LogFilePath
-  - **Unreal Engine (1):** UnrealEnginePath
+- Define schema with **2 properties in 2 categories:**
+  - **LiveLink Connection (1):** SourceName - Name displayed in Unreal Engine's LiveLink Sources window
+  - **Logging (1):** EnableLogging (ExpressionProperty - evaluates at runtime for DebugView++ output)
 - Implement `IElementDefinition` interface
 - `CreateElement()` factory method returns element instance
 
+**Design Evolution:** Earlier designs included manual network configuration properties (LiveLinkHost, LiveLinkPort, ConnectionTimeout, RetryAttempts, LogFilePath, UnrealEnginePath). The final implementation leverages LiveLink Message Bus auto-discovery via UDP multicast (230.0.0.1:6666), eliminating the need for user-specified network endpoints. Logging is handled through native UE_LOG output viewable in DebugView++.
+
 #### 2.2 SimioUnrealEngineLiveLinkElement.cs
-- **Constructor:** Read all 8 properties using helper methods
+- **Constructor:** Read 2 properties using helper methods
 - Create `LiveLinkConfiguration` object with validation
-- Call `PropertyValidation` methods for path/network/UE validation
+- No PropertyValidation methods needed (simplified configuration)
 - **Initialize():** Call `LiveLinkManager.Instance.Initialize(config)`, add TraceInformation
 - **Shutdown():** Call `LiveLinkManager.Instance.Shutdown()` (no TraceInformation to avoid overwriting traces)
 - Expose `IsConnectionHealthy` property for Steps to check
 - Property reader helpers: `ReadStringProperty()`, `ReadBooleanProperty()`, `ReadIntegerProperty()`, `ReadRealProperty()`
 - **Restart awareness:** Initialize() may be called multiple times (native layer handles optimization)
+
+---
+
+### Connection Health and Stability (Sub-Phase 6.6.1)
+
+**Current Implementation:**
+- 2 out of 4 Steps have `IsConnectionHealthy` checks
+- No error message throttling
+- No auto-recovery mechanism
+
+**Connection Health Check Pattern (Already Implemented):**
+```csharp
+// Both CreateObjectStep and SetObjectPositionOrientationStep validate connection
+if (!connectorElement.IsConnectionHealthy)
+{
+    context.ExecutionInformation.ReportError("Unreal Engine Connector element is not in a healthy state");
+    return ExitType.FirstExit;
+}
+```
+
+**Current Implementation Status (Verified Against Code):**
+- ✅ CreateObjectStep.cs (line 35): Has IsConnectionHealthy check
+- ✅ SetObjectPositionOrientationStep.cs (line 37): Has IsConnectionHealthy check
+- ❌ TransmitValuesStep.cs: Missing health check (to be added in Sub-Phase 6.6.1)
+- ❌ DestroyObjectStep.cs: Missing health check (to be added in Sub-Phase 6.6.1)
+
+**Planned Enhancements (Sub-Phase 6.6.1):**
+- Add health checks to TransmitValuesStep and DestroyObjectStep
+- Add error message throttling (once per second) to all Steps
+- Implement auto-recovery in LiveLinkManager.GetConnectionStatus()
+- More actionable error messages: "LiveLink connection lost. Stop and restart the simulation."
+
+**Reference:** See MessageBusStabilityFixPlan.md for complete implementation details.
 
 ---
 
@@ -479,7 +526,9 @@ public class LiveLinkManager
 1. Resolve element reference, validate connection
 2. Read object name
 3. Call `LiveLinkManager.Instance.RemoveObject(name)`
-4. Add TraceInformation: `"LiveLink object '{name}' removed"`
+4. Add TraceInformation: `"LiveLink object '{name}' destroyed successfully"` (already implemented ✅)
+
+**Note:** DestroyObjectStep already has TraceInformation implemented in code.
 
 **Each Step Requires:**
 - `*Step.cs` - IStep implementation with `Execute(IStepExecutionContext)`
@@ -494,29 +543,29 @@ public class LiveLinkManager
 ### Phase 4: Utils Infrastructure
 **Goal:** Shared validation, path handling, network utilities
 
-#### 4.1 PropertyValidation.cs - Element Property Validation
+#### 4.1 PropertyValidation.cs - Element Property Validation (Simplified)
 
-**Methods:**
+**Current Implementation:**
 ```csharp
-// Path normalization and validation
+// Path normalization and validation (ONLY METHOD CURRENTLY IMPLEMENTED)
 public static string NormalizeFilePath(string rawPath, IExecutionContext context)
 // Resolves relative paths, creates directories, reports errors
-
-// Unreal Engine installation validation
-public static string ValidateUnrealEnginePath(string path, IExecutionContext context)
-// Uses UnrealEngineDetection to verify installation
-
-// Network endpoint validation
-public static void ValidateNetworkEndpoint(string host, int port, IExecutionContext context)
-// Validates host format, port range, common config issues
-
-// Range validation
-public static double ValidateTimeout(double timeoutSeconds, IExecutionContext context)
-public static int ValidateRetryAttempts(int retryAttempts, IExecutionContext context)
 ```
 
+**Why Simplified?**
+- Message Bus auto-discovery eliminates need for network validation
+- Reduced Element properties from 8 to 2 (SourceName, EnableLogging)
+- No file paths needed (logging via DebugView++)
+- No Unreal Engine path validation needed
+
+**Previously Planned (No Longer Needed):**
+- ~~ValidateUnrealEnginePath()~~ - Removed with UnrealEnginePath property
+- ~~ValidateNetworkEndpoint()~~ - Removed (Message Bus auto-discovery)
+- ~~ValidateTimeout()~~ - Removed with ConnectionTimeout property
+- ~~ValidateRetryAttempts()~~ - Removed with RetryAttempts property
+
 **Key Points:**
-- All methods use `IExecutionContext` for error reporting
+- Method uses `IExecutionContext` for error reporting
 - Validation happens at Element construction time (fail-fast)
 - Clear, actionable error messages
 
@@ -990,15 +1039,16 @@ Before marking a component complete:
 Managed layer is complete when:
 
 **Functionality:**
-- [ ] All 4 step types implemented and tested (Create, SetPosition, TransmitValues, Destroy)
-- [ ] Element handles all 8 properties correctly
-- [ ] All 12 P/Invoke functions wrapped and tested
+- [x] All 4 step types implemented and tested (Create, SetPosition, TransmitValues, Destroy)
+- [x] Element handles 2 properties correctly (SourceName, EnableLogging)
+- [x] All 12 P/Invoke functions wrapped and tested
 
 **Testing:**
-- [ ] 50+ unit tests passing (current: 37, target: 80+)
-- [ ] Integration tests pass with mock DLL
-- [ ] **Restart stability tests pass** (10+ Initialize/Shutdown cycles)
-- [ ] Performance tests validate initialization timing (26ms / 3ms)
+- [x] 50+ unit tests passing (CoordinateConverter, Types, LiveLinkManager, Utils)
+- [x] Integration tests pass with mock DLL
+- [x] **Restart stability tests pass** (10+ Initialize/Shutdown cycles)
+- [x] Performance tests validate initialization timing (26ms / 3ms)
+- [ ] Target: 80+ tests (current: ~50, need additional coverage for edge cases)
 - [ ] No failing tests in CI
 
 **Deployment:**

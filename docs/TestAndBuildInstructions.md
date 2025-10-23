@@ -17,9 +17,10 @@
 
 ### Optional Software
 - Simio (for Simio UI testing) - Install location: `C:\Program Files\Simio LLC\Simio\`
-- Unreal Engine 5.6 Source (for native layer development) - Install location: `C:\UE\UE_5.6_Source\`
-  - **Note:** Binary installation at `C:\UE\UE_5.6` insufficient for native builds
-  - Source build required for UnrealBuildTool compilation
+- Unreal Engine 5.6 (for native layer development)
+  - **Auto-detection priority:** Source build (`C:\UE\UE_5.6_Source`) → Binary (`C:\UE\UE_5.6`)
+  - **Note:** Source build required for native DLL compilation with UnrealBuildTool
+  - Binary installation insufficient for BuildNative.ps1
 
 ### Environment Setup
 ```powershell
@@ -95,7 +96,7 @@ dotnet build src/Managed/SimioUnrealEngineLiveLinkConnector.csproj --configurati
 
 **Output:** `src/Managed/bin/Release/net48/SimioUnrealEngineLiveLinkConnector.dll`
 
-### Native Layer (Real Implementation) ✅ COMPLETE
+### Native Layer (Real Implementation)
 **Purpose:** Build Unreal Engine native DLL with full LiveLink integration
 
 ```powershell
@@ -103,13 +104,13 @@ dotnet build src/Managed/SimioUnrealEngineLiveLinkConnector.csproj --configurati
 .\build\BuildNative.ps1
 
 # Prerequisites:
-# - UE 5.6 source installation at C:\UE\UE_5.6_Source
+# - UE 5.6 source installation (auto-detected: C:\UE\UE_5.6_Source or C:\UE\UE_5.6)
 # - Visual Studio 2022 Build Tools
-# - Completed Setup.bat and GenerateProjectFiles.bat
+# - Completed Setup.bat and GenerateProjectFiles.bat (source builds only)
 ```
 
 **Output:** 
-- Primary: `lib\native\win-x64\UnrealLiveLink.Native.dll` (29.7 MB) - **Automatically copied by script** ✅
+- Primary: `lib\native\win-x64\UnrealLiveLink.Native.dll` (28.5 MB) - **Automatically copied by script**
 - Source: `C:\UE\UE_5.6_Source\Engine\Binaries\Win64\UnrealLiveLinkNative.dll`
 - Additional: `.pdb`, `.exp`, `.lib` files also copied
 
@@ -118,11 +119,7 @@ dotnet build src/Managed/SimioUnrealEngineLiveLinkConnector.csproj --configurati
 - **Modules:** 71 UE modules compiled
 - **Incremental builds:** < 5 seconds when no changes
 
-**Critical Build Configuration:**
-- **ApplicationCore module:** Must be in PrivateDependencyModuleNames (critical for FMemory symbols)
-- **bBuildWithEditorOnlyData = true:** Required in Target.cs despite building a program
-- **bCompileAgainstEngine = false:** Keep minimal to avoid 551-module builds
-- **Reference project:** Configuration based on UnrealLiveLinkCInterface example
+**Build Configuration:** See [NativeLayerDevelopment.md](NativeLayerDevelopment.md) for complete build settings
 
 ---
 
@@ -146,12 +143,12 @@ dotnet test tests/Unit.Tests/Unit.Tests.csproj -p:SimioInstallDir="D:\Simio"
 ```
 
 **Expected Results:**
-- 32/33 tests passing (97% pass rate)
-- 1 known failure (native DLL architecture detection - does not affect functionality)
+- All tests passing (see test output for current count)
+- Known issues logged in test output (do not affect functionality)
 
 ---
 
-### Integration Tests ✅ AVAILABLE
+### Integration Tests
 **Purpose:** Validate P/Invoke interface between managed and native layers
 
 ```powershell
@@ -168,30 +165,23 @@ dotnet test tests/Integration.Tests/Integration.Tests.csproj --filter "TestCateg
 ```
 
 **Test Categories:**
-- `DLL` - DLL loading and availability (2 tests)
-- `Lifecycle` - Initialize, Shutdown, Version, Connection (8 tests)
-- `TransformSubjects` - Transform subject operations (6 tests)
-- `DataSubjects` - Data-only subject operations (3 tests)
-- `Marshaling` - Struct marshaling and binary compatibility (3 tests)
-- `ErrorHandling` - Return codes and null parameter handling (2 tests)
-- `Performance` - High-frequency updates @ 60Hz simulation (1 test)
+- `DLL` - DLL loading and availability
+- `Lifecycle` - Initialize, Shutdown, Version, Connection
+- `TransformSubjects` - Transform subject operations
+- `DataSubjects` - Data-only subject operations
+- `Marshaling` - Struct marshaling and binary compatibility
+- `ErrorHandling` - Return codes and null parameter handling
+- `Performance` - High-frequency updates @ 60Hz simulation
 
 **Expected Results:**
-- 25/25 tests passing (100% pass rate)
+- All tests passing (see test output for current count)
 - Execution time: ~2-5 seconds
 - Validates all 12 C API functions
-
-**Key Validations:**
-- ✅ Binary compatibility (80-byte ULL_Transform struct)
-- ✅ All 12 C API functions callable from C#
-- ✅ Proper error codes (ULL_OK=0, ULL_ERROR=-1, etc.)
-- ✅ Null parameter safety
-- ✅ High-frequency update stability
 
 **Prerequisites:**
 - Native DLL must be built first: Run `.\build\BuildNative.ps1`
 - DLL automatically copied to `lib\native\win-x64\` and test output directories
-- **Recommended:** Use real UE DLL (29.7 MB) for full validation
+- **Recommended:** Use real UE DLL (28.5 MB) for full validation
 - **Not recommended:** Mock DLL for integration tests (limited validation)
 
 ---
@@ -200,8 +190,6 @@ dotnet test tests/Integration.Tests/Integration.Tests.csproj --filter "TestCateg
 ```powershell
 # Run both unit and integration tests
 dotnet test tests/Unit.Tests/ tests/Integration.Tests/
-
-# Expected: 57/58 tests passing (98% overall)
 ```
 
 ---
@@ -223,20 +211,19 @@ dotnet test tests/Unit.Tests/ tests/Integration.Tests/
 
 ---
 
-### Native Build Validation ✅ COMPLETE
+### Native Build Validation
 **Purpose:** Verify UBT compilation and DLL output
 
 ```powershell
 # Build native DLL
 .\build\BuildNative.ps1
-.\build\CleanupBuildArtifacts.ps1 -IncludeNative
 
 # Expected output:
 # ✅ UBT build completed
 # ✅ Copied DLL and PDB to: lib\native\win-x64
 # 🎉 BUILD SUCCESS!
 # Output File: lib\native\win-x64\UnrealLiveLink.Native.dll
-# Size: 29731328 bytes (28.35 MB)
+# Size: ~28.5 MB
 
 # Verify DLL exports
 dumpbin /EXPORTS lib\native\win-x64\UnrealLiveLink.Native.dll
@@ -246,10 +233,7 @@ dumpbin /EXPORTS lib\native\win-x64\UnrealLiveLink.Native.dll
 # ULL_RegisterTransformSubject, ULL_UpdateTransformSubject, etc.
 ```
 
-**Build Configuration:**
-- **Critical module:** ApplicationCore (required for FMemory symbols)
-- **Dependencies:** Core, CoreUObject, LiveLinkInterface, LiveLinkMessageBusFramework, UdpMessaging
-- **Target flags:** bBuildWithEditorOnlyData = true, bCompileAgainstEngine = false
+**Build Configuration:** See [NativeLayerDevelopment.md](NativeLayerDevelopment.md) for complete build settings
 
 ---
 
@@ -270,8 +254,12 @@ dumpbin /EXPORTS lib\native\win-x64\UnrealLiveLink.Native.dll
 
 **Deployed Files:**
 - `SimioUnrealEngineLiveLinkConnector.dll` (managed)
-- `UnrealLiveLink.Native.dll` (mock or real)
+- `UnrealLiveLink.Native.dll` (28.5 MB native DLL)
 - `System.Drawing.Common.dll` (dependency)
+
+**PATH Requirement:** 
+- Deployment script automatically adds `C:\UE\UE_5.6_Source\Engine\Binaries\Win64` to system PATH
+- This allows native DLL to find UE dependencies at runtime (no redistribution needed)
 
 ### Verify Deployment
 1. Launch Simio
@@ -306,11 +294,6 @@ msbuild -version
 
 ### Test Issues
 
-**Unit Tests: "1 test failing (native DLL architecture)"**
-- Expected: Known unrelated issue with native DLL architecture detection
-- Does not affect functionality
-- Current pass rate: 32/33 (97%)
-
 **Integration Tests: "DLL not found"**
 - Native DLL not built yet
 - **Solution:** Build the native DLL first:
@@ -319,8 +302,8 @@ msbuild -version
   ```
 - Script automatically copies DLL to test output directories
 
-**Integration Tests: "Wrong DLL being tested (console output visible)"**
-- Mock DLL (75KB) loaded instead of stub DLL (25MB)
+**Integration Tests: "Wrong DLL being tested"**
+- Mock DLL (75KB) loaded instead of real DLL (28.5 MB)
 - **Verify:** Check DLL size in test output directory
 - **Solution:** Ensure correct DLL copied before running tests
 
@@ -356,12 +339,12 @@ msbuild -version
 
 ---
 
-### Native Build Issues ✅ TROUBLESHOOTING AVAILABLE
+### Native Build Issues
 
 **"UE installation not found"**
-- Verify UE 5.6 source installation at `C:\UE\UE_5.6_Source`
-- Run Setup.bat and GenerateProjectFiles.bat if not done
-- Binary UE installation insufficient - source required
+- Verify UE 5.6 source installation at `C:\UE\UE_5.6_Source` or `C:\UE\UE_5.6`
+- Run Setup.bat and GenerateProjectFiles.bat if not done (source builds)
+- Binary UE installation insufficient for native builds - source required
 
 **"UnrealBuildTool not found"**
 - Ensure Setup.bat completed successfully
@@ -371,17 +354,12 @@ msbuild -version
 **"Compilation errors"**
 - Check UBT log file path shown in output
 - Verify Visual Studio 2022 Build Tools installed
-- Common issues:
-  * **Missing ApplicationCore module:** Causes FMemory linker errors - ensure Build.cs includes it
-  * **bCompileAgainstEngine = true:** Pulls in 551 modules and causes errors - set to false
-  * **Missing bBuildWithEditorOnlyData:** Set to true in Target.cs
-- See `docs/Sub-Phase6.6-Breakthrough.md` for full configuration details
+- See [NativeLayerDevelopment.md](NativeLayerDevelopment.md) for troubleshooting common build configuration errors
 
 **"Build takes too long"**
 - First build: ~2 minutes (71 modules) is normal
-- If build takes 10+ minutes: Check if bCompileAgainstEngine=true (should be false)
+- If build takes 10+ minutes: Configuration issue - see NativeLayerDevelopment.md
 - Incremental builds: < 5 seconds when no changes
-- Module count > 100: Configuration issue, review Build.cs and Target.cs
 
 ---
 
@@ -427,47 +405,19 @@ dotnet test tests/Unit.Tests/Unit.Tests.csproj -p:SimioInstallDir="D:\Custom\Sim
 
 ## Mock DLL vs Real Native Build
 
-### Mock DLL Features
-- ✅ Complete API coverage (12 functions)
-- ✅ Console logging for debugging
-- ✅ State tracking (registered objects, properties)
-- ✅ No Unreal Engine dependency
-- ✅ Fast build (seconds)
-- ✅ 75KB size
-- ❌ No actual LiveLink integration
-- ❌ Returns mock success for IsConnected
+### Mock DLL
+- **Size:** 75KB
+- **Build Time:** Seconds
+- **Features:** API coverage, console logging, state tracking
+- **Limitations:** No LiveLink integration, mock responses only
+- **Use For:** Managed layer development, unit testing, quick iteration
 
-**Use Cases:**
-- Managed layer development
-- Unit testing (coordinate conversion, manager logic)
-- CI/CD pipelines
-- Quick iteration without UE dependencies
-
----
-
-### Native Real DLL Features ✅ COMPLETE (Sub-Phase 6.6)
-- ✅ UBT compilation with UE 5.6 source
-- ✅ 29.7 MB native DLL with full UE Core integration
-- ✅ All 12 C API functions exported and functional
-- ✅ Proper UE logging (UE_LOG with compile-time verbose control)
-- ✅ **Full LiveLink integration via FSimioLiveLinkSource**
-- ✅ **Transform subject registration and streaming**
-- ✅ **LiveLink Message Bus connectivity**
-- ✅ Parameter validation (null checks, bounds checks)
-- ✅ Correct return codes (negative for errors)
-- ✅ 2-minute builds (71 modules, optimized configuration)
-- ✅ Binary compatible with C# P/Invoke
-- ✅ **25/25 integration tests passing (100%)**
-- ✅ **Subjects appear in Unreal Editor Live Link window**
-
-**Use Cases:**
-- ✅ Integration testing (P/Invoke validation)
-- ✅ Native layer development
-- ✅ **Production-ready LiveLink streaming**
-- ✅ End-to-end Simio → Unreal workflow
-- 🔄 Property streaming (next phase - Sub-Phase 6.7)
-
----
+### Native Real DLL
+- **Size:** 28.5 MB
+- **Build Time:** ~2 minutes (71 UE modules)
+- **Features:** Full LiveLink integration, Message Bus connectivity, transform streaming
+- **Requirements:** UE 5.6 source installation
+- **Use For:** Integration testing, native development, production deployment
 
 ### When to Use Each
 
@@ -475,114 +425,21 @@ dotnet test tests/Unit.Tests/Unit.Tests.csproj -p:SimioInstallDir="D:\Custom\Sim
 |----------|----------|-----------------|
 | Managed layer development | ✅ Recommended | ⚠️ Slower builds |
 | Unit testing | ✅ Recommended | ❌ Not needed |
-| Integration testing | ❌ Limited value | ✅ **Required** |
-| Native layer development | ❌ Not applicable | ✅ **Required** |
-| LiveLink testing | ❌ No functionality | ✅ **Required** |
-| CI/CD | ✅ Fast (if UE unavailable) | ✅ **Preferred** (2 min builds) |
-| Production | ❌ **Never** | ✅ **Always** |
+| Integration testing | ❌ Limited | ✅ Required |
+| Native layer development | ❌ N/A | ✅ Required |
+| LiveLink testing | ❌ No functionality | ✅ Required |
+| Production | ❌ Never | ✅ Always |
 
 ---
 
 ## Known Issues and Limitations
 
 ### Build System
-- **Status:** ✅ All previous build issues resolved in Sub-Phase 6.6
-- **Build time:** ~2 minutes (71 modules) - optimized from 15+ minutes
-- **Configuration:** Minimal dependency approach using reference project pattern
-- **Critical modules:** ApplicationCore required (not documented in standard UE docs)
+- **Build time:** ~2 minutes (71 modules) for native DLL with UE source
+- **Configuration:** See [NativeLayerDevelopment.md](NativeLayerDevelopment.md) for build configuration details
 
 ### Test Scripts
-- **Issue:** RunIntegrationTests.ps1 has PowerShell escaping error (minor)
-- **Impact:** Cannot run via script
-- **Workaround:** Use `dotnet test tests/Integration.Tests/Integration.Tests.csproj` directly
-
-### Current Implementation Status ✅ Sub-Phase 6.6 COMPLETE
-- ✅ All P/Invoke functions callable and functional
-- ✅ Parameter validation works
-- ✅ Return codes correct
-- ✅ **IsConnected returns ULL_OK (connected to LiveLink)**
-- ✅ **Transform subjects appear in Unreal Editor**
-- ✅ **LiveLink Message Bus integration working**
-- ✅ **FSimioLiveLinkSource custom implementation**
-- 🔄 **Properties not yet transmitted** (Sub-Phase 6.7 - next phase)
-- 🔄 **Data-only subjects** (Sub-Phase 6.8 - future)
-
-**Next Steps:** Sub-Phase 6.7 will add property transmission to transform subjects.
-
----
-
-## CI/CD Notes
-
-### GitHub Actions Workflow (Planned)
-```yaml
-# .github/workflows/build-test.yml
-name: Build and Test
-on: [push, pull_request]
-jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-      - name: Build Mock DLL
-        run: .\build\BuildMockDLL.ps1
-      - name: Build Managed
-        run: .\build\BuildManaged.ps1
-      - name: Run Unit Tests
-        run: dotnet test tests/Unit.Tests/Unit.Tests.csproj
-      - name: Run Integration Tests
-        run: dotnet test tests/Integration.Tests/Integration.Tests.csproj
-```
-
-### Self-Hosted Runner Considerations
-- Required for Simio-dependent integration tests
-- Must have Simio installed
-- Can run full deployment validation
-- Native builds require UE 5.6 source installation
-
----
-
-## Test Development Guidelines
-
-### Unit Test Best Practices
-- ✅ Focus on context-independent logic
-- ✅ Use real Simio DLLs when available (copied post-build)
-- ❌ Do NOT create custom Simio interface implementations
-- ❌ Do NOT test Simio API behavior (assume it works)
-- ✅ Mock external dependencies
-- ✅ Fast execution (< 100ms per test)
-
-### Integration Test Best Practices
-- ✅ Test P/Invoke boundary contracts
-- ✅ Validate struct marshaling and sizes
-- ✅ Test error handling (null parameters, invalid values)
-- ✅ Use real native DLL (not mock)
-- ✅ Test high-frequency scenarios
-- ✅ Verify return codes match expectations
-- ❌ Do NOT test internal native implementation details
-
-### Example Test Structure
-```csharp
-[TestClass]
-public class CoordinateConverterTests
-{
-    [TestMethod]
-    public void SimioPositionToUnreal_ZeroPosition_ReturnsOrigin()
-    {
-        // Arrange
-        double simioX = 0, simioY = 0, simioZ = 0;
-        
-        // Act
-        var (unrealX, unrealY, unrealZ) = CoordinateConverter.SimioPositionToUnreal(simioX, simioY, simioZ);
-        
-        // Assert
-        Assert.AreEqual(0, unrealX);
-        Assert.AreEqual(0, unrealY);
-        Assert.AreEqual(0, unrealZ);
-    }
-}
-```
+- **RunIntegrationTests.ps1:** Use `dotnet test tests/Integration.Tests/Integration.Tests.csproj` directly for more reliable execution
 
 ---
 
@@ -602,15 +459,8 @@ public class CoordinateConverterTests
 **Deployment:** Check Event Viewer → Application logs
 
 ### Documentation References
-- **Test Status:** [tests/README.md](tests/README.md)
-- **Integration Test Results:** [IntegrationTestingComplete-Summary.md](IntegrationTestingComplete-Summary.md)
-- **Native Development:** [NativeLayerDevelopment.md](NativeLayerDevelopment.md)
-- **Development Status:** [Phase6DevelopmentPlan.md](Phase6DevelopmentPlan.md)
-
----
-
-## Related Documentation
-- **Architecture:** [Architecture.md](Architecture.md)
-- **Implementation:** [ManagedLayerDevelopment.md](ManagedLayerDevelopment.md), [NativeLayerDevelopment.md](NativeLayerDevelopment.md)
-- **Development Status:** [Phase6DevelopmentPlan.md](Phase6DevelopmentPlan.md)
-- **Test Structure:** [tests/README.md](tests/README.md)
+- **Architecture:** [Architecture.md](Architecture.md) - System design and component overview
+- **Native Development:** [NativeLayerDevelopment.md](NativeLayerDevelopment.md) - Build configuration details
+- **Managed Development:** [ManagedLayerDevelopment.md](ManagedLayerDevelopment.md) - C# implementation guide
+- **Development Status:** [DevelopmentPlan.md](DevelopmentPlan.md) - Current progress and roadmap
+- **Test Structure:** [tests/README.md](../tests/README.md) - Test organization details

@@ -1,7 +1,7 @@
 # Phase 6: Native Layer Implementation Plan
 
 **Status:** 🔄 IN PROGRESS  
-**Progress:** 6/11 sub-phases complete (55%)
+**Progress:** 6/12 sub-phases complete (50%)
 
 ---
 
@@ -11,7 +11,8 @@
 
 **Current Status:**
 - ✅ **Sub-Phases 6.1-6.6 COMPLETE:** UBT setup, type definitions, C API export layer, LiveLinkBridge singleton, **GEngineLoop initialization with restart optimization**, LiveLink framework integration, and transform subject registration with real UE DLL
-- 📋 **Sub-Phase 6.7 NEXT:** Additional property support (dynamic properties)
+- 📋 **Sub-Phase 6.6.1 NEXT:** Message Bus stability fix (4 critical fixes for production readiness)
+- 📋 **Sub-Phase 6.7 PLANNED:** Additional property support (dynamic properties)
 - 📋 **Sub-Phases 6.8-6.11 PLANNED:** LiveLink data subjects, optimization, and deployment
 
 **BREAKTHROUGH (Sub-Phase 6.6):**
@@ -514,6 +515,74 @@ private:
 
 ## Planned Sub-Phases
 
+### 📋 Sub-Phase 6.6.1: Message Bus Stability Fix
+**Status:** PLANNED  
+**Priority:** HIGH - Critical for production stability  
+**Effort:** 2 weeks (10 days)
+
+**Objective:** Address connection errors in successive start/stop/pause/run cycles through four critical fixes.
+
+**Root Causes Identified:**
+1. **Idempotent initialization** returns early without validating provider state
+2. **Shutdown order** destroys provider before removing subjects (potential memory leaks)
+3. **No Message Bus cooldown** between shutdown and initialization (UDP multicast timing)
+4. **No connection recovery** mechanism for lost connections
+
+**Proposed Fixes:**
+
+**Fix #1: InternalShutdown Refactor (CRITICAL)**
+- Add `InternalShutdown()` helper method for proper cleanup sequence
+- Always ensure clean state by calling InternalShutdown() at start of Initialize()
+- Fix subject removal order: remove subjects FROM provider BEFORE destroying provider
+- Add `LastShutdownTime` tracking for cooldown calculation
+
+**Fix #2: Message Bus Cooldown (HIGH)**
+- Add 500ms cooldown period after shutdown before allowing reinitialization
+- Wait for UDP multicast cleanup to propagate (prevent duplicate providers)
+- Static member: `MESSAGE_BUS_COOLDOWN_SECONDS = 0.5`
+- Release lock during sleep to prevent deadlock
+
+**Fix #3: Enhanced Connection Health Check (MEDIUM)**
+- Update `GetConnectionStatus()` to validate provider existence and validity
+- Add auto-recovery logic when provider missing but should exist
+- Add periodic health checks in Update methods (every 60th call)
+- Mark `bLiveLinkSourceCreated = false` when provider becomes invalid
+
+**Fix #4: Managed Layer Connection Validation (MEDIUM)**
+- Add connection health checks in all 4 Steps before operations
+- Add error message throttling (once per second)
+- Provide user-actionable error messages
+- Verify error messages stop after connection recovered
+
+**Current Implementation Status:**
+- ✅ CreateObjectStep.cs: Has IsConnectionHealthy check (line 35)
+- ✅ SetObjectPositionOrientationStep.cs: Has IsConnectionHealthy check (line 37)
+- ❌ TransmitValuesStep.cs: Missing health check
+- ❌ DestroyObjectStep.cs: Missing health check
+
+**Required Work:** Add health checks to TransmitValuesStep and DestroyObjectStep, add throttling to all 4 Steps
+
+**Implementation Plan:**
+- Week 1: Core Stability (Fix #1-2 + testing)
+- Week 2: Enhanced Reliability (Fix #3-4 + documentation)
+
+**Testing Strategy:**
+- Unit tests: 20+ consecutive simulation runs without errors
+- Integration tests: Message Bus cooldown timing validation
+- E2E tests: 50 consecutive Simio simulation runs
+- Stress tests: Rapid START/STOP cycles (< 500ms apart)
+
+**Success Criteria:**
+- ✅ Zero connection errors in 100 consecutive runs
+- ✅ Clean startup/shutdown in < 1 second (including cooldown)
+- ✅ Automatic recovery from connection loss
+- ✅ No duplicate providers in Unreal LiveLink window
+- ✅ Memory stable over extended runs (no leaks)
+
+**Reference:** See MessageBusStabilityFixPlan.md for complete implementation details.
+
+---
+
 ### 📋 Sub-Phase 6.7: Additional Property Support
 **Status:** PLANNED
 
@@ -568,7 +637,9 @@ private:
 - No memory leaks over 1-hour simulation
 - Stable frame timing (no jitter)
 - **First initialization < 50ms**
-- **Subsequent initialization < 5ms**
+- **Subsequent initialization < 5ms (after Sub-Phase 6.6.1 cooldown: < 505ms worst case)**
+
+**Note:** Sub-Phase 6.6.1 adds 0-500ms cooldown only if restart within 500ms of shutdown. Normal user workflow (5-10 sec between runs) experiences no delay.
 
 **Success Criteria:**
 - Meets or exceeds performance targets
@@ -691,6 +762,37 @@ public void NativeLayer_RestartPerformance_ShouldBeFast()
     Assert.IsTrue(sw2.ElapsedMilliseconds <= 5);  // ~1ms expected
     
     UnrealLiveLinkNative.ULL_Shutdown();
+}
+```
+
+### Message Bus Stability Testing (Sub-Phase 6.6.1)
+```csharp
+[TestMethod]
+public void NativeLayer_MessageBusCooldown_ShouldEnforce500ms()
+{
+    UnrealLiveLinkNative.ULL_Initialize("CooldownTest");
+    UnrealLiveLinkNative.ULL_Shutdown();
+    
+    var stopwatch = Stopwatch.StartNew();
+    UnrealLiveLinkNative.ULL_Initialize("CooldownTest");
+    stopwatch.Stop();
+    
+    Assert.IsTrue(stopwatch.ElapsedMilliseconds >= 450, 
+                  $"Expected >= 450ms cooldown, got {stopwatch.ElapsedMilliseconds}ms");
+}
+
+[TestMethod]
+public void NativeLayer_SubjectCleanup_ProperOrder()
+{
+    // Verify subjects removed BEFORE provider destroyed
+    // Prevents memory leaks in LiveLink subsystem
+}
+
+[TestMethod]
+public void NativeLayer_ConnectionRecovery_AutoReconnect()
+{
+    // Verify GetConnectionStatus detects provider loss
+    // Verify auto-recovery when possible
 }
 ```
 

@@ -5,8 +5,8 @@
 **Scope:** Timeless design decisions, component relationships, technical constraints  
 **Not Included:** Implementation details (see layer dev docs), current status (see DevelopmentPlan.md)
 
-**Last Updated:** October 21, 2025  
-**Implementation Status:** Sub-Phase 6.6 Complete (Transform subjects working with real UE integration)
+**Last Updated:** October 23, 2025  
+**Implementation Status:** Sub-Phase 6.6 Complete (Real UE 5.6 DLL integration with transform subjects, 25/25 integration tests passing)
 
 ---
 
@@ -22,7 +22,6 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 **Design Principles:**
 - **Mock-First Development:** Mock native DLL enables rapid managed layer development without Unreal Engine dependency
 - **Graceful Degradation:** Simulation continues even if visualization connection fails
-- **Lazy Registration:** Objects auto-register on first use, reducing boilerplate
 - **Configuration-Driven:** Comprehensive Element properties for flexible deployment
 - **Message Bus Architecture:** Uses Unreal's LiveLink Message Bus for loose coupling (third-party integration pattern)
 - **DLL Hosted Context:** Designed as DLL loaded in Simio.exe, not standalone executable (critical for lifecycle management)
@@ -35,7 +34,7 @@ SimioUnrealEngineLiveLinkConnector streams real-time simulation data from Simio 
 
 Our architecture is based on a **proven production system**:
 
-> "provides a C Interface to the Unreal Live Link Message Bus API. This allows for third party packages to stream to Unreal Live Link without requiring to compile with the Unreal Build Tool (UBT). This is done by exposing the Live Link API via a C interface in a shared object compiled using UBT."
+> "Provides a C Interface to the Unreal Live Link Message Bus API. This allows for third party packages to stream to Unreal Live Link without requiring to compile with the Unreal Build Tool (UBT). This is done by exposing the Live Link API via a C interface in a shared object compiled using UBT."
 
 **Validated Design Decisions:**
 - ✅ **Third-Party Integration:** External application → UBT-compiled DLL → LiveLink Message Bus → Unreal Editor
@@ -67,9 +66,9 @@ Our architecture is based on a **proven production system**:
 
 **Key Components:**
 - **Element** - Connection lifecycle management, configuration validation
-- **Steps** - Simio process integration (CreateObject, SetPositionOrientation, TransmitValues, DestroyObject)
+- **Steps** - Simio process integration (CreateObject, SetObjectPositionOrientation, TransmitValues, DestroyObject)
 - **UnrealIntegration** - P/Invoke abstraction, coordinate conversion, object registry
-- **Utils** - Property validation, path handling, network validation, UE detection
+- **Utils** - PropertyValidation.cs, PathUtils.cs, NetworkUtils.cs, UnrealEngineDetection.cs
 
 **Simio API Integration:**
 - Implements `IElementDefinition` and `IElement` for connection management
@@ -103,6 +102,13 @@ Our architecture is based on a **proven production system**:
 - **String Conversion:** C string → FName caching for performance
 - **Static Initialization Flag:** `bGEngineLoopInitialized` prevents fatal restart crashes
 
+**Implementation Files:**
+- `UnrealLiveLink.Native.Main.cpp` - Program entry point (IMPLEMENT_APPLICATION)
+- `UnrealLiveLink.API.cpp` - C API implementations
+- `LiveLinkBridge.cpp/.h` - Singleton state management and LiveLink integration
+- `CoordinateHelpers.h` - Transform conversion utilities
+- `TypesValidation.cpp` - Compile-time struct validation
+
 **Unreal Engine Initialization (GEngineLoop Pattern):**
 ```cpp
 // First initialization (21ms typical)
@@ -124,18 +130,21 @@ IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PreDefault);
 - No direct coupling - Editor and DLL run as separate processes
 
 **Required Module Dependencies:**
+
+**Actual Build Configuration (UnrealLiveLinkNative.Build.cs):**
 ```csharp
 PrivateDependencyModuleNames.AddRange(new string[] 
 {
     "Core",                         // Unreal fundamentals
     "CoreUObject",                  // UObject system
-    "ApplicationCore",              // Provides FMemory_* symbols for Program targets
-    "Projects",                     // Plugin loading system
+    "ApplicationCore",              // FMemory_* symbols for Program targets
+    "Projects",                     // Plugin manager
     "LiveLinkInterface",            // LiveLink API types
     "LiveLinkMessageBusFramework",  // Message Bus framework
-    "UdpMessaging",                 // Network transport for LiveLink
+    "UdpMessaging",                 // Network transport
 });
 ```
+Note: Final implementation uses exactly 7 modules for minimal dependencies and fast build times.
 
 **Deployment Dependencies (Critical):**
 > "copying just the dll may not be enough. There may be other dependencies that need to be copied such as the tbbmalloc.dll" - Reference Project Warning
@@ -211,7 +220,7 @@ Expected additional DLLs (50-200MB total):
 ┌─────────────────────────────────────────────────────────────────────┐
 │                  P/Invoke Boundary (12 Functions)                   │
 │  ULL_Initialize | ULL_RegisterObject | ULL_UpdateObject | etc.      │
-└────────────────────────────────────┬────────────────────────────────┘
+└────────────────────────────────┬────────────────────────────────────┘
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -404,17 +413,14 @@ TSharedPtr<ILiveLinkProvider> LiveLinkProvider =
 - Default values for all properties (zero-config quick start)
 - `CreateValidated()` factory method sanitizes edge cases
 - Stored in LiveLinkManager for runtime access by Steps
+- **Simplified to 2 properties:** SourceName and EnableLogging
+- **Message Bus auto-discovery:** No manual network configuration required (UDP multicast 230.0.0.1:6666)
 
 **Property Validation Strategy:**
 - Utils layer provides context-aware validation (`PropertyValidation.cs`)
 - Validation runs at Element construction time (fail-fast)
 - Clear error messages via `ExecutionContext.ExecutionInformation.ReportError()`
-- Network endpoints, paths, timeouts all validated before use
-
-**Path Normalization:**
-- Relative paths resolved to Simio project folder
-- `PathUtils.SafePathCombine()` prevents directory traversal
-- Log file paths created if parent directories missing
+- SourceName validated for non-empty string
 
 ### Error Handling Philosophy
 
@@ -424,10 +430,10 @@ TSharedPtr<ILiveLinkProvider> LiveLinkProvider =
 - Missing native DLL detected early with helpful error message
 
 **When to Block vs Warn:**
-- **Block:** Invalid configuration (empty source name, port out of range)
+- **Block:** Invalid configuration (empty source name)
 - **Block:** API version mismatch (native DLL incompatible)
 - **Warn:** Connection timeout (Unreal not running)
-- **Warn:** Network issues (firewall, wrong host)
+- **Warn:** Network issues (firewall blocking UDP multicast)
 
 **User Feedback:**
 - `TraceInformation` for successful operations (visible in Simio Trace window)
@@ -513,6 +519,9 @@ struct ULL_Transform {
 // Total size: 80 bytes (10 doubles)
 ```
 
+**Size Verification:** Confirmed via static_assert in TypesValidation.cpp and C# Marshal.SizeOf tests.  
+Breakdown: position[3]=24 bytes, rotation[4]=32 bytes, scale[3]=24 bytes = 80 bytes total.
+
 #### Data Subject Functions (3)
 
 ```cpp
@@ -540,12 +549,13 @@ void ULL_RemoveDataSubject(const char* subjectName);
 
 **IElementDefinition / IElement:**
 - **Connection lifecycle management:** Initialize on simulation start, Shutdown on end
-- **8 properties total:**
-  - **LiveLink Connection (5):** SourceName, LiveLinkHost, LiveLinkPort, ConnectionTimeout, RetryAttempts
-  - **Logging (2):** EnableLogging (ExpressionProperty - evaluates at runtime), LogFilePath
-  - **Unreal Engine (1):** UnrealEnginePath (user-specified installation path)
+- **2 properties total:**
+  - **LiveLink Connection (1):** SourceName - Name displayed in Unreal Engine's LiveLink Sources window
+  - **Logging (1):** EnableLogging (ExpressionProperty - evaluates at runtime for DebugView++ output)
 - **Configuration object:** `LiveLinkConfiguration` with validation
 - **Health status:** `IsConnectionHealthy` property for Steps to check
+
+**Design Evolution:** Earlier designs included manual network configuration properties (LiveLinkHost, LiveLinkPort, ConnectionTimeout, RetryAttempts, LogFilePath, UnrealEnginePath). The final implementation leverages LiveLink Message Bus auto-discovery via UDP multicast (230.0.0.1:6666), eliminating the need for user-specified network endpoints. Logging is handled through native UE_LOG output viewable in DebugView++, removing the need for custom log file paths.
 
 **IStepDefinition / IStep:**
 - **Process integration:** 4 step types (Create, SetPositionOrientation, TransmitValues, Destroy)
@@ -668,16 +678,10 @@ void ULL_RemoveDataSubject(const char* subjectName);
 - Array count parameters validated (non-negative, reasonable bounds)
 - String lengths implicitly validated by null-terminator scanning
 
-**Path Traversal Protection:**
-- `PropertyValidation.NormalizeFilePath()` resolves paths via `Path.GetFullPath()`
-- Rejects paths with ".." sequences outside project folder
-- Log file creation uses sanitized paths only
-
-**Network Endpoint Validation:**
-- Host format validated (DNS name or IP address)
-- Port range checked (1-65535)
-- No raw socket access (LiveLink Message Bus handles network layer)
-- Connection timeout enforced (prevents infinite hangs)
+**Network Security:**
+- No raw socket access (LiveLink Message Bus handles network layer via UDP multicast)
+- Message Bus uses standard Unreal networking (230.0.0.1:6666)
+- No user-configurable network endpoints (eliminates configuration attack surface)
 
 **Privilege Requirements:**
 - Deployment requires Administrator (writes to Program Files)
